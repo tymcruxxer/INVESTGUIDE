@@ -1,0 +1,12 @@
+# Prettier Configuration Ignore File
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+.git/
+.env
+.env.local
+package-lock.json
+yarn.lock
