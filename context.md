@@ -1004,3 +1004,69 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 010: implement a dry-run news ingestion orchestration layer that consumes scraper results, normalizes, deduplicates, links assets, assigns source trust metadata, and reports what would be persisted without writing to the database yet.
+---
+
+## Session 013
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 010 by building a dry-run news ingestion orchestration layer without database writes, external website calls, live scraping, AI, sentiment, embeddings, RAG, authentication, or frontend integration.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Added source trust metadata and scoring for official, institutional, journalism, and general web source tiers.
+* Added dry-run ingestion orchestration that runs fixture scraper instances, collects articles, normalizes content, deduplicates articles, builds backend-compatible payloads, links assets, attaches source-trust credibility scores, and returns a report.
+* Added dry-run report contracts for payloads, source summaries, and aggregate ingestion statistics.
+* Added `python -m scrapers.run_dry_ingestion` CLI command that runs all fixture placeholder scrapers and prints a readable dry-run summary.
+* Added tests for source trust scoring, dry-run success path, failed scraper handling, deduplication, credibility score attachment, asset ticker linking, CLI importability/report formatting, no database imports, and no network calls.
+* Updated `scrapers/README.md` with dry-run command, source trust scores, and current limitations.
+* Updated `PROJECT_STATE.md` for Sprint 010.
+
+Files Created:
+
+* `scrapers/pipeline/source_trust.py`
+* `scrapers/pipeline/ingestion_orchestrator.py`
+* `scrapers/run_dry_ingestion.py`
+* `scrapers/tests/test_dry_ingestion.py`
+
+Files Modified:
+
+* `scrapers/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Source trust metadata is centralized in `scrapers/pipeline/source_trust.py` and uses simple numeric scores: Tier 1 `1.0`, Tier 2 `0.85`, Tier 3 `0.7`, Tier 4 `0.4`.
+* The dry-run orchestrator accepts scraper instances rather than discovering or scheduling sources, keeping execution explicit and testable.
+* The report contract uses dataclasses and contains only report-safe fields describing what would be persisted.
+* Credibility scores are attached during payload building from source trust metadata.
+* The dry-run command uses only fixture placeholder scrapers and prints a summary; it does not write to the database.
+* No backend database sessions, HTTP clients, browser automation, scheduler jobs, AI, sentiment analysis, embeddings, RAG, frontend changes, or authentication were added.
+
+Validation Results:
+
+* `python -m pytest scrapers/tests`: passed, 13 tests passed.
+* `python -m pytest`: passed from repository root, 50 tests passed.
+* `python -m scrapers.run_dry_ingestion`: passed and printed a readable summary for 8 fixture sources, 8 scraped articles, 0 duplicates, linked tickers, source trust scores, and no errors.
+* Network safety: tests monkeypatch `socket.create_connection`; dry-run orchestration and placeholder scrapers pass without network calls.
+* Database safety: scraper package contains no database engine/session usage and performs no database writes.
+
+Known Issues Update:
+
+* Resolved: dry-run news ingestion orchestration, source trust metadata, report contracts, CLI command, and orchestration tests did not exist; Sprint 010 implemented them.
+* Unresolved: real HTTP fetching and source-specific live parsing are not implemented by design.
+* Unresolved: database-backed ingestion writes are not implemented by design.
+* Unresolved: PostgreSQL client tools are not available on PATH.
+* Unresolved: port `8000` still has a persistent local listener on PID `4288`.
+* Unresolved: real migration execution and database-backed endpoint validation remain blocked by PostgreSQL authentication for the configured local development user.
+* Unresolved: AI, sentiment analysis, embeddings, RAG, authentication, notifications, analytics, and frontend integration are not implemented.
+
+Sprint Summary:
+
+* Sprint 010 completed the dry-run news ingestion orchestration layer. The scraper system can now run fixture sources through a controlled normalize/dedupe/link/trust-score/payload/report workflow while proving no network calls or database writes occur.
+
+Next Recommended Task:
+
+* Sprint 011: implement a persistence-ready ingestion adapter behind an explicit dry-run/write boundary, including backend model mapping and duplicate lookup interfaces, while keeping writes disabled by default and tests database-free or SQLite-only.
