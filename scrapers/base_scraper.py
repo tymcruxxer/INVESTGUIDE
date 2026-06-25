@@ -5,10 +5,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-import logging
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from scrapers.core.context import ScraperContext
 
 
 @dataclass(frozen=True)
@@ -46,15 +45,20 @@ class ScraperResult:
 class BaseScraper(ABC):
     """Base interface for source-specific scrapers.
 
-    Sprint 009 scrapers are fixture-only. Real HTTP fetching, browser automation,
-    scheduling, and database writes are intentionally deferred.
+    Scrapers receive one ``ScraperContext`` dependency container. Fixture
+    scrapers may omit the context and receive a default offline context.
     """
 
     source_name: str
     source_url: str
 
-    def __init__(self, logger_: logging.Logger | None = None) -> None:
-        self.logger = logger_ or logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
+    def __init__(self, context: ScraperContext | None = None) -> None:
+        if context is None:
+            from scrapers.core.context_factory import ScraperContextFactory
+
+            context = ScraperContextFactory().build(self.source_name)
+        self.context = context
+        self.logger = self.context.logger.logger
 
     @abstractmethod
     def fetch(self) -> Any:
@@ -69,21 +73,22 @@ class BaseScraper(ABC):
 
     def run(self) -> ScraperResult:
         """Execute fetch and parse with structured error handling."""
-        self.logger.info("Starting scraper", extra={"source_name": self.source_name})
+        self.context.logger.scraper_started(self.source_name)
         try:
             raw_content = self.fetch()
             articles = self.parse(raw_content)
         except Exception as exc:  # pragma: no cover - exact exception varies by scraper
-            self.logger.exception("Scraper failed", extra={"source_name": self.source_name})
+            self.context.logger.scraper_failed(self.source_name, execution_time=0.0, error=str(exc))
             return ScraperResult(
                 source_name=self.source_name,
                 source_url=self.source_url,
                 errors=[str(exc)],
             )
 
-        self.logger.info(
-            "Scraper completed",
-            extra={"source_name": self.source_name, "article_count": len(articles)},
+        self.context.logger.scraper_completed(
+            self.source_name,
+            execution_time=0.0,
+            article_count=len(articles),
         )
         return ScraperResult(
             source_name=self.source_name,

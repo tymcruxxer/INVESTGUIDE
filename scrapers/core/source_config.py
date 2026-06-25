@@ -25,7 +25,7 @@ class SourceConfig:
     def from_env(cls, source_id: str, env: Mapping[str, str] | None = None) -> "SourceConfig":
         """Load config from defaults and source-specific environment variables."""
         values = env or environ
-        prefix = f"SCRAPER_{source_id.upper().replace('-', '_')}_"
+        prefix = f"SCRAPER_{source_id.upper().replace('-', '_').replace(' ', '_')}_"
         default_prefix = "SCRAPER_DEFAULT_"
         config = cls()
 

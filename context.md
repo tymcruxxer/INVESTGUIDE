@@ -1288,3 +1288,63 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 013: implement one opt-in live scraper using the Sprint 012 infrastructure, with documented robots/rate-limit review, mocked tests, and no broad multi-source scraping, AI, scheduler, authentication, or frontend integration yet.
+
+---
+
+## Session 017
+
+Date: 2026-06-25
+
+Objective: Complete a pre-Sprint-013 architecture improvement by introducing `ScraperContext` dependency injection for scraper infrastructure without changing scraper behavior or adding live scraping.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added `ScraperContext` as a shared dependency container for scraper infrastructure.
+* Added `ScraperContextFactory` to build ready-to-use contexts from source ids, display names, raw source names, or `SourceDefinition` metadata.
+* Updated `BaseScraper` to accept one `ScraperContext` object and expose dependencies through `self.context`.
+* Preserved backwards compatibility by letting fixture scrapers omit context and receive a default offline context.
+* Ensured context owns source config, HTTP client, retry policy, rate limiter, metrics collector, per-source metrics, scraper logger, user-agent manager, robots policy, and optional source definition metadata.
+* Added tests for context creation, factory wiring, source-specific configuration loading, fake transport attachment, placeholder scraper context injection, and no-argument fixture compatibility.
+* Updated `scrapers/README.md` and `PROJECT_STATE.md`.
+
+Files Created:
+
+* `scrapers/core/context.py`
+* `scrapers/core/context_factory.py`
+* `scrapers/tests/test_scraper_context.py`
+
+Files Modified:
+
+* `scrapers/base_scraper.py`
+* `scrapers/core/source_config.py`
+* `scrapers/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Future scraper constructors should receive one dependency object: `ScraperContext`.
+* `ScraperContextFactory` is responsible for constructing infrastructure dependencies so individual scrapers do not manage HTTP clients, retry policies, rate limiters, metrics, robots policy, user agents, or loggers separately.
+* Existing fixture scrapers remain behavior-compatible because `BaseScraper` creates a default offline context when none is provided.
+* Context factory supports injected fake transports for offline tests and future live scraper testing without network calls.
+* Source-specific environment loading now handles source identifiers with spaces as well as hyphens.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 80 tests passed.
+* Network safety: context tests use fake HTTP transports and do not call live websites.
+* Database safety: scraper context infrastructure does not import backend database sessions and performs no database writes.
+
+Known Issues Update:
+
+* Resolved: scraper dependency injection required passing or constructing many infrastructure dependencies separately; `ScraperContext` now centralizes them.
+* Unresolved: live scraper fetching, robots.txt parsing/enforcement, scheduling, AI, sentiment analysis, embeddings, RAG, authentication, analytics, frontend integration, and scraper database writes remain intentionally unimplemented.
+
+Session Summary:
+
+* Added the scraper dependency-injection container and factory so future scrapers can scale with a stable constructor shape while existing fixture behavior remains unchanged.
+
+Next Recommended Task:
+
+* Sprint 013: implement one opt-in live scraper using `ScraperContextFactory` and Sprint 012 infrastructure, with mocked tests and documented robots/rate-limit review before any live network use.

@@ -27,6 +27,7 @@ Current Tasks:
 * [x] Added source metadata for official, institutional, and financial journalism sources.
 * [x] Added offline tests proving no network calls or database writes are required.
 * [x] Updated scraper README, project state, and context.
+* [x] Added ScraperContext and ScraperContextFactory before Sprint 013 to centralize scraper dependency injection.
 
 Sprint Exit Criteria:
 
@@ -58,7 +59,7 @@ API: In Progress - health, read-only assets, read-only news, and internal news i
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
-Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, pipeline utilities, and dry-run ingestion orchestration exist; backend ingestion adapter can consume normalized payloads; real fetching not implemented
+Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, and dry-run ingestion orchestration exist; backend ingestion adapter can consume normalized payloads; real fetching not implemented
 
 Analytics Engine: Not Started
 
@@ -82,7 +83,7 @@ Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
 Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
 
-Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, and dry-run ingestion orchestration; no live requests, Playwright, browser automation, external calls, scheduler, or DB writes yet
+Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, and dry-run ingestion orchestration; no live requests, Playwright, browser automation, external calls, scheduler, or DB writes yet
 
 State Management: Zustand, TanStack Query
 
@@ -96,7 +97,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: `python -m pytest` from repository root runs backend and scraper tests; 75 tests pass
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 80 tests pass
 
 ---
 
@@ -151,7 +152,7 @@ The repository is a modular monorepo scaffold. The frontend foundation is stable
 
 The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migrations.
 
-The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
+The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
 
 The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer intentionally contains no real HTTP fetching, browser automation, scheduling, sentiment, embeddings, RAG, or database persistence.
 
@@ -183,8 +184,8 @@ Sprint 013 should implement the first opt-in live scraper using the Sprint 012 i
 
 Sprint 012 is complete because:
 
-* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, and source metadata exist.
-* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, and logging redaction.
+* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, and context factory exist.
+* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, and placeholder scraper context injection.
 * `python -m pytest` passes from repository root.
 * No live website requests, Playwright, Selenium, BeautifulSoup parsing, scheduler jobs, AI, sentiment, embeddings, RAG, frontend changes, authentication, or database writes were added.
 * Project documentation is updated.
@@ -201,8 +202,8 @@ Sprint 012 is complete because:
 
 ## Validation Results
 
-* Full repository tests: `python -m pytest` passed from repository root, 75 tests passed.
-* Scraper core validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, and scraper logger.
+* Full repository tests: `python -m pytest` passed from repository root, 80 tests passed.
+* Scraper core validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, and `ScraperContextFactory`.
 * Network safety: no live scraper requests are made; HTTP abstraction tests monkeypatch the default transport and use injected fake transports.
 * Database safety: scraper core infrastructure does not import backend database sessions and performs no database writes.
 * Existing backend validation remains covered by the repository test suite; live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication.

@@ -24,6 +24,7 @@ Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sp
 * robots policy metadata abstraction
 * scraper metrics collector
 * scraper lifecycle logger
+* scraper dependency context and context factory
 
 
 ## Core Scraper Infrastructure
@@ -60,6 +61,32 @@ SCRAPER_FINANCIAL_GAZETTE_ENABLED=false
 ```
 
 Source-specific values override defaults. Environment variable source ids use uppercase with hyphens converted to underscores.
+
+## ScraperContext Dependency Injection
+
+Pre-Sprint-013 architecture now groups shared scraper infrastructure into one dependency container:
+
+```python
+from scrapers.core.context_factory import ScraperContextFactory
+from scrapers.news.financial_gazette import FinancialGazetteScraper
+
+context = ScraperContextFactory().build("financial-gazette")
+scraper = FinancialGazetteScraper(context=context)
+```
+
+`ScraperContext` owns:
+
+* source configuration
+* HTTP client
+* retry policy
+* rate limiter
+* metrics collector and per-source metrics
+* scraper logger
+* user-agent manager
+* robots policy
+* optional source definition metadata
+
+Fixture scrapers can still be instantiated without arguments for existing dry-run tests; `BaseScraper` creates a default offline context when one is omitted. Future live scrapers should receive an explicit context from `ScraperContextFactory`.
 ## Dry-Run Command
 
 Run all fixture placeholder scrapers through the dry-run ingestion pipeline:
