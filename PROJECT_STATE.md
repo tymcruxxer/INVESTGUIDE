@@ -9,33 +9,30 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 005
+Sprint Number: Sprint 006
 
-Sprint Goal: Implement the backend asset read API foundation with safe read-only endpoints using the existing asset model and schemas.
+Sprint Goal: Configure a real development database workflow and add a controlled manual asset seed execution system.
 
 Current Tasks:
 
-* [x] Add read-only asset service functions for list and ticker lookup.
-* [x] Support asset filtering by exchange, sector, asset type, status, and search query.
-* [x] Support page/limit pagination for asset listing.
-* [x] Add `GET /api/v1/assets` endpoint.
-* [x] Add `GET /api/v1/assets/{ticker}` endpoint.
-* [x] Return standard response envelopes for asset success and not-found responses.
-* [x] Register asset routes under `/api/v1/assets`.
-* [x] Add tests for route registration, list response shape, detail not-found response, and service filtering.
-* [x] Keep tests independent of live PostgreSQL credentials.
-* [x] Update backend README, project state, and historical context.
+* [x] Document local PostgreSQL setup.
+* [x] Document hosted PostgreSQL setup.
+* [x] Document required environment variables and `DATABASE_URL` workflow.
+* [x] Document Alembic migration commands.
+* [x] Document development asset seeding.
+* [x] Update `.env.example` with `APP_NAME`, `APP_VERSION`, `APP_ENV`, `APP_DEBUG`, `DATABASE_URL`, and `CORS_ORIGINS`.
+* [x] Add a manual duplicate-aware development asset seed command.
+* [x] Add tests for seed data shape, ticker normalization, insert behavior, and duplicate prevention.
 * [x] Validate pytest, Alembic load, uvicorn startup, and health endpoint.
 
 Sprint Exit Criteria:
 
-* Read-only asset routes exist.
-* Routes are registered under `/api/v1/assets`.
-* Asset service layer exists.
-* Response envelope is used consistently.
+* `DATABASE_URL` workflow is clearly documented.
+* Seed command exists and is manually run only.
+* Seed command is duplicate-aware.
 * Tests pass without requiring live PostgreSQL.
 * Backend health endpoint still works.
-* No create, update, or delete endpoints are added.
+* No automatic seeding occurs.
 * Documentation is updated.
 
 ---
@@ -76,7 +73,7 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset domain model and migration added; read-only asset API uses SQLAlchemy sessions
+Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset domain model and migration added; read-only asset API exists; manual duplicate-aware asset seed command exists
 
 State Management: Zustand, TanStack Query
 
@@ -90,7 +87,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health, database foundation, asset model, asset schema, asset service, asset routes, and seed data tests pass; frontend lint/type-check/build validation previously passes
+Testing: Backend health, database foundation, asset model, asset schema, asset service, asset routes, seed data, and seed command tests pass; frontend lint/type-check/build validation previously passes
 
 ---
 
@@ -113,6 +110,7 @@ investguide/
 |   |   |       `-- router.py
 |   |   |-- core/
 |   |   |-- database/
+|   |   |   |-- seed.py
 |   |   |   `-- seed_assets.py
 |   |   |-- models/
 |   |   |   |-- asset.py
@@ -143,16 +141,17 @@ investguide/
 
 ## Current Architecture
 
-The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, Alembic migration scaffolding wired to application settings, the asset domain model/migration, and read-only asset endpoints.
+The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, Alembic migration scaffolding wired to application settings, the asset domain model/migration, read-only asset endpoints, and a controlled manual seed command for development assets.
 
-The backend intentionally contains no authentication, users, asset write routes, analytics, AI, scrapers, notifications, or business workflow logic. Alembic can load the migration environment and asset revision; actual migration execution and live asset endpoint database testing are deferred until PostgreSQL credentials are configured.
+The backend intentionally contains no authentication, users, asset write routes, analytics, AI, scrapers, notifications, or business workflow logic. Alembic can load the migration environment and asset revision; actual migration execution and real seed execution require a configured PostgreSQL `DATABASE_URL`.
 
 ---
 
 ## Current Blockers
 
-* Database migration execution is blocked until valid local or hosted PostgreSQL credentials are configured.
-* Live asset endpoint database testing is blocked until PostgreSQL credentials are configured and the assets migration is applied.
+* Real migration execution is blocked until valid local or hosted PostgreSQL credentials are configured.
+* Real seed execution is blocked until `DATABASE_URL` points to a migrated PostgreSQL database.
+* Live asset endpoint database testing is blocked until PostgreSQL credentials are configured, migrations are applied, and assets are seeded.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
@@ -162,22 +161,22 @@ The backend intentionally contains no authentication, users, asset write routes,
 
 ## Next Immediate Task
 
-Sprint 006 should configure a real local or hosted PostgreSQL development database, apply the existing Alembic migration, and add a controlled seed execution workflow for development assets. Do not add analytics, AI, scrapers, authentication, or frontend integration until the live database path is validated.
+Sprint 007 should validate the real database workflow against a configured PostgreSQL instance: set `DATABASE_URL`, run `python -m alembic upgrade head`, run `python -m app.database.seed`, and smoke-test `GET /api/v1/assets` and `GET /api/v1/assets/{ticker}` against real seeded data. Do not add analytics, AI, scrapers, authentication, or frontend integration until the live database path is verified.
 
 ---
 
 ## Definition of Done
 
-Sprint 005 is complete because:
+Sprint 006 is complete because:
 
-* Read-only asset service functions exist for listing assets and ticker lookup.
-* Asset list supports exchange, sector, asset type, status, search, page, and limit inputs.
-* `GET /api/v1/assets` and `GET /api/v1/assets/{ticker}` are registered under the versioned API router.
-* Asset responses use the existing response envelope.
-* Missing ticker responses return a 404 error envelope.
-* Tests pass without requiring live PostgreSQL.
+* Local and hosted PostgreSQL setup instructions are documented.
+* `DATABASE_URL`, migration, and seed workflows are documented.
+* `.env.example` includes the required Sprint 006 environment variables without real credentials.
+* The manual command `python -m app.database.seed` exists.
+* The seed command inserts missing assets and skips duplicate tickers.
+* Seed tests pass without requiring live PostgreSQL.
 * Backend health endpoint still works.
-* No create, update, delete, auth, analytics, AI, scraper, or frontend work was added.
+* No automatic seeding, frontend changes, auth, asset writes, analytics, AI, scrapers, notifications, or deployment work was added.
 * Documentation is updated.
 
 ---
@@ -186,15 +185,15 @@ Sprint 005 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 005 asset read API foundation with service filtering, read-only routes, tests, validation, and documentation updates.
+* Completed Task: Completed Sprint 006 development database workflow documentation and manual duplicate-aware asset seed command with tests and validation.
 
 ---
 
 ## Validation Results
 
-* Backend tests: passed with `python -m pytest` from `backend/`; 20 tests passed. Pytest emitted a non-blocking cache-write warning in this sandbox.
+* Backend tests: passed with `python -m pytest` from `backend/`; 24 tests passed. Pytest emitted a non-blocking cache-write warning in this sandbox.
 * Alembic load: passed with `python -m alembic current`; PostgreSQL revision lookup was deferred because local database credentials are not configured.
 * Server startup: passed with `python -m uvicorn app.main:app --reload` from `backend/`.
 * Health endpoint: passed with `GET http://127.0.0.1:8000/api/v1/health`.
 * Runtime: uvicorn started without startup errors; health endpoint returned the expected success envelope.
-* Live asset endpoint database testing: deferred until PostgreSQL credentials are configured and the assets migration is applied.
+* Real migration and seed execution: deferred until `DATABASE_URL` points to a valid PostgreSQL database.

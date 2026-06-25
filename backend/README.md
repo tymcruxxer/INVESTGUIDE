@@ -2,14 +2,14 @@
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, and read-only asset API routes.
+This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, and a manual development asset seed command.
 
-Business features such as authentication, asset write endpoints, analytics, AI, scrapers, and notifications are intentionally not implemented yet.
+Business features such as authentication, asset write endpoints, analytics, AI, scrapers, notifications, and production deployment are intentionally not implemented yet.
 
 ## Requirements
 
 * Python 3.12+
-* PostgreSQL for migration execution and live database-backed asset endpoints
+* PostgreSQL for migration execution, seeding, and live database-backed asset endpoints
 
 ## Install
 
@@ -20,7 +20,9 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## Configure
+## Configure Environment
+
+Create a local environment file from the example:
 
 ```bash
 copy .env.example .env
@@ -30,13 +32,105 @@ Environment variables:
 
 * `APP_NAME` - FastAPI application name
 * `APP_VERSION` - application version, currently `0.1.0-alpha`
-* `ENVIRONMENT` - runtime environment
+* `APP_ENV` - runtime environment, such as `development`
 * `APP_DEBUG` - FastAPI debug flag
 * `LOG_LEVEL` - logging level
 * `DATABASE_URL` - SQLAlchemy database URL
-* `CORS_ORIGINS` - comma-separated allowed origins
+* `CORS_ORIGINS` - comma-separated allowed origins or a JSON array string
 
-## Run
+Do not commit real database passwords or hosted database credentials.
+
+## Local PostgreSQL Setup
+
+Create a local development database and user using your PostgreSQL client. Example SQL:
+
+```sql
+CREATE DATABASE investguide_dev;
+CREATE USER investguide_user WITH PASSWORD 'replace_me';
+GRANT ALL PRIVILEGES ON DATABASE investguide_dev TO investguide_user;
+```
+
+Then set `DATABASE_URL` in `.env`:
+
+```bash
+DATABASE_URL=postgresql+psycopg://investguide_user:replace_me@localhost:5432/investguide_dev
+```
+
+If you use the default local `postgres` user, update the username and password to match your machine. The repository does not include real credentials.
+
+## Hosted PostgreSQL Setup
+
+For hosted PostgreSQL providers such as Supabase, Neon, Railway, or Render:
+
+1. Create a PostgreSQL database in the provider dashboard.
+2. Copy the provider connection string.
+3. Ensure the URL uses the SQLAlchemy psycopg driver format: `postgresql+psycopg://...`.
+4. Store the full value in `.env` as `DATABASE_URL`.
+5. Keep SSL options from the provider if required by the connection string.
+
+Example shape only:
+
+```bash
+DATABASE_URL=postgresql+psycopg://user:password@host:5432/database
+```
+
+## Run Migrations
+
+Alembic is configured under `backend/alembic` and uses `DATABASE_URL` from application settings.
+
+Check current revision:
+
+```bash
+python -m alembic current
+```
+
+Apply all migrations:
+
+```bash
+python -m alembic upgrade head
+```
+
+Create a migration after models change:
+
+```bash
+python -m alembic revision --autogenerate -m "describe change"
+```
+
+Rollback one migration:
+
+```bash
+python -m alembic downgrade -1
+```
+
+If PostgreSQL is not available or credentials are not configured, `python -m alembic current` will load the Alembic environment and report that revision lookup is deferred. Migration execution requires a working PostgreSQL connection.
+
+## Seed Development Assets
+
+Development asset seed data is defined in `app/database/seed_assets.py` and is inserted only when explicitly requested.
+
+Run migrations first:
+
+```bash
+python -m alembic upgrade head
+```
+
+Then run the manual seed command:
+
+```bash
+python -m app.database.seed
+```
+
+The seed command:
+
+* connects using the configured `DATABASE_URL`
+* inserts assets from `seed_assets.py`
+* skips existing tickers to avoid duplicates
+* logs inserted and skipped tickers
+* does not run on application startup
+
+If `DATABASE_URL` is not configured or the assets table has not been migrated, real seed execution will fail until the database is ready.
+
+## Run API
 
 ```bash
 uvicorn app.main:app --reload
@@ -115,46 +209,17 @@ The first domain model layer is implemented for investment assets:
 * Pydantic schemas: `app/schemas/asset.py`
 * Read-only service: `app/services/asset_service.py`
 * Read-only routes: `app/api/v1/assets.py`
-* Development seed data structure: `app/database/seed_assets.py`
+* Development seed data: `app/database/seed_assets.py`
+* Manual seed command: `app/database/seed.py`
 * Alembic migration: `alembic/versions/20260625_0001_create_assets_table.py`
-
-Seed data is provided as importable development data and is not executed automatically.
-
-## Database Migrations
-
-Alembic is configured under `backend/alembic` and uses the application `DATABASE_URL` from `app.core.config`.
-
-Check current revision:
-
-```bash
-python -m alembic current
-```
-
-Create a migration after models are added:
-
-```bash
-python -m alembic revision --autogenerate -m "describe change"
-```
-
-Apply migrations:
-
-```bash
-python -m alembic upgrade head
-```
-
-Rollback one migration:
-
-```bash
-python -m alembic downgrade -1
-```
-
-If PostgreSQL is not available or credentials are not configured, `python -m alembic current` will load the Alembic environment and report that revision lookup is deferred. Migration execution and live asset endpoint database testing require a working PostgreSQL connection.
 
 ## Test
 
 ```bash
 pytest
 ```
+
+Automated tests use mocks or in-memory SQLite where database behavior is needed, so they do not require live PostgreSQL credentials.
 
 ## Folder Structure
 
@@ -179,6 +244,7 @@ backend/
 |   |   `-- responses.py
 |   |-- database/
 |   |   |-- base.py
+|   |   |-- seed.py
 |   |   |-- seed_assets.py
 |   |   `-- session.py
 |   |-- models/
@@ -199,7 +265,8 @@ backend/
 |   |-- test_asset_service.py
 |   |-- test_database.py
 |   |-- test_health.py
-|   `-- test_seed_assets.py
+|   |-- test_seed_assets.py
+|   `-- test_seed_command.py
 |-- .env.example
 |-- alembic.ini
 |-- README.md

@@ -1,9 +1,9 @@
-﻿"""Application configuration."""
+"""Application configuration."""
 
 from functools import lru_cache
 from typing import Any
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     app_name: str = "InvestGuide Backend"
     app_version: str = "0.1.0-alpha"
-    environment: str = "development"
+    environment: str = Field(default="development", validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"))
     debug: bool = Field(default=True, validation_alias="APP_DEBUG")
     api_v1_prefix: str = "/api/v1"
 

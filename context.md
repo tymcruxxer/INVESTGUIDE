@@ -624,3 +624,72 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 006: configure a real local or hosted PostgreSQL development database, apply the existing Alembic migration, and add a controlled development seed execution workflow for assets before adding analytics, AI, scrapers, authentication, or frontend integration.
+---
+
+## Session 008
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 006 by documenting the real development database workflow and adding a controlled manual asset seed command.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant markdown documentation under `docs/` before implementation.
+* Updated `backend/.env.example` to include `APP_NAME`, `APP_VERSION`, `APP_ENV`, `APP_DEBUG`, `DATABASE_URL`, and `CORS_ORIGINS` without real credentials.
+* Updated settings to accept `APP_ENV` while preserving compatibility with the prior `ENVIRONMENT` variable.
+* Added `python -m app.database.seed` as a manual development-only seed command.
+* Implemented duplicate-aware asset seeding that inserts missing tickers and skips existing tickers.
+* Added seed command logging and rollback behavior on SQLAlchemy errors.
+* Added tests for seed data shape, ticker normalization, insert behavior, and duplicate prevention using in-memory SQLite.
+* Updated backend README with local PostgreSQL setup, hosted PostgreSQL setup, migration workflow, and seed workflow instructions.
+* Updated `PROJECT_STATE.md` for Sprint 006.
+* Verified the backend health endpoint still works and no automatic seed execution was added.
+
+Files Created:
+
+* `backend/app/database/seed.py`
+* `backend/tests/test_seed_command.py`
+
+Files Modified:
+
+* `backend/.env.example`
+* `backend/app/core/config.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Development asset seeding is an explicit manual command and does not run on FastAPI startup.
+* Seed execution uses configured SQLAlchemy sessions and the existing `DATABASE_URL` workflow.
+* Duplicate prevention is based on normalized ticker symbols before inserting.
+* Automated seed tests use in-memory SQLite so the test suite remains independent of live PostgreSQL credentials.
+* `APP_ENV` is now supported as the preferred environment variable name, while `ENVIRONMENT` remains compatible.
+* No frontend changes, authentication, asset write APIs, analytics, AI, scrapers, notifications, or deployment work were implemented.
+
+Validation Results:
+
+* `python -m pytest`: passed, 24 tests collected and passed. Pytest emitted one non-blocking cache-write warning in the sandbox.
+* `python -m alembic current`: passed; Alembic loaded and reported PostgreSQL revision lookup deferred because local `postgres` credentials failed authentication.
+* `python -m uvicorn app.main:app --reload`: passed; server started without startup errors.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8000/api/v1/health`: passed and returned the expected success envelope.
+* Real migration and seed execution are deferred until `DATABASE_URL` points to a valid PostgreSQL database.
+
+Known Issues Update:
+
+* Resolved: Controlled development seed execution workflow did not exist; `python -m app.database.seed` now exists.
+* Resolved: Database workflow documentation was incomplete; backend README now documents local/hosted PostgreSQL, migrations, and seeding.
+* Unresolved: Real migration execution is deferred until PostgreSQL credentials are configured.
+* Unresolved: Real seed execution is deferred until PostgreSQL credentials are configured and migrations are applied.
+* Unresolved: Live asset endpoint database testing is deferred until a configured PostgreSQL database is migrated and seeded.
+* Unresolved: Asset create/update/delete endpoints are not implemented by design.
+* Unresolved: Authentication, analytics, AI, scrapers, notifications, and frontend data integration are not implemented.
+* Unresolved: `docs/ai/ai-agent-rules.md` is empty.
+
+Sprint Summary:
+
+* Sprint 006 completed the development database workflow foundation. The backend now documents local and hosted PostgreSQL setup, supports the required environment variables, and includes a safe manual duplicate-aware seed command for development assets.
+
+Next Recommended Task:
+
+* Sprint 007: validate the workflow against a real PostgreSQL database by setting `DATABASE_URL`, running `python -m alembic upgrade head`, running `python -m app.database.seed`, and smoke-testing the read-only asset endpoints against seeded data.
