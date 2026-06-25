@@ -9,31 +9,32 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 006
+Sprint Number: Sprint 007
 
-Sprint Goal: Configure a real development database workflow and add a controlled manual asset seed execution system.
+Sprint Goal: Validate the backend against a real PostgreSQL development database and smoke-test asset read endpoints with real seeded data.
 
 Current Tasks:
 
-* [x] Document local PostgreSQL setup.
-* [x] Document hosted PostgreSQL setup.
-* [x] Document required environment variables and `DATABASE_URL` workflow.
-* [x] Document Alembic migration commands.
-* [x] Document development asset seeding.
-* [x] Update `.env.example` with `APP_NAME`, `APP_VERSION`, `APP_ENV`, `APP_DEBUG`, `DATABASE_URL`, and `CORS_ORIGINS`.
-* [x] Add a manual duplicate-aware development asset seed command.
-* [x] Add tests for seed data shape, ticker normalization, insert behavior, and duplicate prevention.
-* [x] Validate pytest, Alembic load, uvicorn startup, and health endpoint.
+* [x] Checked local PostgreSQL availability.
+* [x] Created local `backend/.env` from `.env.example` without committing credentials.
+* [x] Added `backend/.env` to `.gitignore` so local credentials cannot be committed accidentally.
+* [x] Set a local development `DATABASE_URL` placeholder in ignored `.env`.
+* [x] Ran live migration and seed validation commands.
+* [x] Smoke-tested health and asset routes against the current backend process.
+* [x] Documented blockers preventing real migration, seed, and seeded endpoint success.
+* [x] Reviewed Sprint 007 repository changes before commit.
+* [x] Categorized repository-safe changes and local-only files.
+* [x] Confirmed `backend/.env` is ignored and untracked.
+* [x] Revalidated tests, Alembic configuration loading, backend startup, and health endpoint.
 
 Sprint Exit Criteria:
 
-* `DATABASE_URL` workflow is clearly documented.
-* Seed command exists and is manually run only.
-* Seed command is duplicate-aware.
-* Tests pass without requiring live PostgreSQL.
-* Backend health endpoint still works.
-* No automatic seeding occurs.
-* Documentation is updated.
+* Real PostgreSQL connection is configured locally or setup blocker is clearly documented.
+* Migration runs successfully, or blocker is clearly documented.
+* Seed command runs successfully, or blocker is clearly documented.
+* Asset endpoints are tested against seeded data, or blocker is clearly documented.
+* No credentials are committed.
+* Project state and context are updated.
 
 ---
 
@@ -43,7 +44,7 @@ Frontend: Stable
 
 Backend: Stable
 
-Database: In Progress
+Database: In Progress - blocked on valid local PostgreSQL credentials
 
 Authentication: Not Started
 
@@ -73,7 +74,7 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset domain model and migration added; read-only asset API exists; manual duplicate-aware asset seed command exists
+Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset domain model and migration added; read-only asset API exists; manual duplicate-aware asset seed command exists; real migration/seed blocked by local PostgreSQL authentication
 
 State Management: Zustand, TanStack Query
 
@@ -87,7 +88,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health, database foundation, asset model, asset schema, asset service, asset routes, seed data, and seed command tests pass; frontend lint/type-check/build validation previously passes
+Testing: Backend health, database foundation, asset model, asset schema, asset service, asset routes, seed data, and seed command tests pass; live database smoke testing blocked by local PostgreSQL authentication
 
 ---
 
@@ -134,6 +135,7 @@ investguide/
 |-- AGENT.md
 |-- PROJECT_STATE.md
 |-- context.md
+|-- .gitignore
 `-- README.md
 ```
 
@@ -143,15 +145,19 @@ investguide/
 
 The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, Alembic migration scaffolding wired to application settings, the asset domain model/migration, read-only asset endpoints, and a controlled manual seed command for development assets.
 
-The backend intentionally contains no authentication, users, asset write routes, analytics, AI, scrapers, notifications, or business workflow logic. Alembic can load the migration environment and asset revision; actual migration execution and real seed execution require a configured PostgreSQL `DATABASE_URL`.
+Sprint 007 validated the workflow far enough to confirm a PostgreSQL listener is available at `localhost:5432`, but the configured local development database user is not authenticated. Migration, seed execution, and live seeded asset endpoint tests remain blocked until valid PostgreSQL credentials/database/user are configured.
+
+The backend intentionally contains no authentication, users, asset write routes, analytics, AI, scrapers, notifications, or business workflow logic.
 
 ---
 
 ## Current Blockers
 
-* Real migration execution is blocked until valid local or hosted PostgreSQL credentials are configured.
-* Real seed execution is blocked until `DATABASE_URL` points to a migrated PostgreSQL database.
-* Live asset endpoint database testing is blocked until PostgreSQL credentials are configured, migrations are applied, and assets are seeded.
+* Local PostgreSQL client commands `psql` and `pg_isready` are not available on PATH.
+* Port `8000` still has a persistent listener on PID `4288`; current-app smoke testing can use alternate port `8001` until that local process is cleared.
+* Real migration execution is blocked by PostgreSQL authentication failure for the configured local development user.
+* Real seed execution is blocked by the same PostgreSQL authentication failure.
+* Live asset endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and assets are seeded.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
@@ -161,23 +167,22 @@ The backend intentionally contains no authentication, users, asset write routes,
 
 ## Next Immediate Task
 
-Sprint 007 should validate the real database workflow against a configured PostgreSQL instance: set `DATABASE_URL`, run `python -m alembic upgrade head`, run `python -m app.database.seed`, and smoke-test `GET /api/v1/assets` and `GET /api/v1/assets/{ticker}` against real seeded data. Do not add analytics, AI, scrapers, authentication, or frontend integration until the live database path is verified.
+Sprint 008 should resolve the remaining local database blocker: install/expose PostgreSQL client tools, create or verify the `investguide_dev` database and application user, update ignored `backend/.env` with valid local credentials, rerun `python -m alembic upgrade head`, rerun `python -m app.database.seed`, and smoke-test asset endpoints against seeded data.
 
 ---
 
 ## Definition of Done
 
-Sprint 006 is complete because:
+Sprint 007 is complete with blockers documented because:
 
-* Local and hosted PostgreSQL setup instructions are documented.
-* `DATABASE_URL`, migration, and seed workflows are documented.
-* `.env.example` includes the required Sprint 006 environment variables without real credentials.
-* The manual command `python -m app.database.seed` exists.
-* The seed command inserts missing assets and skips duplicate tickers.
-* Seed tests pass without requiring live PostgreSQL.
-* Backend health endpoint still works.
-* No automatic seeding, frontend changes, auth, asset writes, analytics, AI, scrapers, notifications, or deployment work was added.
-* Documentation is updated.
+* Local `.env` was created from `.env.example` and ignored by git.
+* `DATABASE_URL` was set for a local development attempt without committing credentials.
+* Migration command was run and reached PostgreSQL, but failed authentication.
+* Seed command was run and failed on the same authentication blocker.
+* Health endpoint passed on the current backend process.
+* Asset list/detail endpoints were smoke-tested on the current backend process and failed only because database authentication is blocked.
+* Minimal workflow fixes were made for CORS dotenv parsing and `.env` git safety.
+* Project state and context are updated.
 
 ---
 
@@ -185,15 +190,18 @@ Sprint 006 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 006 development database workflow documentation and manual duplicate-aware asset seed command with tests and validation.
+* Completed Task: Completed Sprint 007 repository review before commit, categorized repository versus local-only changes, applied a minimal CORS settings parser correction, and revalidated backend checks.
 
 ---
 
 ## Validation Results
 
-* Backend tests: passed with `python -m pytest` from `backend/`; 24 tests passed. Pytest emitted a non-blocking cache-write warning in this sandbox.
-* Alembic load: passed with `python -m alembic current`; PostgreSQL revision lookup was deferred because local database credentials are not configured.
-* Server startup: passed with `python -m uvicorn app.main:app --reload` from `backend/`.
-* Health endpoint: passed with `GET http://127.0.0.1:8000/api/v1/health`.
-* Runtime: uvicorn started without startup errors; health endpoint returned the expected success envelope.
-* Real migration and seed execution: deferred until `DATABASE_URL` points to a valid PostgreSQL database.
+* Git review: `git status --short` shows only repository-safe tracked changes: `.gitignore`, `PROJECT_STATE.md`, `backend/README.md`, `backend/app/core/config.py`, and `context.md`.
+* Local-only files: `backend/.env` exists for local development validation, is ignored by `.gitignore`, and is not tracked by git.
+* Repository review: no credentials, hardcoded local filesystem paths, machine-specific assumptions, frontend changes, or feature additions were found in Sprint 007 changes.
+* Config review: `CORS_ORIGINS` supports comma-separated dotenv values and documented JSON-array strings using explicit settings parsing.
+* Tests: `python -m pytest` passed, 24 tests passed with one non-blocking pytest cache permission warning.
+* Alembic: `python -m alembic current` exited successfully and loaded configuration; database revision lookup remains deferred because PostgreSQL authentication fails for the configured local development user.
+* Server startup: `python -m uvicorn app.main:app --reload` was run; port `8000` still has a persistent local listener on PID `4288`, so current-app smoke testing was verified on alternate port `8001`.
+* Health endpoint: `GET /api/v1/health` passed on `127.0.0.1:8001` and returned the expected success envelope.
+* Migration/seed/live seeded assets: still blocked until valid PostgreSQL credentials and database/user setup are available.

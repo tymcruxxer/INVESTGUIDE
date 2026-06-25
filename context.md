@@ -693,3 +693,144 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 007: validate the workflow against a real PostgreSQL database by setting `DATABASE_URL`, running `python -m alembic upgrade head`, running `python -m app.database.seed`, and smoke-testing the read-only asset endpoints against seeded data.
+---
+
+## Session 009
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 007 by validating the backend against a real PostgreSQL development database and smoke-testing asset read endpoints with real seeded data.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant markdown documentation under `docs/` before implementation.
+* Checked local PostgreSQL tooling; `psql` and `pg_isready` are not available on PATH.
+* Created local `backend/.env` from `.env.example` and set a local development `DATABASE_URL` placeholder without committing credentials.
+* Added `backend/.env` to `.gitignore` after discovering it was not ignored.
+* Ran `python -m alembic upgrade head`; the command reached PostgreSQL but failed authentication for the configured local development user.
+* Ran `python -m app.database.seed`; the command failed on the same PostgreSQL authentication blocker before inserting data.
+* Started the backend with `python -m uvicorn app.main:app --reload`; port `8000` was occupied by inaccessible stale PID `4288`.
+* Smoke-tested the current backend on alternate port `8001` using `python -m uvicorn app.main:app --reload --port 8001`.
+* Verified `GET /api/v1/health` succeeds on the current app.
+* Smoke-tested `GET /api/v1/assets`, `GET /api/v1/assets/DELTA`, `GET /api/v1/assets/ECO`, and `GET /api/v1/assets/TIGERE`; routes were reached but returned 500 because PostgreSQL authentication is blocked.
+* Fixed `.env` parsing for comma-separated `CORS_ORIGINS` by marking the settings field with `NoDecode`.
+* Updated backend README with setup notes for PostgreSQL client tools and alternate dev port usage.
+* Updated `PROJECT_STATE.md` for Sprint 007.
+
+Files Created:
+
+* None committed. A local ignored `backend/.env` file was created for validation only.
+
+Files Modified:
+
+* `.gitignore`
+* `backend/app/core/config.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* No business architecture was changed.
+* Local credentials remain outside git in ignored `backend/.env`.
+* `CORS_ORIGINS` now explicitly bypasses pydantic-settings JSON decoding so comma-separated dotenv values work as documented.
+* Port `8001` was used only for smoke testing because port `8000` is occupied by inaccessible stale PID `4288` in this local environment.
+* No frontend changes, authentication, asset writes, analytics, AI, scrapers, or deployment work were implemented.
+
+Validation Results:
+
+* Local PostgreSQL tooling: `psql` and `pg_isready` were not available on PATH.
+* Database connection: PostgreSQL listener was reachable on `localhost:5432`, but authentication failed for the configured local development user.
+* `python -m alembic upgrade head`: failed due PostgreSQL authentication.
+* `python -m app.database.seed`: failed due PostgreSQL authentication.
+* `python -m uvicorn app.main:app --reload`: port `8000` was blocked by stale PID `4288`.
+* `python -m uvicorn app.main:app --reload --port 8001`: started current backend successfully for smoke testing.
+* `GET /api/v1/health`: passed on current backend and returned the expected success envelope.
+* `GET /api/v1/assets`: reached route but returned 500 due PostgreSQL authentication failure.
+* `GET /api/v1/assets/DELTA`: reached route but returned 500 due PostgreSQL authentication failure.
+* `GET /api/v1/assets/ECO`: reached route but returned 500 due PostgreSQL authentication failure.
+* `GET /api/v1/assets/TIGERE`: reached route but returned 500 due PostgreSQL authentication failure.
+* `python -m pytest`: passed, 24 tests collected and passed. Pytest emitted one non-blocking cache-write warning in the sandbox.
+
+Known Issues Update:
+
+* Resolved: `backend/.env` was not ignored; `.gitignore` now ignores it.
+* Resolved: comma-separated `CORS_ORIGINS` from `.env` failed settings parsing; `NoDecode` now lets the existing validator parse it.
+* Unresolved: PostgreSQL client tools are not available on PATH.
+* Unresolved: Port `8000` is occupied by inaccessible stale PID `4288`.
+* Unresolved: Real migration execution is blocked by PostgreSQL authentication.
+* Unresolved: Real seed execution is blocked by PostgreSQL authentication.
+* Unresolved: Seeded asset endpoint success is blocked until the database is migrated and seeded.
+* Unresolved: Asset create/update/delete endpoints are not implemented by design.
+* Unresolved: Authentication, analytics, AI, scrapers, notifications, and frontend data integration are not implemented.
+* Unresolved: `docs/ai/ai-agent-rules.md` is empty.
+
+Sprint Summary:
+
+* Sprint 007 validated the live database workflow as far as the local environment allows. The backend code path reaches PostgreSQL and asset routes are mounted, but real migration, seeding, and seeded asset endpoint success are blocked by missing/invalid local database credentials and a stale process occupying port `8000`.
+
+Next Recommended Task:
+
+* Sprint 008: fix the local environment by installing PostgreSQL client tools, clearing stale port `8000` PID `4288` or standardizing an alternate dev port, creating the `investguide_dev` database and application user, updating ignored `backend/.env` with valid credentials, then rerunning migration, seed, and asset endpoint smoke tests.
+---
+
+## Session 010
+
+Date: 2026-06-25
+
+Objective: Review Sprint 007 changes before commit and separate repository improvements from local development environment files.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, and `context.md` before making review changes.
+* Ran `git status --short` and confirmed tracked changes are limited to repository-safe files.
+* Confirmed `backend/.env` is local-only, ignored by `.gitignore`, and not tracked by git.
+* Reviewed `.gitignore`, `backend/app/core/config.py`, and `backend/README.md` for credentials, machine-specific paths, hardcoded local assumptions, and temporary hacks.
+* Applied a minimal settings parser correction so `CORS_ORIGINS` supports both comma-separated dotenv values and documented JSON-array strings.
+* Revalidated backend tests, Alembic configuration loading, uvicorn startup, and the health endpoint.
+* Updated `PROJECT_STATE.md` with the current review outcome and remaining blocker.
+
+Files Created:
+
+* None.
+
+Files Modified:
+
+* `backend/app/core/config.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Repository Review Classification:
+
+* Group A - safe to commit: `.gitignore`, `backend/app/core/config.py`, `backend/README.md`, `PROJECT_STATE.md`, `context.md`.
+* Group B - local development only: `backend/.env`; it must remain untracked and ignored.
+
+Architectural Decisions:
+
+* No architecture changes were made.
+* No frontend, authentication, analytics, AI, scraper, deployment, or new business feature work was performed.
+* Local development credentials remain outside git in ignored `backend/.env`.
+
+Validation Results:
+
+* `python -m pytest`: passed, 24 tests passed with one non-blocking pytest cache permission warning.
+* `python -m alembic current`: passed as a configuration-load check; database revision lookup is deferred because PostgreSQL authentication fails for the configured local development user.
+* `python -m uvicorn app.main:app --reload`: run during review; port `8000` still has a persistent local listener on PID `4288`, so current-app smoke testing was verified with `python -m uvicorn app.main:app --reload --port 8001`.
+* `GET http://127.0.0.1:8001/api/v1/health`: passed and returned the expected success envelope.
+* `git status --short`: tracked changes are `.gitignore`, `PROJECT_STATE.md`, `backend/README.md`, `backend/app/core/config.py`, and `context.md`.
+* `git check-ignore -v backend/.env`: confirmed `backend/.env` is ignored by `.gitignore`.
+
+Known Issues Update:
+
+* Resolved for current review: repository changes are categorized and safe to commit, excluding local `backend/.env`.
+* Unresolved: PostgreSQL client tools are not available on PATH.
+* Unresolved: port `8000` still has a persistent local listener on PID `4288`.
+* Unresolved: real migration, seed execution, and seeded asset endpoint success remain blocked by PostgreSQL authentication for the configured local development user.
+
+Sprint Summary:
+
+* Sprint 007 review confirmed the repository contains only project improvements plus an ignored local `.env`. Backend validation is green except for the expected PostgreSQL credential blocker.
+
+Next Recommended Task:
+
+* Sprint 008: resolve local PostgreSQL setup by installing/exposing client tools, creating or verifying the development database/user, updating ignored `backend/.env` with valid credentials, then rerunning migration, seed, and seeded asset endpoint smoke tests.

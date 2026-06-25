@@ -1,10 +1,11 @@
 """Application configuration."""
 
+import json
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import AliasChoices, Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -21,7 +22,7 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL",
     )
 
-    cors_origins: list[str] = Field(
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"],
         validation_alias="CORS_ORIGINS",
     )
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
             if not value:
                 return []
             if value.startswith("["):
-                return value
+                return json.loads(value)
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
@@ -53,4 +54,3 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return cached application settings."""
     return Settings()
-

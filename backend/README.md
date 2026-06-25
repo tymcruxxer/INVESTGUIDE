@@ -42,6 +42,8 @@ Do not commit real database passwords or hosted database credentials.
 
 ## Local PostgreSQL Setup
 
+Install PostgreSQL server and client tools, and ensure commands such as `psql` are available on your PATH. Start the PostgreSQL service before running migrations.
+
 Create a local development database and user using your PostgreSQL client. Example SQL:
 
 ```sql
@@ -134,6 +136,12 @@ If `DATABASE_URL` is not configured or the assets table has not been migrated, r
 
 ```bash
 uvicorn app.main:app --reload
+```
+
+If port `8000` is already occupied by another local process, use an alternate port for development smoke tests:
+
+```bash
+python -m uvicorn app.main:app --reload --port 8001
 ```
 
 Health check:
