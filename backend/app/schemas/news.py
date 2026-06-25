@@ -14,6 +14,7 @@ class NewsBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=500)
     summary: str | None = None
     content: str | None = None
+    content_hash: str | None = Field(default=None, min_length=64, max_length=64)
     source: str = Field(..., min_length=1, max_length=150)
     author: str | None = Field(default=None, max_length=150)
     published_at: datetime

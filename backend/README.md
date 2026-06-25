@@ -2,7 +2,7 @@
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes.
+This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes, and persisted content hashes for scalable duplicate detection.
 
 Business features such as authentication, asset/news write endpoints, analytics, AI, scrapers, notifications, and production deployment are intentionally not implemented yet.
 
@@ -37,6 +37,7 @@ Environment variables:
 * `LOG_LEVEL` - logging level
 * `DATABASE_URL` - SQLAlchemy database URL
 * `CORS_ORIGINS` - comma-separated allowed origins or a JSON array string
+* `INGESTION_MODE` - internal ingestion adapter mode, `DRY_RUN` or `WRITE`; defaults to `DRY_RUN`
 
 Do not commit real database passwords or hosted database credentials.
 
@@ -270,6 +271,48 @@ The news foundation is implemented for future scraper and AI modules:
 * Read-only routes: `app/api/v1/news.py`
 * Development sample data: `app/database/seed_news.py`
 * Alembic migration: `alembic/versions/20260625_0002_create_news_articles_table.py`
+* Content hash migration: `alembic/versions/20260625_0003_add_news_content_hash.py`
+
+
+## Internal News Ingestion Adapter
+
+Sprint 011 adds an internal backend adapter for normalized news ingestion payloads:
+
+* Endpoint: `POST /api/v1/ingestion/news`
+* Default behavior: dry-run report only through `INGESTION_MODE=DRY_RUN`
+* Optional write behavior: set `INGESTION_MODE=WRITE` or pass request `mode: "WRITE"`
+* Duplicate checks: URL, stored indexed `content_hash`, normalized title, and published timestamp where appropriate
+* Asset resolution: links active asset tickers, warns for missing or inactive tickers
+* Hash ownership: backend generates the canonical SHA-256 `content_hash` before persistence and ignores caller-supplied hashes for stored records
+* Transaction handling: each article commits only after validation, duplicate checks, mapping, and relationship resolution; failures roll back the article
+
+This endpoint is intended for internal ingestion workflows only. It accepts normalized backend-compatible payloads, not raw scraper output, and it is not a public user-facing API.
+
+Request shape:
+
+```json
+{
+  "mode": "DRY_RUN",
+  "articles": [
+    {
+      "title": "Sample normalized article",
+      "source": "Financial Gazette",
+      "published_at": "2026-06-25T08:00:00Z",
+      "summary": "Development summary.",
+      "content": "Development article body.",
+      "url": "https://example.com/article",
+      "language": "en",
+      "asset_tickers": ["DLTA"],
+      "credibility_score": 0.7,
+      "content_hash": "optional-caller-hash-backend-regenerates-before-write"
+    }
+  ]
+}
+```
+
+Report fields include `articles_received`, `articles_written`, `duplicates_skipped`, `failed_articles`, `assets_linked`, `execution_time`, `errors`, `warnings`, `mode`, and per-article results. The persisted `news_articles.content_hash` column is fixed-length 64 characters, indexed, unique, and non-nullable.
+
+Automated write-mode coverage uses in-memory SQLite. Live PostgreSQL ingestion requires valid `DATABASE_URL`, applied migrations, and seeded assets.
 
 ## Asset Domain Foundation
 
@@ -298,7 +341,8 @@ backend/
 |-- alembic/
 |   |-- versions/
 |   |   |-- 20260625_0001_create_assets_table.py
-|   |   `-- 20260625_0002_create_news_articles_table.py
+|   |   |-- 20260625_0002_create_news_articles_table.py
+|   |   `-- 20260625_0003_add_news_content_hash.py
 |   |-- env.py
 |   `-- script.py.mako
 |-- app/
@@ -306,6 +350,8 @@ backend/
 |   |   `-- v1/
 |   |       |-- assets.py
 |   |       |-- health.py
+|   |       |-- ingestion.py
+|   |       |-- news.py
 |   |       `-- router.py
 |   |-- core/
 |   |   |-- config.py
@@ -328,9 +374,13 @@ backend/
 |   |-- schemas/
 |   |   |-- __init__.py
 |   |   |-- asset.py
+|   |   |-- ingestion_report.py
 |   |   `-- news.py
 |   |-- services/
+|   |   |-- asset_resolution_service.py
 |   |   |-- asset_service.py
+|   |   |-- duplicate_service.py
+|   |   |-- ingestion_service.py
 |   |   `-- news_service.py
 |   |-- utils/
 |   `-- main.py
@@ -341,6 +391,7 @@ backend/
 |   |-- test_asset_service.py
 |   |-- test_database.py
 |   |-- test_health.py
+|   |-- test_ingestion_adapter.py
 |   |-- test_news_model.py
 |   |-- test_news_routes.py
 |   |-- test_news_schema.py

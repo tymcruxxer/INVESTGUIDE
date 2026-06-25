@@ -2,7 +2,7 @@
 
 import json
 from functools import lru_cache
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     )
 
     log_level: str = "INFO"
+    ingestion_mode: Literal["DRY_RUN", "WRITE"] = Field(
+        default="DRY_RUN",
+        validation_alias="INGESTION_MODE",
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -47,6 +51,14 @@ class Settings(BaseSettings):
             if value.startswith("["):
                 return json.loads(value)
             return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("ingestion_mode", mode="before")
+    @classmethod
+    def normalize_ingestion_mode(cls, value: Any) -> Any:
+        """Allow operators to provide ingestion mode case-insensitively."""
+        if isinstance(value, str):
+            return value.strip().upper()
         return value
 
 

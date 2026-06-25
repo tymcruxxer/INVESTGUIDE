@@ -1070,3 +1070,145 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 011: implement a persistence-ready ingestion adapter behind an explicit dry-run/write boundary, including backend model mapping and duplicate lookup interfaces, while keeping writes disabled by default and tests database-free or SQLite-only.
+
+---
+
+## Session 014
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 011 by converting the dry-run ingestion pipeline into a production-ready backend ingestion adapter without live scraping, external websites, scheduling, AI, sentiment, embeddings, RAG, frontend changes, or authentication.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Added `INGESTION_MODE` configuration with allowed values `DRY_RUN` and `WRITE`, defaulting to `DRY_RUN`.
+* Added backend ingestion report and request schemas for normalized news payloads.
+* Added duplicate detection by URL, normalized title, content hash, and published timestamp where appropriate.
+* Added asset resolution for active, missing, and inactive ticker relationships.
+* Added ingestion service that validates payloads, rejects malformed payloads, checks duplicates, maps payloads to the `News` model, resolves asset relationships, supports dry-run/write modes, and rolls back failed writes.
+* Added internal `POST /api/v1/ingestion/news` endpoint returning the global response envelope.
+* Added SQLite-backed tests for duplicate detection, dry-run mode, write mode, rollback behavior, asset resolution, malformed payload rejection, missing assets, duplicate URLs, duplicate hashes, duplicate titles, route registration, and response shape.
+* Updated `backend/README.md`, `PROJECT_STATE.md`, and `context.md` for Sprint 011.
+
+Files Created:
+
+* `backend/app/api/v1/ingestion.py`
+* `backend/app/schemas/ingestion_report.py`
+* `backend/app/services/asset_resolution_service.py`
+* `backend/app/services/duplicate_service.py`
+* `backend/app/services/ingestion_service.py`
+* `backend/tests/test_ingestion_adapter.py`
+
+Files Modified:
+
+* `backend/.env.example`
+* `backend/README.md`
+* `backend/app/api/v1/router.py`
+* `backend/app/core/config.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* The backend ingestion adapter accepts normalized payloads only and does not import scraper execution code.
+* `INGESTION_MODE` defaults to `DRY_RUN` so persistence is opt-in.
+* Write mode uses article-level transaction boundaries: validate, duplicate-check, resolve assets, map, commit, and rollback on failure.
+* Definite duplicates and possible duplicates are skipped to prevent accidental duplicate persistence.
+* Asset resolution links only active assets and reports missing or inactive tickers as warnings instead of hard failures.
+* Content hash duplicate detection is computed at ingestion time because the current `news_articles` table does not yet persist a `content_hash` column.
+* The ingestion endpoint is internal, not public, and no authentication layer was added in this sprint.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 60 tests passed.
+* `python -m alembic current` from `backend/`: Alembic configuration loaded; current revision lookup deferred because local PostgreSQL authentication failed for user `investguide_user`.
+* `python -m uvicorn app.main:app --reload --port 8001`: backend started successfully.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8001/api/v1/health`: returned `success=True`, `message=Backend is healthy`, `status=ok`, `version=0.1.0-alpha`.
+* Dry-run ingestion validation: covered by SQLite-backed automated tests, no database writes in dry-run mode.
+* Write-mode ingestion validation: covered by SQLite-backed automated tests, including asset relationships and rollback behavior.
+
+Known Issues Update:
+
+* Resolved: backend ingestion adapter, duplicate service, asset resolution service, transaction boundaries, dry-run/write modes, internal ingestion endpoint, and ingestion tests did not exist; Sprint 011 implemented them.
+* Unresolved: real PostgreSQL migration, seed, and live ingestion endpoint validation remain blocked by local PostgreSQL authentication failure for `investguide_user`.
+* Unresolved: local `psql` and `pg_isready` commands are still not available on PATH.
+* Unresolved: port `8000` still has a persistent local listener on PID `4288`; smoke testing used port `8001`.
+* Unresolved: `news_articles` does not persist `content_hash`; duplicate hash checks are computed from existing article title/summary/content during ingestion.
+* Unresolved: live scraping, source-specific parsing, AI, sentiment analysis, embeddings, RAG, scheduling, authentication, notifications, analytics, and frontend integration remain intentionally unimplemented.
+
+Sprint Summary:
+
+* Sprint 011 completed the backend ingestion adapter foundation. InvestGuide can now accept structured normalized investment news payloads, report dry-run outcomes by default, optionally persist records in write mode, attach active asset relationships, prevent duplicates conservatively, and roll back failed article writes.
+
+Next Recommended Task:
+
+* Sprint 012: fix local PostgreSQL credentials, run migrations and asset seed against PostgreSQL, then validate `POST /api/v1/ingestion/news` against a real database in both `DRY_RUN` and `WRITE` modes with duplicate-prevention smoke tests. Do not add live scraping, AI, scheduling, authentication, or frontend integration yet.
+
+---
+
+## Session 015
+
+Date: 2026-06-25
+
+Objective: Complete a technical improvement before Sprint 012 by persisting deterministic news `content_hash` values for scalable duplicate detection without adding product features.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added `backend/app/utils/hashing.py` as the single source of truth for title normalization and SHA-256 content hash generation.
+* Added `content_hash` to the `News` SQLAlchemy model as a fixed-length 64-character, non-nullable, indexed, unique column.
+* Added an ORM `before_insert` safety net so direct `News` inserts receive the canonical content hash if one is not supplied.
+* Added a new Alembic migration `20260625_0003_add_news_content_hash.py` without modifying previous migrations.
+* Updated duplicate detection to prioritize URL, stored `content_hash`, normalized title, and published timestamp, computing the incoming hash once and avoiding recomputing hashes for stored rows.
+* Updated ingestion persistence to generate and assign the backend-owned content hash before storing a `News` record.
+* Updated schemas so `content_hash` can be represented where needed without becoming a required public API input.
+* Added tests for deterministic hash generation, hash differences, hash normalization, model metadata, migration registration, duplicate detection by stored hash, and ingestion hash persistence.
+* Updated backend README and project state documentation.
+
+Files Created:
+
+* `backend/app/utils/hashing.py`
+* `backend/alembic/versions/20260625_0003_add_news_content_hash.py`
+* `backend/tests/test_hashing.py`
+* `backend/tests/test_migrations.py`
+
+Files Modified:
+
+* `backend/app/models/news.py`
+* `backend/app/schemas/news.py`
+* `backend/app/services/duplicate_service.py`
+* `backend/app/services/ingestion_service.py`
+* `backend/tests/test_ingestion_adapter.py`
+* `backend/tests/test_news_model.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Persisted `news_articles.content_hash` is now the scalable duplicate-detection path for article content identity.
+* The backend owns hash generation; caller-supplied hashes remain optional compatibility data and are not trusted for persisted records.
+* `generate_content_hash()` centralizes hashing logic to avoid drift between ingestion, duplicate detection, ORM defaults, migrations, and tests.
+* The migration backfills existing rows with Python SHA-256 hashing before applying non-null, index, and unique constraints.
+* Existing migrations were not modified.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 65 tests passed.
+* `python -m alembic current` from `backend/`: Alembic configuration loaded successfully, including the new migration chain; current revision lookup remains deferred because local PostgreSQL authentication fails for `investguide_user`.
+
+Known Issues Update:
+
+* Resolved: `news_articles` did not persist `content_hash`; it now does.
+* Unresolved: live PostgreSQL migration execution remains blocked by local PostgreSQL authentication failure.
+* Unresolved: existing duplicate article rows, if any exist in a real database, must be cleaned before applying the unique `content_hash` constraint.
+* Unresolved: live scraping, scheduling, AI, sentiment analysis, embeddings, RAG, authentication, analytics, and frontend integration remain intentionally unimplemented.
+
+Session Summary:
+
+* Completed the pre-Sprint-012 scalability improvement for news duplicate detection. Stored news articles now have a deterministic, indexed, unique content hash generated by backend-owned logic, and ingestion/duplicate detection use that persisted value.
+
+Next Recommended Task:
+
+* Sprint 012: fix local PostgreSQL credentials, run migrations through `20260625_0003_add_news_content_hash`, seed assets, and validate real PostgreSQL ingestion in `DRY_RUN` and `WRITE` modes with content-hash duplicate prevention.
