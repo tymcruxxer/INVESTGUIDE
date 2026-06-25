@@ -554,3 +554,73 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 005: implement the backend asset repository/service/API read foundation for listing assets and retrieving asset detail through `/api/v1/assets`, using the existing response envelope and asset schemas, without adding authentication, analytics, AI, scrapers, or frontend changes.
+---
+
+## Session 007
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 005 by implementing only the backend read-only asset API foundation.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant markdown documentation under `docs/` before implementation.
+* Added `asset_service.list_assets` with optional filters for exchange, sector, asset type, status, and search query.
+* Added `asset_service.get_asset_by_ticker` with case-insensitive ticker lookup.
+* Added pagination support with `page` and `limit`.
+* Added read-only `GET /api/v1/assets` endpoint.
+* Added read-only `GET /api/v1/assets/{ticker}` endpoint.
+* Registered asset routes under `/api/v1/assets`.
+* Used the existing response envelope for successful asset responses and 404 not-found responses.
+* Added route tests for registration, list response shape, and asset detail not-found response.
+* Added service tests for filtering, search, pagination, and ticker lookup using in-memory SQLite so no live PostgreSQL database is required.
+* Updated backend README and `PROJECT_STATE.md` for Sprint 005.
+* Verified the backend health endpoint still works and no asset write endpoints were added.
+
+Files Created:
+
+* `backend/app/services/asset_service.py`
+* `backend/app/api/v1/assets.py`
+* `backend/tests/test_asset_routes.py`
+* `backend/tests/test_asset_service.py`
+
+Files Modified:
+
+* `backend/app/api/v1/router.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Asset read behavior is split into a service layer and FastAPI route layer to preserve backend module boundaries.
+* Asset list responses include pagination metadata using the existing `success_response` envelope.
+* Missing asset lookups return a route-level `JSONResponse` with the existing `error_response` envelope and `ASSET_NOT_FOUND` code.
+* Tests mock route service calls and use in-memory SQLite for service behavior, avoiding dependency on live PostgreSQL credentials.
+* No create, update, delete, authentication, market prices, dividends, analytics, AI, scrapers, seed automation, or frontend integration were implemented.
+
+Validation Results:
+
+* `python -m pytest`: passed, 20 tests collected and passed. Pytest emitted one non-blocking cache-write warning in the sandbox.
+* `python -m alembic current`: passed; Alembic loaded and reported PostgreSQL revision lookup deferred because local `postgres` credentials failed authentication.
+* `python -m uvicorn app.main:app --reload`: passed; server started without startup errors.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8000/api/v1/health`: passed and returned the expected success envelope.
+* Live asset endpoint database testing is deferred until PostgreSQL credentials are configured and the assets migration is applied.
+
+Known Issues Update:
+
+* Resolved: Asset business API endpoints were not implemented; read-only list/detail endpoints now exist.
+* Unresolved: Real migration execution is deferred until PostgreSQL credentials are configured.
+* Unresolved: Live asset endpoint database testing is deferred until PostgreSQL credentials are configured and migration is applied.
+* Unresolved: Asset create/update/delete endpoints are not implemented by design.
+* Unresolved: Authentication is not implemented.
+* Unresolved: Analytics, AI, scrapers, notifications, and frontend data integration are not implemented.
+* Unresolved: `docs/ai/ai-agent-rules.md` is empty.
+
+Sprint Summary:
+
+* Sprint 005 completed the backend read-only asset API foundation. InvestGuide now exposes asset list and detail routes using the existing response envelope, backed by a service layer and covered by tests that do not require PostgreSQL.
+
+Next Recommended Task:
+
+* Sprint 006: configure a real local or hosted PostgreSQL development database, apply the existing Alembic migration, and add a controlled development seed execution workflow for assets before adding analytics, AI, scrapers, authentication, or frontend integration.
