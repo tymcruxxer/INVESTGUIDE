@@ -9,35 +9,34 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 008
+Sprint Number: Sprint 009
 
-Sprint Goal: Build the News Intelligence Foundation without implementing scrapers, AI, external API calls, authentication, or frontend integration.
+Sprint Goal: Build the web scraping engine foundation for investment news without performing real web scraping, external website calls, database writes, AI, sentiment, embeddings, RAG, authentication, or frontend integration.
 
 Current Tasks:
 
-* [x] Created the `News` SQLAlchemy model.
-* [x] Added the `asset_news` many-to-many association table.
-* [x] Linked `Asset` and `News` through SQLAlchemy relationships.
-* [x] Created Pydantic news schemas.
-* [x] Created read-only news service functions.
-* [x] Created read-only `/api/v1/news` endpoints.
-* [x] Added development-only sample news data.
-* [x] Added Alembic migration for `news_articles` and `asset_news`.
-* [x] Added tests for news model, schemas, service behavior, and routes.
-* [x] Updated backend README, project state, and context.
+* [x] Created the base scraper interface and result/article contracts.
+* [x] Created fixture-only placeholder scrapers for Financial Gazette, NewsDay Business, Herald Business, ZSE announcements, VFEX market data, RBZ macro data, IH Securities, and MMC Capital.
+* [x] Created the normalization pipeline contract.
+* [x] Created the deduplication pipeline contract.
+* [x] Created the asset-linking contract using explicit keyword matching.
+* [x] Created the ingestion payload contract compatible with backend `NewsCreate` semantics.
+* [x] Added scraper tests that verify base behavior, fixtures, normalization, deduplication, asset linking, ingestion payloads, and no network calls.
+* [x] Added root `pytest.ini` so `python -m pytest` runs backend and scraper tests from the repository root.
+* [x] Updated scraper README, project state, and context.
 
 Sprint Exit Criteria:
 
-* News model exists.
-* Asset-news relationship exists.
-* News schemas exist.
-* News service exists.
-* Read-only News API exists.
-* Seed/sample data exists.
+* Scraper base interface exists.
+* Placeholder source scrapers exist.
+* Normalization pipeline exists.
+* Deduplication pipeline exists.
+* Asset linker exists.
+* Ingestion contract exists.
 * Tests pass.
-* Health endpoint still works.
-* No scraper code exists yet.
-* No AI code exists yet.
+* No real external network calls are made.
+* No database writes are made.
+* Project state and context are updated.
 
 ---
 
@@ -55,7 +54,7 @@ API: In Progress - health, read-only assets, and read-only news endpoints exist
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
-Scrapers: Not Started
+Scrapers: In Progress - foundation contracts and fixture-only placeholders exist; real fetching not implemented
 
 Analytics Engine: Not Started
 
@@ -63,7 +62,7 @@ AI/RAG: Not Started
 
 Notifications: Not Started
 
-Testing: In Progress
+Testing: In Progress - root pytest now runs backend and scraper tests
 
 Deployment: Not Started
 
@@ -79,6 +78,8 @@ Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
 Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
 
+Scraping: Python dataclass-based scraper contracts and fixture-only placeholder source modules; no requests, Playwright, browser automation, external calls, scheduler, or DB writes yet
+
 State Management: Zustand, TanStack Query
 
 Styling: TailwindCSS 3.4.x, CSS-variable theme tokens
@@ -91,7 +92,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health, database foundation, asset model/schema/service/routes, asset seed command, news model/schema/service/routes tests pass; live database smoke testing remains blocked by local PostgreSQL authentication
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 43 tests pass
 
 ---
 
@@ -102,49 +103,31 @@ investguide/
 |-- frontend/
 |-- backend/
 |   |-- alembic/
-|   |   |-- versions/
-|   |   |   |-- 20260625_0001_create_assets_table.py
-|   |   |   `-- 20260625_0002_create_news_articles_table.py
-|   |   |-- env.py
-|   |   `-- script.py.mako
 |   |-- app/
-|   |   |-- api/
-|   |   |   `-- v1/
-|   |   |       |-- assets.py
-|   |   |       |-- health.py
-|   |   |       |-- news.py
-|   |   |       `-- router.py
-|   |   |-- core/
-|   |   |-- database/
-|   |   |   |-- seed.py
-|   |   |   |-- seed_assets.py
-|   |   |   `-- seed_news.py
-|   |   |-- models/
-|   |   |   |-- asset.py
-|   |   |   |-- associations.py
-|   |   |   |-- mixins.py
-|   |   |   `-- news.py
-|   |   |-- schemas/
-|   |   |   |-- asset.py
-|   |   |   `-- news.py
-|   |   |-- services/
-|   |   |   |-- asset_service.py
-|   |   |   `-- news_service.py
-|   |   |-- utils/
-|   |   `-- main.py
 |   |-- tests/
 |   |-- .env.example
 |   |-- alembic.ini
 |   |-- README.md
 |   `-- requirements.txt
-|-- ai-services/
 |-- scrapers/
+|   |-- base_scraper.py
+|   |-- fixtures.py
+|   |-- news/
+|   |-- pipeline/
+|   |-- rbz/
+|   |-- research/
+|   |-- tests/
+|   |-- vfex/
+|   |-- zse/
+|   `-- README.md
+|-- ai-services/
 |-- shared/
 |-- infrastructure/
 |-- docs/
 |-- AGENT.md
 |-- PROJECT_STATE.md
 |-- context.md
+|-- pytest.ini
 |-- .gitignore
 `-- README.md
 ```
@@ -155,11 +138,11 @@ investguide/
 
 The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, and Alembic migration scaffolding wired to application settings.
 
-The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation now includes the news article model, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migration.
+The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migration.
 
-The news service queries the database when available and falls back to clearly marked development sample articles when PostgreSQL is unavailable. This keeps the foundation API testable before Sprint 009 scraper ingestion and before local database credentials are corrected.
+The scraper foundation now includes source-independent contracts, fixture-only source placeholders, normalization, deduplication, explicit asset linking, and a backend-compatible ingestion payload contract. Placeholder scrapers return local fixture articles only and do not call external websites or write to the database.
 
-The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, scrapers, notifications, or frontend integration.
+The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer intentionally contains no real HTTP fetching, browser automation, scheduling, sentiment, embeddings, RAG, or database persistence.
 
 ---
 
@@ -170,30 +153,30 @@ The backend intentionally contains no authentication, users, asset/news write ro
 * Real migration execution is blocked by PostgreSQL authentication failure for the configured local development user.
 * Real seed execution is blocked by the same PostgreSQL authentication failure.
 * Live database-backed asset/news endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and data is seeded/ingested.
+* Real scraper fetching is not implemented by design and requires source-specific parsing, rate limiting, robots.txt review, and network policy decisions in a future sprint.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
-* Dedicated frontend/backend CI is not implemented.
+* Dedicated CI is not implemented.
 
 ---
 
 ## Next Immediate Task
 
-Sprint 009 should introduce the web scraping engine foundation for investment news: create modular scraper interfaces and source-specific placeholders, normalization/deduplication contracts, article-to-asset linking workflow, and tests using fixtures. Do not implement AI, sentiment, embeddings, RAG, authentication, or frontend integration yet.
+Sprint 010 should implement the controlled news ingestion preparation layer: transform normalized scraper payloads into backend-compatible persistence commands, add duplicate-aware in-memory/dry-run ingestion orchestration, define source trust metadata, and keep execution dry-run only until PostgreSQL credentials and source-specific fetch rules are ready.
 
 ---
 
 ## Definition of Done
 
-Sprint 008 is complete because:
+Sprint 009 is complete because:
 
-* News model and asset-news relationship exist.
-* News schemas, service, and read-only API routes exist.
-* Development sample news data exists and is clearly marked as placeholder content.
-* Migration for news tables exists.
-* Tests pass without requiring live PostgreSQL.
-* Health and news endpoints work on the current backend process using development fallback data while local PostgreSQL remains blocked.
-* No scraper code, AI code, sentiment analysis, embeddings, RAG, authentication, or frontend integration was added.
+* Base scraper contracts exist.
+* Source-specific placeholder scrapers exist and return local fixtures only.
+* Normalization, deduplication, asset linking, and ingestion contracts exist.
+* Root test configuration exists for one-command validation.
+* `python -m pytest` passes from repository root with backend and scraper tests.
+* No real network calls, database writes, scheduler jobs, AI, sentiment, embeddings, RAG, authentication, or frontend changes were added.
 
 ---
 
@@ -201,16 +184,14 @@ Sprint 008 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 008 News Intelligence Foundation.
+* Completed Task: Completed Sprint 009 web scraping engine foundation.
 
 ---
 
 ## Validation Results
 
-* Tests: `python -m pytest` passed, 37 tests passed with one non-blocking pytest cache permission warning.
-* Alembic: `python -m alembic current` exited successfully and loaded configuration; database revision lookup remains deferred because PostgreSQL authentication fails for the configured local development user.
-* Server startup: `python -m uvicorn app.main:app --reload --port 8001` started the current backend successfully because local port `8000` remains occupied by PID `4288`.
-* Health endpoint: `GET /api/v1/health` passed on `127.0.0.1:8001` and returned the expected success envelope.
-* News list endpoint: `GET /api/v1/news?limit=2` passed on `127.0.0.1:8001` and returned development sample news through the fallback path.
-* News detail endpoint: `GET /api/v1/news/1` passed on `127.0.0.1:8001` and returned a development sample article.
-* Live PostgreSQL-backed news validation: deferred until valid local PostgreSQL credentials are configured and migrations are applied.
+* Scraper tests: `python -m pytest scrapers/tests` passed, 6 tests passed.
+* Backend tests: `python -m pytest` from `backend/` passed, 37 tests passed with one non-blocking pytest cache permission warning.
+* Full repository tests: `python -m pytest` from repository root passed, 43 tests passed.
+* Network safety: tests monkeypatch `socket.create_connection` and all placeholder scrapers pass without network calls.
+* Database safety: scraper package contains no database engine/session usage and performs no database writes.

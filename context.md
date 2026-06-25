@@ -914,3 +914,93 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 009: introduce the web scraping engine foundation for investment news with modular scraper interfaces, normalization/deduplication contracts, article-to-asset linking workflow, and fixture-based tests. Do not implement AI, sentiment, embeddings, RAG, authentication, or frontend integration yet.
+---
+
+## Session 012
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 009 by building the web scraping engine foundation for investment news without real web scraping, external calls, database writes, AI, sentiment, embeddings, RAG, authentication, or frontend integration.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Created the scraper package foundation under `scrapers/`.
+* Added `BaseScraper`, `ScrapedArticle`, and `ScraperResult` contracts.
+* Added fixture-only placeholder scraper classes for Financial Gazette, NewsDay Business, Herald Business, ZSE announcements, VFEX market data, RBZ macro data, IH Securities, and MMC Capital.
+* Added normalization helpers for title, summary, content, source, URL, publication date, and language.
+* Added deduplication helpers using URL matching, normalized title matching, and content hashing.
+* Added an asset-linking contract using explicit company-name keyword matching and avoiding broad exchange-level matching.
+* Added a backend-compatible ingestion payload contract aligned with `NewsCreate` semantics without importing backend persistence or writing to the database.
+* Added scraper tests for base behavior, placeholder fixtures, normalization, deduplication, asset linking, ingestion payload shape, and no-network behavior.
+* Added root `pytest.ini` so `python -m pytest` validates both backend and scraper tests from the repository root.
+* Added `scrapers/README.md` documenting current scraper scope and limitations.
+* Updated `PROJECT_STATE.md` for Sprint 009.
+
+Files Created:
+
+* `pytest.ini`
+* `scrapers/__init__.py`
+* `scrapers/base_scraper.py`
+* `scrapers/fixtures.py`
+* `scrapers/README.md`
+* `scrapers/news/__init__.py`
+* `scrapers/news/financial_gazette.py`
+* `scrapers/news/newsday_business.py`
+* `scrapers/news/herald_business.py`
+* `scrapers/zse/__init__.py`
+* `scrapers/zse/announcements_scraper.py`
+* `scrapers/vfex/__init__.py`
+* `scrapers/vfex/market_scraper.py`
+* `scrapers/rbz/__init__.py`
+* `scrapers/rbz/macro_scraper.py`
+* `scrapers/research/__init__.py`
+* `scrapers/research/ih_securities.py`
+* `scrapers/research/mmc_capital.py`
+* `scrapers/pipeline/__init__.py`
+* `scrapers/pipeline/normalizer.py`
+* `scrapers/pipeline/deduplicator.py`
+* `scrapers/pipeline/asset_linker.py`
+* `scrapers/pipeline/ingestion_contract.py`
+* `scrapers/tests/__init__.py`
+* `scrapers/tests/test_scraper_foundation.py`
+
+Files Modified:
+
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Scraper source modules are fixture-only placeholders in Sprint 009 and do not perform HTTP requests, browser automation, scheduling, or database writes.
+* Scraper contracts use standard-library dataclasses to keep the data-ingestion layer lightweight and independent from backend persistence.
+* Ingestion payloads are backend-compatible with `NewsCreate` but remain decoupled from FastAPI, SQLAlchemy, and database sessions.
+* Deduplication is deterministic and currently batch-local using URL, normalized title, and SHA-256 content hash.
+* Asset linking uses explicit company aliases only; exchange terms like `VFEX` do not map to all exchange-listed assets.
+* Root `pytest.ini` sets test paths and Python paths so one command validates backend and scraper foundations together.
+
+Validation Results:
+
+* `python -m pytest scrapers/tests`: passed, 6 tests passed.
+* `python -m pytest` from `backend/`: passed, 37 tests passed with one non-blocking pytest cache permission warning.
+* `python -m pytest` from repository root: passed, 43 tests passed.
+* Network safety check: tests monkeypatch `socket.create_connection`; all placeholder scrapers pass without network calls.
+* Database safety check: scraper package contains no engine/session usage and performs no database writes.
+
+Known Issues Update:
+
+* Resolved: scraper base interface, placeholder source scrapers, normalization, deduplication, asset-linking, ingestion contract, and scraper tests did not exist; Sprint 009 implemented them.
+* Unresolved: real HTTP fetching and source-specific parsing are not implemented by design.
+* Unresolved: database-backed ingestion orchestration is not implemented by design.
+* Unresolved: PostgreSQL client tools are not available on PATH.
+* Unresolved: port `8000` still has a persistent local listener on PID `4288`.
+* Unresolved: real migration execution and database-backed endpoint validation remain blocked by PostgreSQL authentication for the configured local development user.
+* Unresolved: AI, sentiment analysis, embeddings, RAG, authentication, notifications, analytics, and frontend integration are not implemented.
+
+Sprint Summary:
+
+* Sprint 009 completed the scraper engine foundation. InvestGuide now has modular scraper contracts, fixture-only source placeholders, normalization/deduplication utilities, explicit asset-linking logic, a backend-compatible ingestion payload contract, and tests proving no network calls or database writes occur.
+
+Next Recommended Task:
+
+* Sprint 010: implement a dry-run news ingestion orchestration layer that consumes scraper results, normalizes, deduplicates, links assets, assigns source trust metadata, and reports what would be persisted without writing to the database yet.
