@@ -1212,3 +1212,79 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 012: fix local PostgreSQL credentials, run migrations through `20260625_0003_add_news_content_hash`, seed assets, and validate real PostgreSQL ingestion in `DRY_RUN` and `WRITE` modes with content-hash duplicate prevention.
+
+---
+
+## Session 016
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 012 by building reusable production-grade scraper infrastructure without live scraping, browser automation, scheduling, AI, frontend changes, authentication, or database writes.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added `scrapers/core/` as the reusable scraper infrastructure layer.
+* Added source registry metadata with enable/disable controls, lookup by source id/display name/category/priority, and uniqueness validation.
+* Added source metadata for ZSE, VFEX, RBZ, ZIMSTAT, IH Securities, MMC Capital, Old Mutual Investment Group, ABC Stockbrokers, Financial Gazette, NewsDay Business, and Herald Business.
+* Added environment-driven source configuration for timeout, retry count, retry backoff, rate limit, request interval, user-agent, and enabled status.
+* Added HTTP client abstraction with injectable transport, GET support, headers, timeout, user-agent, and retry integration.
+* Added retry policy with retryable status codes, retryable exceptions, timeout handling, max retries, and exponential backoff.
+* Added rate limiter with minimum interval, requests-per-minute, cooldown, and burst protection.
+* Added user-agent manager for bot, desktop, mobile, and API profiles.
+* Added robots policy metadata storage and future permission-check hook without downloading robots.txt.
+* Added scraper metrics collector for run counts, execution time, retries, last run, articles found, and articles ingested.
+* Added scraper lifecycle logger for started/completed/failed/retry events with basic secret redaction.
+* Added offline tests for all scraper core infrastructure and no-network behavior.
+* Updated `scrapers/README.md` and `PROJECT_STATE.md` for Sprint 012.
+
+Files Created:
+
+* `scrapers/core/__init__.py`
+* `scrapers/core/source_registry.py`
+* `scrapers/core/source_config.py`
+* `scrapers/core/http_client.py`
+* `scrapers/core/retry_policy.py`
+* `scrapers/core/rate_limiter.py`
+* `scrapers/core/user_agent.py`
+* `scrapers/core/robots.py`
+* `scrapers/core/metrics.py`
+* `scrapers/core/logger.py`
+* `scrapers/tests/test_scraper_core.py`
+
+Files Modified:
+
+* `scrapers/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Scraper infrastructure lives under `scrapers/core/` so future source-specific modules can reuse one registry/config/network/rate/metrics/logging foundation.
+* The HTTP client uses an injectable transport; the default standard-library transport exists for future opt-in live scraping, but tests use fake transports and make no network calls.
+* Source metadata is static and does not imply scraping permission; robots policy parsing and permission enforcement are explicit future work.
+* Source configuration supports both global defaults and source-specific environment overrides using `SCRAPER_DEFAULT_*` and `SCRAPER_<SOURCE_ID>_*` variables.
+* Metrics are in-memory for now; no scheduler, persistence, or database writes were added.
+* Logging uses structured `extra` fields and redacts common secret fragments before logging errors.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 75 tests passed.
+* Network safety: scraper core tests monkeypatch the default HTTP transport and use injected fake transports; no live website requests occur.
+* Database safety: scraper core infrastructure does not import backend database sessions and performs no database writes.
+
+Known Issues Update:
+
+* Resolved: reusable scraper infrastructure for source registration, config, HTTP abstraction, retry, rate limiting, user agents, robots metadata, metrics, and logging did not exist; Sprint 012 implemented it.
+* Unresolved: live scraper fetching and source-specific parsing are not implemented by design.
+* Unresolved: robots.txt parsing and permission enforcement are placeholders for future live scraping.
+* Unresolved: scheduler jobs, browser automation, AI, sentiment analysis, embeddings, RAG, authentication, analytics, frontend integration, and scraper database writes remain intentionally unimplemented.
+* Unresolved: live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication failure.
+
+Sprint Summary:
+
+* Sprint 012 completed the reusable scraper infrastructure layer. Future scrapers can now plug into shared source metadata, environment configuration, retry/backoff, rate limiting, user-agent, robots metadata, metrics, logging, and HTTP abstraction while the repository remains fully offline in tests.
+
+Next Recommended Task:
+
+* Sprint 013: implement one opt-in live scraper using the Sprint 012 infrastructure, with documented robots/rate-limit review, mocked tests, and no broad multi-source scraping, AI, scheduler, authentication, or frontend integration yet.
