@@ -1,4 +1,4 @@
-﻿# InvestGuide Project State
+# InvestGuide Project State
 
 ## Project Summary
 
@@ -9,30 +9,32 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 003
+Sprint Number: Sprint 004
 
-Sprint Goal: Implement the backend database and Alembic foundation only, without business API features.
+Sprint Goal: Implement the first real backend domain model layer for investment assets without exposing business API endpoints.
 
 Current Tasks:
 
-* [x] Add Alembic configuration under `backend/`.
-* [x] Configure Alembic to load existing SQLAlchemy `Base.metadata`.
-* [x] Add deterministic database naming conventions.
-* [x] Add timestamp mixin/model convention foundation.
-* [x] Add placeholder model import registry for future Alembic autogeneration.
-* [x] Add database foundation tests.
-* [x] Update backend README with migration commands.
+* [x] Add the SQLAlchemy asset model.
+* [x] Add explicit asset domain value sets for exchanges, asset types, currencies, and statuses.
+* [x] Add Pydantic v2 asset schemas.
+* [x] Register the asset model for Alembic metadata discovery.
+* [x] Add a manual Alembic migration for the assets table.
+* [x] Add development-only seed data structure for initial Zimbabwean assets.
+* [x] Add tests for asset model metadata, schemas, enum values, and seed data.
+* [x] Update backend README, project state, and historical context.
 * [x] Validate pytest, Alembic load, uvicorn startup, and health endpoint.
 
 Sprint Exit Criteria:
 
-* Alembic is installed and configured.
-* SQLAlchemy Base metadata is migration-ready.
-* Naming conventions exist for deterministic migrations.
+* Asset model exists.
+* Asset schemas exist.
+* Alembic migration exists.
+* Seed data structure exists and does not run automatically.
+* Tests pass without requiring a live database.
 * Backend health endpoint still works.
-* Tests pass.
+* No asset business endpoints are exposed.
 * Documentation is updated.
-* No business models or business API features are implemented.
 
 ---
 
@@ -48,7 +50,7 @@ Authentication: Not Started
 
 API: In Progress
 
-Market Data: Not Started
+Market Data: In Progress
 
 Scrapers: Not Started
 
@@ -72,7 +74,7 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; no business models or migrations yet
+Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; first asset domain model and migration added
 
 State Management: Zustand, TanStack Query
 
@@ -86,7 +88,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health and database foundation tests pass; frontend lint/type-check/build validation passes
+Testing: Backend health, database foundation, asset model, asset schema, and seed data tests pass; frontend lint/type-check/build validation previously passes
 
 ---
 
@@ -98,6 +100,7 @@ investguide/
 |-- backend/
 |   |-- alembic/
 |   |   |-- versions/
+|   |   |   `-- 20260625_0001_create_assets_table.py
 |   |   |-- env.py
 |   |   `-- script.py.mako
 |   |-- app/
@@ -105,9 +108,12 @@ investguide/
 |   |   |   `-- v1/
 |   |   |-- core/
 |   |   |-- database/
+|   |   |   `-- seed_assets.py
 |   |   |-- models/
+|   |   |   |-- asset.py
 |   |   |   `-- mixins.py
 |   |   |-- schemas/
+|   |   |   `-- asset.py
 |   |   |-- services/
 |   |   |-- utils/
 |   |   `-- main.py
@@ -131,16 +137,17 @@ investguide/
 
 ## Current Architecture
 
-The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation now includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, and Alembic migration scaffolding wired to application settings.
+The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, Alembic migration scaffolding wired to application settings, and the first asset domain model/migration.
 
-The backend intentionally contains no authentication, users, assets, market APIs, analytics, AI, scrapers, notifications, or business logic. Alembic can load the migration environment; actual migration execution is deferred until PostgreSQL credentials are configured.
+The backend intentionally contains no authentication, users, asset CRUD routes, analytics, AI, scrapers, notifications, or business workflow logic. Alembic can load the migration environment and asset revision; actual migration execution is deferred until PostgreSQL credentials are configured.
 
 ---
 
 ## Current Blockers
 
+* Database migration execution is blocked until valid local or hosted PostgreSQL credentials are configured.
 * Frontend data workflows are blocked by missing business APIs.
-* Database-backed features are blocked by missing business models, migrations, and seed data.
+* Asset UI/API workflows are blocked because asset CRUD/list/detail endpoints are not implemented yet.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
 * Dedicated frontend/backend CI is not implemented.
@@ -149,22 +156,23 @@ The backend intentionally contains no authentication, users, assets, market APIs
 
 ## Next Immediate Task
 
-Sprint 004 should implement the first real database domain model layer: asset schema/model and initial Alembic migration planning, without exposing business APIs until the data model and migration are validated.
+Sprint 005 should implement the backend asset repository/service/API read foundation: list assets and retrieve asset detail through `/api/v1/assets`, using the existing response envelope and asset schemas, without authentication, analytics, AI, scraping, or frontend changes.
 
 ---
 
 ## Definition of Done
 
-Sprint 003 is complete because:
+Sprint 004 is complete because:
 
-* Alembic is configured under `backend/`.
-* SQLAlchemy Base metadata is migration-ready.
-* Deterministic naming conventions exist.
-* Timestamp mixin/model conventions exist.
-* Backend health endpoint still works.
-* Tests pass.
+* The asset SQLAlchemy model exists with deterministic indexes, unique ticker constraint, timestamp mixin, and explicit domain value sets.
+* Pydantic v2 asset schemas exist for create, update, and read shapes.
+* The asset model is registered for Alembic metadata discovery.
+* The first assets-table Alembic migration exists.
+* Development seed data exists and does not run automatically.
+* Tests pass without requiring a live database.
+* The backend health endpoint still works.
+* No business API endpoints were exposed.
 * Documentation is updated.
-* No business features were implemented.
 
 ---
 
@@ -172,13 +180,13 @@ Sprint 003 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 003 database and Alembic foundation with metadata conventions, mixins, tests, validation, and documentation updates.
+* Completed Task: Completed Sprint 004 asset domain model foundation with SQLAlchemy model, Pydantic schemas, migration, seed structure, tests, validation, and documentation updates.
 
 ---
 
 ## Validation Results
 
-* Backend tests: passed with `python -m pytest` from `backend/`.
+* Backend tests: passed with `python -m pytest` from `backend/`; 13 tests passed. Pytest emitted a non-blocking cache-write warning in this sandbox.
 * Alembic load: passed with `python -m alembic current`; PostgreSQL revision lookup was deferred because local database credentials are not configured.
 * Server startup: passed with `python -m uvicorn app.main:app --reload` from `backend/`.
 * Health endpoint: passed with `GET http://127.0.0.1:8000/api/v1/health`.

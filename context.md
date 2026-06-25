@@ -1,4 +1,4 @@
-﻿# Project Overview
+# Project Overview
 
 InvestGuide is an AI-powered Zimbabwean investment intelligence platform. Its mission is to bridge the gap between institutional-grade financial intelligence and everyday Zimbabwean investors by transforming fragmented ZSE, VFEX, REIT, macroeconomic, news, sentiment, and research information into understandable, educational, analytics-driven insights.
 
@@ -480,3 +480,77 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 004: implement the first real database domain model layer, beginning with asset model/schema and initial Alembic migration planning, without exposing business API features until the data model and migration are validated.
+
+---
+
+## Session 006
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 004 by implementing only the backend investment asset domain model foundation.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant markdown documentation under `docs/` before implementation.
+* Added the `Asset` SQLAlchemy model using SQLAlchemy 2.x mapped-column style.
+* Added explicit asset domain value sets for `exchange`, `asset_type`, `currency`, and `status`.
+* Added deterministic asset indexes for ticker, exchange, sector, and asset type.
+* Added a unique ticker constraint.
+* Added Pydantic v2 schemas for asset base, create, update, and read shapes.
+* Registered the asset model and schemas for future discovery/imports.
+* Added a manual Alembic migration for the assets table because local PostgreSQL credentials are not configured for autogeneration/execution.
+* Added development-only seed data structure for initial Zimbabwean listed assets and REITs.
+* Added tests for asset model metadata, schema validation, allowed value sets, and seed data shape.
+* Updated backend README and `PROJECT_STATE.md` for Sprint 004.
+* Verified the backend health endpoint still works and no asset business API endpoints were exposed.
+
+Files Created:
+
+* `backend/app/models/asset.py`
+* `backend/app/schemas/asset.py`
+* `backend/app/database/seed_assets.py`
+* `backend/alembic/versions/20260625_0001_create_assets_table.py`
+* `backend/tests/test_asset_model.py`
+* `backend/tests/test_asset_schema.py`
+* `backend/tests/test_seed_assets.py`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/__init__.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Asset domain values are represented with Python `StrEnum` classes and SQLAlchemy string-backed enum constraints for migration readability and future validation reuse.
+* The asset model uses the existing `TimestampMixin` and SQLAlchemy `Base` naming conventions from Sprint 003.
+* The first asset migration was written manually because local PostgreSQL authentication failed; migration execution remains deferred until valid PostgreSQL credentials are configured.
+* Seed data is importable development data only and does not auto-run, avoiding hidden writes at app startup.
+* No asset routes, CRUD services, authentication, analytics, AI, scrapers, or frontend changes were implemented.
+
+Validation Results:
+
+* `python -m pytest`: passed, 13 tests collected and passed. Pytest emitted one non-blocking cache-write warning in the sandbox.
+* `python -m alembic current`: passed; Alembic loaded and reported PostgreSQL revision lookup deferred because local `postgres` credentials failed authentication.
+* `python -m uvicorn app.main:app --reload`: passed; server started without startup errors.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8000/api/v1/health`: passed and returned the expected success envelope.
+
+Known Issues Update:
+
+* Resolved: Business database models were not implemented; the first asset domain model now exists.
+* Resolved: Initial asset migration did not exist; the first assets-table migration now exists.
+* Unresolved: Real migration execution is deferred until PostgreSQL credentials are configured.
+* Unresolved: Asset business API endpoints are not implemented.
+* Unresolved: Authentication is not implemented.
+* Unresolved: Analytics, AI, scrapers, notifications, and frontend data integration are not implemented.
+* Unresolved: `docs/ai/ai-agent-rules.md` is empty.
+
+Sprint Summary:
+
+* Sprint 004 completed the backend asset domain foundation only. InvestGuide now has a migration-ready asset model, validation schemas, seed data structure, and focused tests while intentionally avoiding asset APIs and business workflows.
+
+Next Recommended Task:
+
+* Sprint 005: implement the backend asset repository/service/API read foundation for listing assets and retrieving asset detail through `/api/v1/assets`, using the existing response envelope and asset schemas, without adding authentication, analytics, AI, scrapers, or frontend changes.
