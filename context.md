@@ -1348,3 +1348,65 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 013: implement one opt-in live scraper using `ScraperContextFactory` and Sprint 012 infrastructure, with mocked tests and documented robots/rate-limit review before any live network use.
+
+---
+
+## Session 018
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 013 by implementing the first opt-in live scraper pattern for one official source, ZSE announcements, without adding broad live scraping, schedulers, AI, frontend integration, authentication, or database writes.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added `SCRAPER_LIVE_ENABLED=false` support through `SourceConfig.live_enabled`, with source-specific `SCRAPER_<SOURCE>_LIVE_ENABLED` override support.
+* Added `ZSELiveAnnouncementsScraper` for the configured ZSE announcements page.
+* Wired the scraper through `ScraperContext`, `HttpClient`, `RateLimiter`, retry policy, logger, metrics, user-agent configuration, and robots metadata infrastructure.
+* Ensured the scraper performs no network request unless live mode is explicitly enabled.
+* Added a saved ZSE announcements HTML fixture for parser validation.
+* Added offline tests for disabled-by-default safety, fixture parsing, mocked live transport/rate-limiter behavior, HTTP failure reporting, metrics, and ingestion-pipeline compatibility.
+* Updated scraper documentation and project state.
+
+Files Created:
+
+* `scrapers/zse/live_announcements_scraper.py`
+* `scrapers/tests/fixtures/zse_announcements_sample.html`
+* `scrapers/tests/test_zse_live_announcements_scraper.py`
+
+Files Modified:
+
+* `scrapers/core/source_config.py`
+* `scrapers/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Live scraper execution is globally opt-in through `SCRAPER_LIVE_ENABLED=false` by default.
+* The first live scraper is limited to one official source, ZSE announcements, to prove the pattern safely.
+* Automated tests must remain offline; fixture HTML and injected fake transports validate parser and request behavior.
+* The live scraper returns `ScrapedArticle` objects compatible with normalization, asset linking, content hashing/deduplication, and ingestion payload building, but performs no database writes.
+* Missing dates/content are handled gracefully; missing dates fall back to run-time UTC timestamps.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 85 tests passed.
+* Network safety: live mode defaults to disabled; tests use saved fixtures and mocked transports only.
+* Database safety: no backend database sessions are imported by the live scraper and no database writes occur.
+
+Known Issues Update:
+
+* Resolved: no opt-in live scraper pattern existed; Sprint 013 now provides one for ZSE announcements.
+* Unresolved: live ZSE execution has not been manually run against the internet in this environment.
+* Unresolved: robots.txt and source terms must be manually reviewed before enabling live scraping in shared or production environments.
+* Unresolved: broad multi-source scraping, scheduler jobs, persistence handoff, AI, sentiment analysis, embeddings, RAG, authentication, analytics, and frontend integration remain intentionally unimplemented.
+* Unresolved: live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication failure.
+
+Session Summary:
+
+* Sprint 013 completed the first safe live scraper foundation. The ZSE announcements scraper uses the shared scraper context and infrastructure, remains disabled by default, is validated offline with fixture/mock tests, and produces pipeline-compatible `ScrapedArticle` output.
+
+Next Recommended Task:
+
+* Sprint 014: perform an explicit manual live-mode validation of the ZSE announcements scraper after robots/terms review, then design the controlled persistence handoff into the existing backend ingestion adapter. Do not add AI, scheduling, authentication, frontend integration, or broad multi-source scraping yet.

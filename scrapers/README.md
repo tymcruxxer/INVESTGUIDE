@@ -1,8 +1,8 @@
-# InvestGuide Scrapers
+﻿# InvestGuide Scrapers
 
 The scraper package contains InvestGuide's data ingestion and scraper infrastructure foundation.
 
-Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 adds reusable production-grade scraper infrastructure for future live sources while still making no network calls or database writes.
+Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 added reusable production-grade scraper infrastructure. Sprint 013 adds the first opt-in live scraper pattern for ZSE announcements while keeping live requests disabled by default and automated tests offline.
 
 ## Current Capabilities
 
@@ -25,6 +25,7 @@ Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sp
 * scraper metrics collector
 * scraper lifecycle logger
 * scraper dependency context and context factory
+* opt-in ZSE live announcements scraper using saved fixtures and mocked transports in tests
 
 
 ## Core Scraper Infrastructure
@@ -55,6 +56,7 @@ SCRAPER_DEFAULT_RATE_LIMIT=30
 SCRAPER_DEFAULT_REQUEST_INTERVAL=2
 SCRAPER_DEFAULT_USER_AGENT="InvestGuideBot/0.1 (+https://investguide.app)"
 SCRAPER_DEFAULT_ENABLED=true
+SCRAPER_LIVE_ENABLED=false
 
 SCRAPER_FINANCIAL_GAZETTE_TIMEOUT=15
 SCRAPER_FINANCIAL_GAZETTE_ENABLED=false
@@ -87,6 +89,30 @@ scraper = FinancialGazetteScraper(context=context)
 * optional source definition metadata
 
 Fixture scrapers can still be instantiated without arguments for existing dry-run tests; `BaseScraper` creates a default offline context when one is omitted. Future live scrapers should receive an explicit context from `ScraperContextFactory`.
+## Opt-In ZSE Live Scraper
+
+Sprint 013 adds one live scraper candidate: `scrapers/zse/live_announcements_scraper.py`.
+
+Safety controls:
+
+* Live scraping is disabled by default with `SCRAPER_LIVE_ENABLED=false`.
+* When disabled, the scraper returns no articles and performs no network request.
+* Automated tests use saved HTML fixtures and injected fake HTTP transports only.
+* The optional manual command is `python -m scrapers.zse.live_announcements_scraper` and should only be run after explicitly enabling live mode in a local environment.
+
+Source and request policy:
+
+* Source URL: `https://www.zse.co.zw/category/announcements/`
+* Source name normalized as: `ZSE`
+* Robots policy: metadata is recorded by the shared robots policy abstraction; live use requires a manual robots/terms review before enabling in any shared environment.
+* Request interval: default `SCRAPER_DEFAULT_REQUEST_INTERVAL=2` seconds.
+* Rate limit: default `SCRAPER_DEFAULT_RATE_LIMIT=30` requests per minute.
+* Timeout: default `SCRAPER_DEFAULT_TIMEOUT=10` seconds.
+* Retry behavior: default `SCRAPER_DEFAULT_RETRY_COUNT=3` with `SCRAPER_DEFAULT_RETRY_BACKOFF=0.5` exponential backoff.
+* User agent: default `InvestGuideBot/0.1 (+https://investguide.app)` unless overridden.
+
+The parser extracts announcement-like links, normalizes relative URLs, supports ISO datetime values when available, and gracefully handles missing dates/content. It returns `ScrapedArticle` objects compatible with the normalizer, deduplicator, asset linker, and ingestion payload builder. It does not write to the backend database.
+
 ## Dry-Run Command
 
 Run all fixture placeholder scrapers through the dry-run ingestion pipeline:
@@ -113,9 +139,9 @@ The command prints:
 
 ## Current Limitations
 
-* no real HTTP requests by source scrapers; `HttpClient` exists only as an abstraction and tests use fake transports
+* live HTTP requests are opt-in only; the ZSE live scraper is disabled by default and tests use fixtures/fake transports
 * no browser automation or Playwright execution
-* no live website parsing
+* live website parsing is limited to the opt-in ZSE announcements parser and is validated with saved HTML fixtures
 * no scheduler jobs
 * no database writes
 * backend ingestion API exists, but scraper infrastructure still performs no database writes

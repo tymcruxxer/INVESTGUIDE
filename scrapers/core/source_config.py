@@ -1,4 +1,4 @@
-"""Source-specific scraper configuration."""
+﻿"""Source-specific scraper configuration."""
 
 from __future__ import annotations
 
@@ -20,11 +20,12 @@ class SourceConfig:
     request_interval: float = 2.0
     user_agent: str = DEFAULT_USER_AGENT
     enabled: bool = True
+    live_enabled: bool = False
 
     @classmethod
     def from_env(cls, source_id: str, env: Mapping[str, str] | None = None) -> "SourceConfig":
         """Load config from defaults and source-specific environment variables."""
-        values = env or environ
+        values = environ if env is None else env
         prefix = f"SCRAPER_{source_id.upper().replace('-', '_').replace(' ', '_')}_"
         default_prefix = "SCRAPER_DEFAULT_"
         config = cls()
@@ -49,5 +50,9 @@ class SourceConfig:
         enabled = get_value("ENABLED")
         if enabled is not None:
             updates["enabled"] = enabled.strip().lower() in {"1", "true", "yes", "on"}
+
+        live_enabled = values.get(f"{prefix}LIVE_ENABLED") or values.get("SCRAPER_LIVE_ENABLED")
+        if live_enabled is not None:
+            updates["live_enabled"] = live_enabled.strip().lower() in {"1", "true", "yes", "on"}
 
         return replace(config, **updates)

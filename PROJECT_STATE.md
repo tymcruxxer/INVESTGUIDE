@@ -1,4 +1,4 @@
-# InvestGuide Project State
+﻿# InvestGuide Project State
 
 ## Project Summary
 
@@ -9,42 +9,32 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 012
+Sprint Number: Sprint 013
 
-Sprint Goal: Build reusable production-grade scraper infrastructure for future live data sources without scraping live websites, using browser automation, adding schedulers, adding AI, or writing to the database.
+Sprint Goal: Implement the first opt-in live scraper pattern using one low-risk official source, ZSE announcements, without adding schedulers, AI, database writes, frontend integration, or broad multi-source scraping.
 
 Current Tasks:
 
-* [x] Created source registry with source metadata, enable/disable controls, category/priority lookup, and uniqueness validation.
-* [x] Created environment-driven source configuration.
-* [x] Created HTTP client abstraction with injectable transport and retry support.
-* [x] Created retry policy with retryable status codes, exceptions, timeout handling, and exponential backoff.
-* [x] Created rate limiter with minimum interval, requests-per-minute, cooldown, and burst protection.
-* [x] Created user-agent manager with bot, desktop, mobile, and API profiles.
-* [x] Created robots policy metadata abstraction without downloading robots.txt.
-* [x] Created scraper metrics collector.
-* [x] Created scraper lifecycle logger with secret redaction.
-* [x] Added source metadata for official, institutional, and financial journalism sources.
-* [x] Added offline tests proving no network calls or database writes are required.
-* [x] Updated scraper README, project state, and context.
-* [x] Added ScraperContext and ScraperContextFactory before Sprint 013 to centralize scraper dependency injection.
+* [x] Added one ZSE live announcements scraper.
+* [x] Kept live scraping disabled by default with `SCRAPER_LIVE_ENABLED=false`.
+* [x] Used `ScraperContext`, `HttpClient`, `RateLimiter`, retry policy, logger, metrics, and robots metadata.
+* [x] Added saved ZSE announcement HTML fixture.
+* [x] Added offline parser and mocked transport tests.
+* [x] Verified parsed `ScrapedArticle` output is compatible with normalization, asset linking, deduplication/hash, and ingestion payload contracts.
+* [x] Updated scraper documentation, project state, and context.
 
 Sprint Exit Criteria:
 
-* Source registry exists.
-* HTTP abstraction exists.
-* Retry policy exists.
-* Rate limiter exists.
-* User-agent manager exists.
-* Robots policy abstraction exists.
-* Metrics collector exists.
-* Logger exists.
-* Source metadata exists.
+* One ZSE live scraper exists.
+* Live scraping is opt-in and disabled by default.
+* Automated tests use fixtures and mocks only.
+* No automated test calls the internet.
+* Scraper uses `ScraperContext` and shared scraper infrastructure.
+* Parser works on saved fixture HTML.
+* No database writes, schedulers, AI, frontend changes, authentication, or multi-source live scraping are added.
 * Tests pass.
-* No external network calls occur.
 * Documentation is updated.
 ---
-
 ## Module Status
 
 Frontend: Stable
@@ -59,7 +49,7 @@ API: In Progress - health, read-only assets, read-only news, and internal news i
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
-Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, and dry-run ingestion orchestration exist; backend ingestion adapter can consume normalized payloads; real fetching not implemented
+Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, dry-run ingestion orchestration, and one opt-in ZSE live announcements scraper exist; live fetching is disabled by default and tests remain offline
 
 Analytics Engine: Not Started
 
@@ -83,7 +73,7 @@ Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
 Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
 
-Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, and dry-run ingestion orchestration; no live requests, Playwright, browser automation, external calls, scheduler, or DB writes yet
+Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, and dry-run ingestion orchestration; one opt-in ZSE live scraper exists but is disabled by default; no Playwright, browser automation, scheduler, or DB writes yet
 
 State Management: Zustand, TanStack Query
 
@@ -97,7 +87,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: `python -m pytest` from repository root runs backend and scraper tests; 80 tests pass
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 85 tests pass
 
 ---
 
@@ -152,9 +142,9 @@ The repository is a modular monorepo scaffold. The frontend foundation is stable
 
 The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migrations.
 
-The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
+The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, one opt-in ZSE live announcements scraper, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
 
-The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer intentionally contains no real HTTP fetching, browser automation, scheduling, sentiment, embeddings, RAG, or database persistence.
+The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer contains one opt-in live HTTP scraper for ZSE announcements, disabled by default. It intentionally contains no browser automation, scheduling, sentiment, embeddings, RAG, or database persistence.
 
 ---
 
@@ -165,7 +155,7 @@ The backend intentionally contains no authentication, users, asset/news write ro
 * Real migration execution is blocked by PostgreSQL authentication failure for the configured local development user.
 * Real seed execution is blocked by the same PostgreSQL authentication failure.
 * Live database-backed asset/news endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and data is seeded/ingested.
-* Real scraper fetching is not implemented by design; Sprint 012 added reusable rate limiting, robots metadata, retry, HTTP abstraction, source registry, metrics, and logging infrastructure for future implementation.
+* Real scraper fetching is implemented only as a disabled-by-default ZSE announcements pattern; broad live scraping remains intentionally unimplemented.
 * Resolved: dry-run ingestion can now hand normalized payloads to the backend ingestion adapter; persistence is available only through explicit WRITE mode.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
@@ -176,18 +166,18 @@ The backend intentionally contains no authentication, users, asset/news write ro
 
 ## Next Immediate Task
 
-Sprint 013 should implement the first opt-in live scraper using the Sprint 012 infrastructure, starting with one low-risk source and keeping network behavior behind explicit tests/mocks and documented robots/rate-limit review. Do not add AI, scheduling, authentication, frontend integration, or broad multi-source scraping yet.
+Sprint 014 should validate the ZSE live scraper manually in an explicitly enabled local environment after robots/terms review, then design a controlled persistence handoff from scraper payloads to the existing backend ingestion adapter. Do not add AI, scheduling, authentication, frontend integration, or broad multi-source scraping yet.
 
 ---
 
 ## Definition of Done
 
-Sprint 012 is complete because:
+Sprint 013 is complete because:
 
-* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, and context factory exist.
-* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, and placeholder scraper context injection.
+* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, context factory, and one opt-in ZSE live announcements scraper exist.
+* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, placeholder scraper context injection, and the ZSE live scraper parser/opt-in guard.
 * `python -m pytest` passes from repository root.
-* No live website requests, Playwright, Selenium, BeautifulSoup parsing, scheduler jobs, AI, sentiment, embeddings, RAG, frontend changes, authentication, or database writes were added.
+* No automated live website requests, Playwright, Selenium, BeautifulSoup dependency, scheduler jobs, AI, sentiment, embeddings, RAG, frontend changes, authentication, or database writes were added.
 * Project documentation is updated.
 
 ---
@@ -196,14 +186,15 @@ Sprint 012 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 012 production-grade scraper infrastructure foundation.
+* Completed Task: Completed Sprint 013 opt-in ZSE live scraper foundation.
 
 ---
 
 ## Validation Results
 
-* Full repository tests: `python -m pytest` passed from repository root, 80 tests passed.
-* Scraper core validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, and `ScraperContextFactory`.
-* Network safety: no live scraper requests are made; HTTP abstraction tests monkeypatch the default transport and use injected fake transports.
-* Database safety: scraper core infrastructure does not import backend database sessions and performs no database writes.
+* Full repository tests: `python -m pytest` passed from repository root, 85 tests passed.
+* Scraper validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, `ScraperContextFactory`, and the opt-in ZSE live scraper.
+* Network safety: live scraper requests are disabled by default; ZSE live scraper tests use saved HTML fixtures and injected fake transports.
+* Database safety: scraper infrastructure and the ZSE live scraper do not import backend database sessions and perform no database writes.
 * Existing backend validation remains covered by the repository test suite; live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication.
+
