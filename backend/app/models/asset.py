@@ -5,12 +5,17 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, Enum, Index, Numeric, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.models.associations import asset_news
 from app.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.news import News
 
 
 class Exchange(StrEnum):
@@ -122,3 +127,11 @@ class Asset(TimestampMixin, Base):
         default=AssetStatus.ACTIVE,
         server_default=AssetStatus.ACTIVE.value,
     )
+    news_articles: Mapped[list[News]] = relationship(
+        "News",
+        secondary=asset_news,
+        back_populates="assets",
+    )
+# Import after class declaration so SQLAlchemy can resolve the relationship target.
+from app.models.news import News  # noqa: E402
+

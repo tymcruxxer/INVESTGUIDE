@@ -834,3 +834,83 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 008: resolve local PostgreSQL setup by installing/exposing client tools, creating or verifying the development database/user, updating ignored `backend/.env` with valid credentials, then rerunning migration, seed, and seeded asset endpoint smoke tests.
+---
+
+## Session 011
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 008 by building the News Intelligence Foundation without scrapers, AI, external APIs, authentication, or frontend integration.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Added the `News` SQLAlchemy model for investment news articles.
+* Added the `asset_news` association table and wired the many-to-many relationship between `Asset` and `News`.
+* Added Pydantic v2 schemas for news article creation and read responses.
+* Added read-only `news_service.list_news` and `news_service.get_news` functions.
+* Added read-only `GET /api/v1/news` and `GET /api/v1/news/{id}` endpoints.
+* Registered news routes under `/api/v1`.
+* Added clearly marked development-only sample news data for ZSE, VFEX, RBZ, Delta, Econet, Innscor, mining, REITs, inflation, and interest-rate themes.
+* Added a manual Alembic migration for `news_articles` and `asset_news`.
+* Added tests for news model metadata, schema validation, service filtering/fallback behavior, and route envelopes.
+* Updated backend README and `PROJECT_STATE.md` for Sprint 008.
+
+Files Created:
+
+* `backend/app/models/associations.py`
+* `backend/app/models/news.py`
+* `backend/app/schemas/news.py`
+* `backend/app/services/news_service.py`
+* `backend/app/api/v1/news.py`
+* `backend/app/database/seed_news.py`
+* `backend/alembic/versions/20260625_0002_create_news_articles_table.py`
+* `backend/tests/test_news_model.py`
+* `backend/tests/test_news_schema.py`
+* `backend/tests/test_news_service.py`
+* `backend/tests/test_news_routes.py`
+
+Files Modified:
+
+* `backend/app/models/asset.py`
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/__init__.py`
+* `backend/app/api/v1/router.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* News article persistence uses `news_articles` as the table name to align with the documented database architecture.
+* Asset-news linking uses a dedicated `asset_news` association table in `app/models/associations.py` so both models can reference the relationship cleanly.
+* News routes remain read-only and use the existing global response envelope.
+* The news service queries PostgreSQL when available and falls back to clearly marked development sample data if database access fails, preserving API usability while local PostgreSQL authentication remains blocked.
+* Development news sample data is not a scraper, does not call external APIs, does not fabricate factual events, and does not run automatically.
+* No authentication, frontend integration, scraper engine, sentiment analysis, embeddings, RAG, summarization, or AI code was added.
+
+Validation Results:
+
+* `python -m pytest`: passed, 37 tests passed with one non-blocking pytest cache permission warning.
+* `python -m alembic current`: passed as a configuration-load check; database revision lookup remains deferred because PostgreSQL authentication fails for the configured local development user.
+* `python -m uvicorn app.main:app --reload --port 8001`: passed; current backend started successfully on alternate port because local port `8000` remains occupied by PID `4288`.
+* `GET http://127.0.0.1:8001/api/v1/health`: passed and returned the expected success envelope.
+* `GET http://127.0.0.1:8001/api/v1/news?limit=2`: passed and returned development sample news using the fallback path.
+* `GET http://127.0.0.1:8001/api/v1/news/1`: passed and returned a development sample article.
+
+Known Issues Update:
+
+* Resolved: News model, news schemas, news read API, asset-news relationship, news migration, and news tests did not exist; Sprint 008 implemented them.
+* Unresolved: PostgreSQL client tools are not available on PATH.
+* Unresolved: port `8000` still has a persistent local listener on PID `4288`.
+* Unresolved: real migration execution and database-backed endpoint validation remain blocked by PostgreSQL authentication for the configured local development user.
+* Unresolved: scraper ingestion is not implemented by design and should be handled in Sprint 009.
+* Unresolved: AI, sentiment analysis, embeddings, RAG, authentication, notifications, analytics, and frontend integration are not implemented.
+
+Sprint Summary:
+
+* Sprint 008 completed the news intelligence backend foundation. InvestGuide now has a migration-ready news data model, asset-news relationship, read-only news API, development sample data fallback, and focused tests while intentionally avoiding scrapers and AI.
+
+Next Recommended Task:
+
+* Sprint 009: introduce the web scraping engine foundation for investment news with modular scraper interfaces, normalization/deduplication contracts, article-to-asset linking workflow, and fixture-based tests. Do not implement AI, sentiment, embeddings, RAG, authentication, or frontend integration yet.

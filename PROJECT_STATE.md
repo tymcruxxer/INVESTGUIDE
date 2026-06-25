@@ -9,32 +9,35 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 007
+Sprint Number: Sprint 008
 
-Sprint Goal: Validate the backend against a real PostgreSQL development database and smoke-test asset read endpoints with real seeded data.
+Sprint Goal: Build the News Intelligence Foundation without implementing scrapers, AI, external API calls, authentication, or frontend integration.
 
 Current Tasks:
 
-* [x] Checked local PostgreSQL availability.
-* [x] Created local `backend/.env` from `.env.example` without committing credentials.
-* [x] Added `backend/.env` to `.gitignore` so local credentials cannot be committed accidentally.
-* [x] Set a local development `DATABASE_URL` placeholder in ignored `.env`.
-* [x] Ran live migration and seed validation commands.
-* [x] Smoke-tested health and asset routes against the current backend process.
-* [x] Documented blockers preventing real migration, seed, and seeded endpoint success.
-* [x] Reviewed Sprint 007 repository changes before commit.
-* [x] Categorized repository-safe changes and local-only files.
-* [x] Confirmed `backend/.env` is ignored and untracked.
-* [x] Revalidated tests, Alembic configuration loading, backend startup, and health endpoint.
+* [x] Created the `News` SQLAlchemy model.
+* [x] Added the `asset_news` many-to-many association table.
+* [x] Linked `Asset` and `News` through SQLAlchemy relationships.
+* [x] Created Pydantic news schemas.
+* [x] Created read-only news service functions.
+* [x] Created read-only `/api/v1/news` endpoints.
+* [x] Added development-only sample news data.
+* [x] Added Alembic migration for `news_articles` and `asset_news`.
+* [x] Added tests for news model, schemas, service behavior, and routes.
+* [x] Updated backend README, project state, and context.
 
 Sprint Exit Criteria:
 
-* Real PostgreSQL connection is configured locally or setup blocker is clearly documented.
-* Migration runs successfully, or blocker is clearly documented.
-* Seed command runs successfully, or blocker is clearly documented.
-* Asset endpoints are tested against seeded data, or blocker is clearly documented.
-* No credentials are committed.
-* Project state and context are updated.
+* News model exists.
+* Asset-news relationship exists.
+* News schemas exist.
+* News service exists.
+* Read-only News API exists.
+* Seed/sample data exists.
+* Tests pass.
+* Health endpoint still works.
+* No scraper code exists yet.
+* No AI code exists yet.
 
 ---
 
@@ -44,13 +47,13 @@ Frontend: Stable
 
 Backend: Stable
 
-Database: In Progress - blocked on valid local PostgreSQL credentials
+Database: In Progress - models and migrations exist; live migration execution remains blocked on valid local PostgreSQL credentials
 
 Authentication: Not Started
 
-API: In Progress
+API: In Progress - health, read-only assets, and read-only news endpoints exist
 
-Market Data: In Progress
+Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
 Scrapers: Not Started
 
@@ -74,7 +77,7 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset domain model and migration added; read-only asset API exists; manual duplicate-aware asset seed command exists; real migration/seed blocked by local PostgreSQL authentication
+Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
 
 State Management: Zustand, TanStack Query
 
@@ -88,7 +91,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health, database foundation, asset model, asset schema, asset service, asset routes, seed data, and seed command tests pass; live database smoke testing blocked by local PostgreSQL authentication
+Testing: Backend health, database foundation, asset model/schema/service/routes, asset seed command, news model/schema/service/routes tests pass; live database smoke testing remains blocked by local PostgreSQL authentication
 
 ---
 
@@ -100,7 +103,8 @@ investguide/
 |-- backend/
 |   |-- alembic/
 |   |   |-- versions/
-|   |   |   `-- 20260625_0001_create_assets_table.py
+|   |   |   |-- 20260625_0001_create_assets_table.py
+|   |   |   `-- 20260625_0002_create_news_articles_table.py
 |   |   |-- env.py
 |   |   `-- script.py.mako
 |   |-- app/
@@ -108,18 +112,24 @@ investguide/
 |   |   |   `-- v1/
 |   |   |       |-- assets.py
 |   |   |       |-- health.py
+|   |   |       |-- news.py
 |   |   |       `-- router.py
 |   |   |-- core/
 |   |   |-- database/
 |   |   |   |-- seed.py
-|   |   |   `-- seed_assets.py
+|   |   |   |-- seed_assets.py
+|   |   |   `-- seed_news.py
 |   |   |-- models/
 |   |   |   |-- asset.py
-|   |   |   `-- mixins.py
+|   |   |   |-- associations.py
+|   |   |   |-- mixins.py
+|   |   |   `-- news.py
 |   |   |-- schemas/
-|   |   |   `-- asset.py
+|   |   |   |-- asset.py
+|   |   |   `-- news.py
 |   |   |-- services/
-|   |   |   `-- asset_service.py
+|   |   |   |-- asset_service.py
+|   |   |   `-- news_service.py
 |   |   |-- utils/
 |   |   `-- main.py
 |   |-- tests/
@@ -143,11 +153,13 @@ investguide/
 
 ## Current Architecture
 
-The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, Alembic migration scaffolding wired to application settings, the asset domain model/migration, read-only asset endpoints, and a controlled manual seed command for development assets.
+The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, and Alembic migration scaffolding wired to application settings.
 
-Sprint 007 validated the workflow far enough to confirm a PostgreSQL listener is available at `localhost:5432`, but the configured local development database user is not authenticated. Migration, seed execution, and live seeded asset endpoint tests remain blocked until valid PostgreSQL credentials/database/user are configured.
+The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation now includes the news article model, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migration.
 
-The backend intentionally contains no authentication, users, asset write routes, analytics, AI, scrapers, notifications, or business workflow logic.
+The news service queries the database when available and falls back to clearly marked development sample articles when PostgreSQL is unavailable. This keeps the foundation API testable before Sprint 009 scraper ingestion and before local database credentials are corrected.
+
+The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, scrapers, notifications, or frontend integration.
 
 ---
 
@@ -157,7 +169,7 @@ The backend intentionally contains no authentication, users, asset write routes,
 * Port `8000` still has a persistent listener on PID `4288`; current-app smoke testing can use alternate port `8001` until that local process is cleared.
 * Real migration execution is blocked by PostgreSQL authentication failure for the configured local development user.
 * Real seed execution is blocked by the same PostgreSQL authentication failure.
-* Live asset endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and assets are seeded.
+* Live database-backed asset/news endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and data is seeded/ingested.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
@@ -167,22 +179,21 @@ The backend intentionally contains no authentication, users, asset write routes,
 
 ## Next Immediate Task
 
-Sprint 008 should resolve the remaining local database blocker: install/expose PostgreSQL client tools, create or verify the `investguide_dev` database and application user, update ignored `backend/.env` with valid local credentials, rerun `python -m alembic upgrade head`, rerun `python -m app.database.seed`, and smoke-test asset endpoints against seeded data.
+Sprint 009 should introduce the web scraping engine foundation for investment news: create modular scraper interfaces and source-specific placeholders, normalization/deduplication contracts, article-to-asset linking workflow, and tests using fixtures. Do not implement AI, sentiment, embeddings, RAG, authentication, or frontend integration yet.
 
 ---
 
 ## Definition of Done
 
-Sprint 007 is complete with blockers documented because:
+Sprint 008 is complete because:
 
-* Local `.env` was created from `.env.example` and ignored by git.
-* `DATABASE_URL` was set for a local development attempt without committing credentials.
-* Migration command was run and reached PostgreSQL, but failed authentication.
-* Seed command was run and failed on the same authentication blocker.
-* Health endpoint passed on the current backend process.
-* Asset list/detail endpoints were smoke-tested on the current backend process and failed only because database authentication is blocked.
-* Minimal workflow fixes were made for CORS dotenv parsing and `.env` git safety.
-* Project state and context are updated.
+* News model and asset-news relationship exist.
+* News schemas, service, and read-only API routes exist.
+* Development sample news data exists and is clearly marked as placeholder content.
+* Migration for news tables exists.
+* Tests pass without requiring live PostgreSQL.
+* Health and news endpoints work on the current backend process using development fallback data while local PostgreSQL remains blocked.
+* No scraper code, AI code, sentiment analysis, embeddings, RAG, authentication, or frontend integration was added.
 
 ---
 
@@ -190,18 +201,16 @@ Sprint 007 is complete with blockers documented because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 007 repository review before commit, categorized repository versus local-only changes, applied a minimal CORS settings parser correction, and revalidated backend checks.
+* Completed Task: Completed Sprint 008 News Intelligence Foundation.
 
 ---
 
 ## Validation Results
 
-* Git review: `git status --short` shows only repository-safe tracked changes: `.gitignore`, `PROJECT_STATE.md`, `backend/README.md`, `backend/app/core/config.py`, and `context.md`.
-* Local-only files: `backend/.env` exists for local development validation, is ignored by `.gitignore`, and is not tracked by git.
-* Repository review: no credentials, hardcoded local filesystem paths, machine-specific assumptions, frontend changes, or feature additions were found in Sprint 007 changes.
-* Config review: `CORS_ORIGINS` supports comma-separated dotenv values and documented JSON-array strings using explicit settings parsing.
-* Tests: `python -m pytest` passed, 24 tests passed with one non-blocking pytest cache permission warning.
+* Tests: `python -m pytest` passed, 37 tests passed with one non-blocking pytest cache permission warning.
 * Alembic: `python -m alembic current` exited successfully and loaded configuration; database revision lookup remains deferred because PostgreSQL authentication fails for the configured local development user.
-* Server startup: `python -m uvicorn app.main:app --reload` was run; port `8000` still has a persistent local listener on PID `4288`, so current-app smoke testing was verified on alternate port `8001`.
+* Server startup: `python -m uvicorn app.main:app --reload --port 8001` started the current backend successfully because local port `8000` remains occupied by PID `4288`.
 * Health endpoint: `GET /api/v1/health` passed on `127.0.0.1:8001` and returned the expected success envelope.
-* Migration/seed/live seeded assets: still blocked until valid PostgreSQL credentials and database/user setup are available.
+* News list endpoint: `GET /api/v1/news?limit=2` passed on `127.0.0.1:8001` and returned development sample news through the fallback path.
+* News detail endpoint: `GET /api/v1/news/1` passed on `127.0.0.1:8001` and returned a development sample article.
+* Live PostgreSQL-backed news validation: deferred until valid local PostgreSQL credentials are configured and migrations are applied.

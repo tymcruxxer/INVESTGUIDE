@@ -2,9 +2,9 @@
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, and a manual development asset seed command.
+This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes.
 
-Business features such as authentication, asset write endpoints, analytics, AI, scrapers, notifications, and production deployment are intentionally not implemented yet.
+Business features such as authentication, asset/news write endpoints, analytics, AI, scrapers, notifications, and production deployment are intentionally not implemented yet.
 
 ## Requirements
 
@@ -209,6 +209,68 @@ Missing ticker response shape:
 
 No create, update, delete, price, dividend, analytics, AI, or scraper endpoints exist yet.
 
+## News Read API
+
+Read-only news endpoints are available under `/api/v1/news`:
+
+* `GET /api/v1/news` - list investment news with optional filters, date sorting, and pagination
+* `GET /api/v1/news/{id}` - retrieve one news article by id
+
+Supported list filters:
+
+* `source`: case-insensitive exact source match
+* `asset`: related asset ticker, such as `DLTA` or `ECO`
+* `search`: matches title, summary, content, source, or author
+* `sort`: `desc` or `asc` by published date, defaults to `desc`
+* `page`: defaults to `1`
+* `limit`: defaults to `20`, maximum `100`
+
+If the configured PostgreSQL database is unavailable, the service falls back to clearly marked development sample articles from `app/database/seed_news.py`. This fallback exists only so the foundation API can be exercised before scraper ingestion and database setup are complete.
+
+List response shape:
+
+```json
+{
+  "success": true,
+  "message": "News retrieved successfully",
+  "data": [],
+  "meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 0,
+    "has_next": false,
+    "source": null,
+    "asset": null,
+    "sort": "desc"
+  }
+}
+```
+
+Missing article response shape:
+
+```json
+{
+  "success": false,
+  "message": "News article '999' was not found",
+  "error_code": "NEWS_NOT_FOUND",
+  "details": {}
+}
+```
+
+No news create, update, delete, scraper, AI, sentiment-analysis, summarization, embedding, or RAG endpoints exist yet.
+
+## News Intelligence Foundation
+
+The news foundation is implemented for future scraper and AI modules:
+
+* SQLAlchemy model: `app/models/news.py`
+* Asset-news association table: `app/models/associations.py`
+* Pydantic schemas: `app/schemas/news.py`
+* Read-only service: `app/services/news_service.py`
+* Read-only routes: `app/api/v1/news.py`
+* Development sample data: `app/database/seed_news.py`
+* Alembic migration: `alembic/versions/20260625_0002_create_news_articles_table.py`
+
 ## Asset Domain Foundation
 
 The first domain model layer is implemented for investment assets:
@@ -235,7 +297,8 @@ Automated tests use mocks or in-memory SQLite where database behavior is needed,
 backend/
 |-- alembic/
 |   |-- versions/
-|   |   `-- 20260625_0001_create_assets_table.py
+|   |   |-- 20260625_0001_create_assets_table.py
+|   |   `-- 20260625_0002_create_news_articles_table.py
 |   |-- env.py
 |   `-- script.py.mako
 |-- app/
@@ -254,16 +317,21 @@ backend/
 |   |   |-- base.py
 |   |   |-- seed.py
 |   |   |-- seed_assets.py
+|   |   |-- seed_news.py
 |   |   `-- session.py
 |   |-- models/
 |   |   |-- __init__.py
 |   |   |-- asset.py
-|   |   `-- mixins.py
+|   |   |-- associations.py
+|   |   |-- mixins.py
+|   |   `-- news.py
 |   |-- schemas/
 |   |   |-- __init__.py
-|   |   `-- asset.py
+|   |   |-- asset.py
+|   |   `-- news.py
 |   |-- services/
-|   |   `-- asset_service.py
+|   |   |-- asset_service.py
+|   |   `-- news_service.py
 |   |-- utils/
 |   `-- main.py
 |-- tests/
@@ -273,6 +341,10 @@ backend/
 |   |-- test_asset_service.py
 |   |-- test_database.py
 |   |-- test_health.py
+|   |-- test_news_model.py
+|   |-- test_news_routes.py
+|   |-- test_news_schema.py
+|   |-- test_news_service.py
 |   |-- test_seed_assets.py
 |   `-- test_seed_command.py
 |-- .env.example
