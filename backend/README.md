@@ -2,7 +2,7 @@
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides infrastructure only: application setup, environment-based configuration, logging, middleware, database session wiring, response envelope helpers, exception handlers, API versioning, and a health endpoint.
+This package currently provides infrastructure only: application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, and a health endpoint.
 
 Business features such as authentication, users, assets, analytics, AI, scrapers, and notifications are intentionally not implemented yet.
 
@@ -61,6 +61,36 @@ Expected response:
 }
 ```
 
+## Database Migrations
+
+Alembic is configured under `backend/alembic` and uses the application `DATABASE_URL` from `app.core.config`.
+
+Check current revision:
+
+```bash
+python -m alembic current
+```
+
+Create a migration after models are added:
+
+```bash
+python -m alembic revision --autogenerate -m "describe change"
+```
+
+Apply migrations:
+
+```bash
+python -m alembic upgrade head
+```
+
+Rollback one migration:
+
+```bash
+python -m alembic downgrade -1
+```
+
+If PostgreSQL is not available or credentials are not configured, `python -m alembic current` will load the Alembic environment and report that revision lookup is deferred. Migration execution requires a working PostgreSQL connection.
+
 ## Test
 
 ```bash
@@ -71,6 +101,10 @@ pytest
 
 ```text
 backend/
+|-- alembic/
+|   |-- versions/
+|   |-- env.py
+|   `-- script.py.mako
 |-- app/
 |   |-- api/
 |   |   `-- v1/
@@ -86,14 +120,17 @@ backend/
 |   |   |-- base.py
 |   |   `-- session.py
 |   |-- models/
+|   |   |-- __init__.py
+|   |   `-- mixins.py
 |   |-- schemas/
 |   |-- services/
 |   |-- utils/
 |   `-- main.py
 |-- tests/
+|   |-- test_database.py
 |   `-- test_health.py
 |-- .env.example
+|-- alembic.ini
 |-- README.md
 `-- requirements.txt
 ```
-

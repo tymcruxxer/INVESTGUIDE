@@ -409,3 +409,74 @@ Sprint Summary:
 Next Recommended Task:
 
 * Sprint 003: implement the initial database and Alembic foundation, including Alembic configuration, migration environment, model conventions, and the first asset schema/model plan without adding business API features yet.
+
+---
+
+## Session 005
+
+Date: 2026-06-25
+
+Objective: Complete Sprint 003 by implementing only the backend database and Alembic foundation.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant markdown documentation under `docs/` before implementation.
+* Added Alembic configuration under `backend/`.
+* Configured Alembic to load `app.database.base.Base.metadata` and application `DATABASE_URL` from existing settings.
+* Added deterministic SQLAlchemy naming conventions for stable migrations.
+* Added timestamp mixin/model convention foundation without adding business models.
+* Added placeholder model registry imports for future Alembic autogeneration.
+* Added database foundation tests covering metadata naming conventions, configured database URL, and timestamp mixin columns.
+* Updated backend README with migration commands and database availability notes.
+* Verified health endpoint remains functional.
+
+Files Created:
+
+* `backend/alembic.ini`
+* `backend/alembic/env.py`
+* `backend/alembic/script.py.mako`
+* `backend/alembic/versions/.gitkeep`
+* `backend/app/models/mixins.py`
+* `backend/tests/test_database.py`
+
+Files Modified:
+
+* `backend/app/database/base.py`
+* `backend/app/models/__init__.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* SQLAlchemy `Base.metadata` now uses deterministic naming conventions for indexes, unique constraints, checks, foreign keys, and primary keys.
+* Alembic imports the model registry through `app.models` so future model modules can be discovered by autogenerate.
+* `TimestampMixin` provides `created_at` and `updated_at` conventions for future models.
+* No asset, user, news, auth, analytics, AI, scraper, or notification models/endpoints were implemented.
+* Alembic `current` handles unavailable PostgreSQL by loading configuration and deferring revision lookup, while migration execution remains dependent on a real configured database.
+* `alembic.ini` is written as UTF-8 without BOM because Python `configparser` rejected the Windows BOM.
+
+Validation Results:
+
+* `python -m pytest`: passed, 4 tests collected and passed.
+* `python -m alembic current`: passed; reported database unavailable and deferred current revision lookup because local PostgreSQL credentials are not configured.
+* `python -m uvicorn app.main:app --reload`: passed; server started without startup errors.
+* `GET http://127.0.0.1:8000/api/v1/health`: passed and returned the expected success envelope.
+
+Known Issues Update:
+
+* Resolved: Alembic was not configured.
+* Resolved: SQLAlchemy Base metadata lacked naming conventions.
+* Unresolved: Real migration execution is deferred until PostgreSQL credentials are configured.
+* Unresolved: Business database models and migrations are not implemented.
+* Unresolved: Authentication is not implemented.
+* Unresolved: Business APIs for assets, market data, watchlists, analytics, AI, and notifications are not implemented.
+* Unresolved: `docs/ai/ai-agent-rules.md` is empty.
+
+Sprint Summary:
+
+* Sprint 003 completed the backend database/Alembic foundation only. The backend is migration-ready at the infrastructure level while intentionally avoiding all business feature implementation.
+
+Next Recommended Task:
+
+* Sprint 004: implement the first real database domain model layer, beginning with asset model/schema and initial Alembic migration planning, without exposing business API features until the data model and migration are validated.

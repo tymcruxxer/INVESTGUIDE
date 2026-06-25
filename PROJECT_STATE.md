@@ -9,35 +9,30 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 002
+Sprint Number: Sprint 003
 
-Sprint Goal: Build the backend foundation only, without business features.
+Sprint Goal: Implement the backend database and Alembic foundation only, without business API features.
 
 Current Tasks:
 
-* [x] Create FastAPI backend package under `backend/app`.
-* [x] Add environment-based configuration with `pydantic-settings`.
-* [x] Add centralized logging.
-* [x] Add SQLAlchemy 2.x database base and session factory.
-* [x] Add versioned `/api/v1` API router.
-* [x] Add `GET /api/v1/health` endpoint.
-* [x] Add reusable global response envelope helpers.
-* [x] Add global exception handlers.
-* [x] Add CORS, request logging, and processing-time middleware.
-* [x] Add backend README, `.env.example`, requirements, and health test.
-* [x] Validate install, server startup, live health endpoint, and pytest.
+* [x] Add Alembic configuration under `backend/`.
+* [x] Configure Alembic to load existing SQLAlchemy `Base.metadata`.
+* [x] Add deterministic database naming conventions.
+* [x] Add timestamp mixin/model convention foundation.
+* [x] Add placeholder model import registry for future Alembic autogeneration.
+* [x] Add database foundation tests.
+* [x] Update backend README with migration commands.
+* [x] Validate pytest, Alembic load, uvicorn startup, and health endpoint.
 
 Sprint Exit Criteria:
 
-* Backend starts with `python -m uvicorn app.main:app --reload`.
-* `GET /api/v1/health` returns the documented success envelope.
-* Configuration is environment-based.
-* Database base/session infrastructure exists.
-* Response envelope helpers exist.
-* Logging exists.
-* Middleware exists.
-* Health test passes with `python -m pytest`.
-* No authentication, business APIs, analytics, AI, scrapers, or notifications are implemented.
+* Alembic is installed and configured.
+* SQLAlchemy Base metadata is migration-ready.
+* Naming conventions exist for deterministic migrations.
+* Backend health endpoint still works.
+* Tests pass.
+* Documentation is updated.
+* No business models or business API features are implemented.
 
 ---
 
@@ -77,7 +72,7 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; no models or migrations yet
+Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; no business models or migrations yet
 
 State Management: Zustand, TanStack Query
 
@@ -91,7 +86,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: Backend health test exists and passes; frontend lint/type-check/build validation passes
+Testing: Backend health and database foundation tests pass; frontend lint/type-check/build validation passes
 
 ---
 
@@ -101,18 +96,24 @@ Testing: Backend health test exists and passes; frontend lint/type-check/build v
 investguide/
 |-- frontend/
 |-- backend/
+|   |-- alembic/
+|   |   |-- versions/
+|   |   |-- env.py
+|   |   `-- script.py.mako
 |   |-- app/
 |   |   |-- api/
 |   |   |   `-- v1/
 |   |   |-- core/
 |   |   |-- database/
 |   |   |-- models/
+|   |   |   `-- mixins.py
 |   |   |-- schemas/
 |   |   |-- services/
 |   |   |-- utils/
 |   |   `-- main.py
 |   |-- tests/
 |   |-- .env.example
+|   |-- alembic.ini
 |   |-- README.md
 |   `-- requirements.txt
 |-- ai-services/
@@ -130,16 +131,16 @@ investguide/
 
 ## Current Architecture
 
-The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is now implemented as a FastAPI application with versioned routing, environment settings, logging, middleware, exception handling, response envelope helpers, SQLAlchemy base/session infrastructure, and a health endpoint.
+The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation now includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, and Alembic migration scaffolding wired to application settings.
 
-The backend intentionally contains no authentication, users, assets, market APIs, analytics, AI, scrapers, notifications, or business logic. Database models and migrations are not implemented yet.
+The backend intentionally contains no authentication, users, assets, market APIs, analytics, AI, scrapers, notifications, or business logic. Alembic can load the migration environment; actual migration execution is deferred until PostgreSQL credentials are configured.
 
 ---
 
 ## Current Blockers
 
 * Frontend data workflows are blocked by missing business APIs.
-* Database-backed features are blocked by missing models, migrations, and seed data.
+* Database-backed features are blocked by missing business models, migrations, and seed data.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
 * Dedicated frontend/backend CI is not implemented.
@@ -148,21 +149,19 @@ The backend intentionally contains no authentication, users, assets, market APIs
 
 ## Next Immediate Task
 
-Sprint 003 should implement the initial database and Alembic foundation: Alembic configuration, migration environment, core SQLAlchemy model conventions, and the first schema/model plan for assets without adding business endpoints beyond foundation-level database setup.
+Sprint 004 should implement the first real database domain model layer: asset schema/model and initial Alembic migration planning, without exposing business APIs until the data model and migration are validated.
 
 ---
 
 ## Definition of Done
 
-Sprint 002 is complete because:
+Sprint 003 is complete because:
 
-* Backend starts successfully.
-* Health endpoint works.
-* Configuration is environment-based.
-* Database base/session layer is initialized.
-* Response envelope exists.
-* Logging exists.
-* Middleware exists.
+* Alembic is configured under `backend/`.
+* SQLAlchemy Base metadata is migration-ready.
+* Deterministic naming conventions exist.
+* Timestamp mixin/model conventions exist.
+* Backend health endpoint still works.
 * Tests pass.
 * Documentation is updated.
 * No business features were implemented.
@@ -173,14 +172,14 @@ Sprint 002 is complete because:
 
 * Date: 2026-06-25
 * AI Agent: Codex
-* Completed Task: Completed Sprint 002 backend foundation with FastAPI infrastructure, health endpoint, tests, validation, and documentation updates.
+* Completed Task: Completed Sprint 003 database and Alembic foundation with metadata conventions, mixins, tests, validation, and documentation updates.
 
 ---
 
 ## Validation Results
 
-* Dependency install: passed with `python -m pip install -r requirements.txt` from `backend/`.
+* Backend tests: passed with `python -m pytest` from `backend/`.
+* Alembic load: passed with `python -m alembic current`; PostgreSQL revision lookup was deferred because local database credentials are not configured.
 * Server startup: passed with `python -m uvicorn app.main:app --reload` from `backend/`.
 * Health endpoint: passed with `GET http://127.0.0.1:8000/api/v1/health`.
-* Backend tests: passed with `python -m pytest` from `backend/`.
 * Runtime: uvicorn started without startup errors; health endpoint returned the expected success envelope.
