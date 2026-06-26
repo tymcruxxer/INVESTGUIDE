@@ -444,6 +444,32 @@ pytest
 
 Automated tests use mocks or in-memory SQLite where database behavior is needed, so they do not require live PostgreSQL credentials.
 
+## Investor Personalization Foundation
+
+Sprint 018 adds the backend foundation for investor personalization without adding authentication, frontend onboarding, AI recommendations, or public personalization routes.
+
+Implemented foundation pieces:
+
+* Model: `app/models/investor_profile.py`
+* Schemas: `app/schemas/investor_profile.py`
+* Service rules: `app/services/personalization_service.py`
+* Migration: `alembic/versions/20260626_0004_create_investor_profiles_table.py`
+* Product vision: `../docs/product/personalization-and-adaptive-intelligence.md`
+
+The `investor_profiles` table stores:
+
+* nullable `user_id` placeholder for future authentication
+* `experience_level`: `beginner`, `intermediate`, `advanced`
+* `risk_appetite`: `conservative`, `moderate`, `aggressive`
+* `investment_horizon`
+* `planned_investment_range`
+* `preferred_asset_types`
+* `investment_goals`
+* `preferred_language_level`
+* `education_focus`
+* `created_at` and `updated_at`
+
+The personalization service derives presentation settings such as language complexity, metrics visibility, education depth, and explanation style from profile inputs. It does not generate recommendations, call AI services, expose API routes, or perform portfolio/advisory logic.
 ## Folder Structure
 
 ```text

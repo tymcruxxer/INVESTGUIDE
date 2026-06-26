@@ -2,36 +2,37 @@
 
 ## Project Summary
 
-* InvestGuide is an AI-powered Zimbabwean investment intelligence platform for ZSE, VFEX, REIT, macroeconomic, news, sentiment, and analytics-driven educational decision support.
+* InvestGuide is an AI-powered Zimbabwean investment intelligence platform for ZSE, VFEX, REIT, macroeconomic, news, sentiment, personalization, and analytics-driven educational decision support.
 * Current version: v0.1.0-alpha.
 
 ---
 
 ## Current Sprint
 
-Sprint Number: Sprint 017.1
+Sprint Number: Sprint 018
 
-Sprint Goal: Add a single-command backend developer launcher on top of the Sprint 017 Docker/bootstrap workflow.
+Sprint Goal: Implement the backend foundation for user profiles and investor personalization without frontend onboarding, authentication, AI recommendations, or product recommendation features.
 
 Current Tasks:
 
-* [x] Added `python backend/scripts/dev.py` as the one-command backend development launcher.
-* [x] Added Docker installed and Docker daemon checks with clear failure messages.
-* [x] Added Docker Compose startup, PostgreSQL wait, bootstrap delegation, and Uvicorn launch flow.
-* [x] Added `--no-server`, `--port`, `--skip-docker`, and `--skip-bootstrap` flags.
-* [x] Added mocked tests for Docker failures, command construction, wait behavior, bootstrap delegation, Uvicorn startup, and flag behavior.
-* [x] Updated root and backend documentation with launcher workflow, flags, common errors, and safety notes.
-* [x] Validated automated tests and real missing-Docker launcher behavior.
-* [ ] Validate full one-command launch after Docker is installed or available on PATH.
+* [x] Created `docs/product/personalization-and-adaptive-intelligence.md` with the personalization and adaptive intelligence vision.
+* [x] Added investor profile model foundation with nullable `user_id` placeholder for future auth.
+* [x] Added investor profile Pydantic create, update, and read schemas.
+* [x] Added personalization service rules for language complexity, metrics visibility, education depth, and explanation style.
+* [x] Added Alembic migration for the `investor_profiles` table.
+* [x] Added tests for model metadata, schema validation, personalization behavior, beginner defaults, advanced behavior, and migration registration.
+* [x] Updated backend README, project state, and context documentation.
+* [x] Ran full repository pytest suite successfully.
 
 Sprint Exit Criteria:
 
-* `backend/scripts/dev.py` exists.
-* One-command development workflow is documented.
-* Missing Docker and stopped Docker daemon cases fail clearly.
-* Launcher can start Docker Compose, bootstrap the backend, and start Uvicorn when Docker/PostgreSQL are available.
-* Tests pass without Docker.
-* No product features, frontend changes, auth, AI, analytics, scraping, scheduler, WRITE mode, new database models, or destructive database reset commands are added.
+* Product personalization document exists.
+* Investor profile model exists.
+* Schemas exist.
+* Personalization service exists.
+* Migration exists.
+* Tests pass.
+* No frontend onboarding, auth, AI, recommendations, portfolio tracking, watchlists, payments, live scraping, or scheduler work was added.
 
 ---
 
@@ -41,13 +42,15 @@ Frontend: Stable
 
 Backend: Stable
 
-Database: In Progress - SQLAlchemy/Alembic models, Docker Compose workflow, bootstrap script, diagnostics script, and one-command dev launcher exist; local full validation is blocked because Docker is not installed or not on PATH on this machine
+Database: In Progress - SQLAlchemy/Alembic models exist for assets, news, content hashes, and investor personalization; local full DB validation is still blocked because Docker is not installed or not on PATH on this machine
 
 Authentication: Not Started
 
-API: In Progress - health, read-only assets, read-only news, and internal news ingestion endpoints exist
+API: In Progress - health, read-only assets, read-only news, and internal news ingestion endpoints exist; no investor profile routes are exposed yet
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
+
+Personalization: In Progress - product vision, investor profile model, schemas, migration, and backend personalization rule service exist; no frontend onboarding, auth integration, AI recommendations, or recommendation endpoints yet
 
 Scrapers: In Progress - fixture-only scraper contracts, core scraper infrastructure, opt-in ZSE live scraper, dry-run orchestration, backend handoff preview, controlled backend submission, and DRY_RUN smoke path exist; live fetching remains disabled by default
 
@@ -75,6 +78,8 @@ Database: PostgreSQL 16 for local Docker development, PostgreSQL planned for hos
 
 Developer Tooling: Docker Compose, `backend/scripts/dev.py`, `backend/scripts/bootstrap_dev.py`, `backend/scripts/check_database.py`
 
+Personalization: SQLAlchemy investor profile model, Pydantic v2 schemas, deterministic backend rule service for presentation settings
+
 Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, dry-run ingestion orchestration, backend handoff preview formatting, and controlled backend submission reporting
 
 State Management: Zustand, TanStack Query
@@ -89,7 +94,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: `python -m pytest` from repository root runs backend and scraper tests; 122 tests pass
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 136 tests pass
 
 ---
 
@@ -101,10 +106,10 @@ investguide/
 |-- backend/
 |   |-- alembic/
 |   |-- app/
+|   |   |-- models/
+|   |   |-- schemas/
+|   |   `-- services/
 |   |-- scripts/
-|   |   |-- bootstrap_dev.py
-|   |   |-- check_database.py
-|   |   `-- dev.py
 |   |-- tests/
 |   |-- .env.example
 |   |-- alembic.ini
@@ -115,6 +120,7 @@ investguide/
 |-- shared/
 |-- infrastructure/
 |-- docs/
+|   `-- product/
 |-- docker-compose.yml
 |-- AGENT.md
 |-- PROJECT_STATE.md
@@ -128,13 +134,15 @@ investguide/
 
 ## Current Architecture
 
-The repository remains a modular monorepo. The frontend foundation is stable. The backend foundation is stable and now includes reproducible local database infrastructure plus a single-command development launcher. The launcher coordinates Docker checks, Compose startup, PostgreSQL readiness, bootstrap migrations/seeding, and Uvicorn startup without adding app startup side effects or destructive database behavior.
+The repository remains a modular monorepo. The frontend foundation is stable. The backend foundation is stable and includes reproducible local database infrastructure plus a single-command development launcher.
 
 The asset foundation includes the asset model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` relationship, read-only service/API, development sample data, and backend ingestion adapter.
 
+The personalization foundation includes the product personalization vision document, `InvestorProfile` model, Pydantic schemas, Alembic migration, and a pure personalization service that derives presentation settings. It intentionally exposes no routes and performs no AI recommendations or advisory logic.
+
 The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, one opt-in ZSE live announcements scraper, backend handoff preview adapter, controlled backend submission client, and operator-run DRY_RUN smoke script. Scrapers do not write directly to the database.
 
-The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The launcher intentionally does not enable WRITE ingestion mode, schedulers, scrapers, live scraping, AI, or analytics jobs.
+The backend intentionally contains no authentication, users auth flow, investor profile routes, analytics engine, AI, notifications, portfolio tracking, watchlists, payments, or frontend integration.
 
 ---
 
@@ -143,8 +151,8 @@ The backend intentionally contains no authentication, users, asset/news write ro
 * Docker is not installed or not available on PATH on this machine, so the full one-command launcher cannot start the Compose stack locally yet.
 * Existing local PostgreSQL on port `5432` rejects the Compose development credentials for `investguide_user`, so bootstrap, diagnostics, Alembic revision lookup, and article-level DRY_RUN ingestion remain database-blocked until Docker PostgreSQL is available or credentials are corrected.
 * Local PostgreSQL client commands `psql` and `pg_isready` are not available on PATH.
-* Real seed execution is blocked until PostgreSQL credentials match the configured `DATABASE_URL` and migrations are applied.
-* Full database-backed asset/news endpoint validation is blocked until PostgreSQL is reachable, migrated, and seeded.
+* Full database-backed asset/news/profile validation is blocked until PostgreSQL is reachable, migrated, and seeded.
+* Investor personalization is backend foundation only; frontend onboarding, auth linkage, profile API routes, AI recommendations, and adaptive dashboards are not implemented.
 * Real scraper fetching is implemented only as a disabled-by-default ZSE announcements pattern; broad live scraping remains intentionally unimplemented.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
@@ -155,13 +163,13 @@ The backend intentionally contains no authentication, users, asset/news write ro
 
 ## Next Immediate Task
 
-Sprint 018 should install/enable Docker Desktop or another Docker Compose runtime, rerun `python backend/scripts/dev.py --no-server`, then run `python backend/scripts/dev.py --port 8001` and verify backend health plus DRY_RUN ingestion without PostgreSQL authentication errors. Do not enable WRITE mode, schedulers, authentication, AI, or frontend integration yet.
+Sprint 019 should add read-only/internal investor profile service or API planning only after deciding the authentication boundary. Do not implement frontend onboarding, auth, AI recommendations, portfolio tracking, watchlists, payments, live scraping, or schedulers until explicitly requested.
 
 ---
 
 ## Definition of Done
 
-Sprint 017.1 is implemented in repository code because the launcher, flags, tests, and documentation exist. Full local runtime acceptance is pending host Docker availability.
+Sprint 018 is complete because the product personalization document, investor profile backend model, schemas, personalization service, migration, tests, and documentation updates exist, and the full test suite passes.
 
 ---
 
@@ -169,13 +177,12 @@ Sprint 017.1 is implemented in repository code because the launcher, flags, test
 
 * Date: 2026-06-26
 * AI Agent: Codex
-* Completed Task: Added Sprint 017.1 one-command backend developer launcher and documented the Docker host blocker.
+* Completed Task: Completed Sprint 018 backend investor personalization foundation.
 
 ---
 
 ## Validation Results
 
-* Tests: `python -m pytest` passed from repository root, 122 tests passed.
-* Launcher validation: `python backend/scripts/dev.py --no-server` failed clearly because Docker is not installed or not available on PATH.
-* Docker-backed launch: not run because Docker is unavailable on this machine.
-* Product safety: no frontend changes, API features, auth, AI, analytics, scraping, scheduler, WRITE mode, new models, destructive database commands, or database reset behavior were added.
+* Tests: `python -m pytest` passed from repository root, 136 tests passed.
+* Warning: pytest could not write its cache under `.pytest_cache` due Windows access denial; this did not fail tests.
+* Git status: reviewed after documentation updates; working tree contains Sprint 017/017.1 and Sprint 018 changes pending commit.

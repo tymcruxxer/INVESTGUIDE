@@ -1749,3 +1749,71 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 018: install/enable Docker Compose, run `python backend/scripts/dev.py --no-server`, then run `python backend/scripts/dev.py --port 8001` and verify backend health plus DRY_RUN ingestion complete without PostgreSQL authentication errors. Do not enable WRITE mode yet.
+
+---
+
+## Session 024
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 018 by adding the backend foundation for user profiles and investor personalization without frontend onboarding, authentication, AI recommendations, or recommendation features.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Created `docs/product/personalization-and-adaptive-intelligence.md` with the personalization and adaptive intelligence vision for InvestGuide.
+* Added `InvestorProfile` SQLAlchemy model with nullable `user_id` placeholder for future auth, experience level, risk appetite, investment horizon, planned investment range, preferred asset types, investment goals, preferred language level, education focus, and timestamps.
+* Added Pydantic schemas: `InvestorProfileCreate`, `InvestorProfileUpdate`, and `InvestorProfileRead`.
+* Added personalization service rules for language complexity, metrics visibility level, education depth, and explanation style.
+* Registered the investor profile model in the SQLAlchemy model registry for Alembic metadata discovery.
+* Added Alembic migration `20260626_0004_create_investor_profiles_table.py`.
+* Added tests for model metadata, schema validation, personalization rules, default beginner-friendly behavior, advanced/professional behavior, and migration registration.
+* Repaired null-byte corruption in `backend/app/models/__init__.py` discovered during test collection.
+* Updated `backend/README.md` and `PROJECT_STATE.md`.
+* Ran the full repository test suite successfully.
+
+Files Created:
+
+* `docs/product/personalization-and-adaptive-intelligence.md`
+* `backend/app/models/investor_profile.py`
+* `backend/app/schemas/investor_profile.py`
+* `backend/app/services/personalization_service.py`
+* `backend/alembic/versions/20260626_0004_create_investor_profiles_table.py`
+* `backend/tests/test_investor_profile_model.py`
+* `backend/tests/test_investor_profile_schema.py`
+* `backend/tests/test_personalization_service.py`
+* `backend/tests/test_investor_profile_migration.py`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Investor personalization is modeled separately from authentication so Sprint 018 can proceed without adding auth.
+* `user_id` remains nullable as a future auth linkage placeholder.
+* Preference lists use JSON columns to avoid premature lookup-table complexity.
+* The personalization service returns presentation settings only; it does not generate recommendations, call AI, or perform advisory/portfolio logic.
+* No API routes were added for investor profiles in this sprint.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 136 tests passed.
+* Warning: pytest could not write its cache under `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Known Issues Update:
+
+* Unresolved: investor profile routes, frontend onboarding, authentication linkage, AI recommendations, adaptive dashboards, portfolio tracking, watchlists, payments, live scraping, and schedulers remain intentionally unimplemented.
+* Unresolved: Docker is not installed or not available on PATH, so full local Docker database validation remains blocked.
+* Unresolved: existing local PostgreSQL on port `5432` rejects `investguide_user` credentials.
+
+Session Summary:
+
+* Sprint 018 completed the backend-only personalization foundation. InvestGuide now has a product personalization vision, investor profile persistence model, schemas, migration, and deterministic presentation-rule service, with tests passing and no frontend/auth/AI/recommendation features added.
+
+Next Recommended Task:
+
+* Sprint 019: decide the authentication/profile boundary, then add controlled investor profile read/write API endpoints or internal service integration only if explicitly requested. Do not implement AI recommendations or frontend onboarding yet.
