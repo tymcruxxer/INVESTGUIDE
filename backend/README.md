@@ -1,4 +1,4 @@
-# InvestGuide Backend
+﻿# InvestGuide Backend
 
 FastAPI backend foundation for InvestGuide.
 
@@ -314,6 +314,25 @@ Report fields include `articles_received`, `articles_written`, `duplicates_skipp
 
 Automated write-mode coverage uses in-memory SQLite. Live PostgreSQL ingestion requires valid `DATABASE_URL`, applied migrations, and seeded assets.
 
+## Scraper Submission Workflow
+
+Sprint 015 adds a scraper-side backend submission client for controlled internal ingestion.
+
+Scraper command:
+
+```bash
+python -m scrapers.run_backend_submission
+```
+
+Scraper-side controls:
+
+* `BACKEND_SUBMISSION_MODE=OFF` - default; no backend request is sent.
+* `BACKEND_SUBMISSION_MODE=DRY_RUN` - sends `mode: "DRY_RUN"` to `/api/v1/ingestion/news`.
+* `BACKEND_SUBMISSION_MODE=WRITE` - requests persistence, but the scraper client downgrades to dry-run unless `SCRAPER_LIVE_ENABLED=true` is also set.
+* `BACKEND_URL` - backend base URL, for example `http://localhost:8000`.
+* `BACKEND_API_VERSION` - API version path segment, currently `v1`.
+
+Backend-side controls still apply. `INGESTION_MODE` defaults to `DRY_RUN`, and live persistence requires the backend database to be configured, migrations to be applied, assets to be seeded, and the request mode/backend settings to allow writes. The scraper client does not bypass backend validation, duplicate checks, asset resolution, or transaction handling.
 ## Asset Domain Foundation
 
 The first domain model layer is implemented for investment assets:

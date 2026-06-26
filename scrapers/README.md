@@ -2,7 +2,7 @@
 
 The scraper package contains InvestGuide's data ingestion and scraper infrastructure foundation.
 
-Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 added reusable production-grade scraper infrastructure. Sprint 013 added the first opt-in live scraper pattern for ZSE announcements while keeping live requests disabled by default and automated tests offline. Sprint 014 adds a live-validation checklist and a backend handoff preview adapter that formats scraper output for `/api/v1/ingestion/news` without sending HTTP requests.
+Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 added reusable production-grade scraper infrastructure. Sprint 013 added the first opt-in live scraper pattern for ZSE announcements while keeping live requests disabled by default and automated tests offline. Sprint 014 added a live-validation checklist and a backend handoff preview adapter that formats scraper output for `/api/v1/ingestion/news` without sending HTTP requests. Sprint 015 adds a controlled backend submission client with OFF, DRY_RUN, and explicitly gated WRITE modes.
 
 ## Current Capabilities
 
@@ -27,6 +27,7 @@ Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sp
 * scraper dependency context and context factory
 * opt-in ZSE live announcements scraper using saved fixtures and mocked transports in tests
 * backend ingestion handoff preview adapter and JSON preview command
+* controlled backend submission client and submission report command
 
 
 ## Core Scraper Infrastructure
@@ -58,6 +59,9 @@ SCRAPER_DEFAULT_REQUEST_INTERVAL=2
 SCRAPER_DEFAULT_USER_AGENT="InvestGuideBot/0.1 (+https://investguide.app)"
 SCRAPER_DEFAULT_ENABLED=true
 SCRAPER_LIVE_ENABLED=false
+BACKEND_SUBMISSION_MODE=OFF
+BACKEND_URL=http://localhost:8000
+BACKEND_API_VERSION=v1
 
 SCRAPER_FINANCIAL_GAZETTE_TIMEOUT=15
 SCRAPER_FINANCIAL_GAZETTE_ENABLED=false
@@ -96,7 +100,10 @@ Sprint 013 adds one live scraper candidate: `scrapers/zse/live_announcements_scr
 
 Safety controls:
 
-* Live scraping is disabled by default with `SCRAPER_LIVE_ENABLED=false`.
+* Live scraping is disabled by default with `SCRAPER_LIVE_ENABLED=false
+BACKEND_SUBMISSION_MODE=OFF
+BACKEND_URL=http://localhost:8000
+BACKEND_API_VERSION=v1`.
 * When disabled, the scraper returns no articles and performs no network request.
 * Automated tests use saved HTML fixtures and injected fake HTTP transports only.
 * The optional manual command is `python -m scrapers.zse.live_announcements_scraper` and should only be run after explicitly enabling live mode in a local environment.
@@ -126,6 +133,31 @@ Sprint 014 adds a contract-only adapter for the existing backend ingestion endpo
 The preview command runs the fixture scraper flow, normalizes and deduplicates articles, links asset tickers, attaches trust scores, builds dry-run payloads, and prints the backend request JSON. It does not send HTTP requests and does not write to the database.
 
 ZSE live validation notes live in `scrapers/zse/LIVE_VALIDATION.md`. Live mode remains disabled by default and manual live validation is optional, local, and gated by robots/terms review.
+## Controlled Backend Submission
+
+Sprint 015 adds a reusable backend submission client for scraper-generated ingestion payloads.
+
+* Client: `scrapers/pipeline/backend_client.py`
+* Command: `python -m scrapers.run_backend_submission`
+* Target endpoint: `/api/v1/ingestion/news`
+* Default mode: `OFF`
+
+Submission modes:
+
+* `OFF` - build payloads and print a local report only; no backend HTTP request is made.
+* `DRY_RUN` - submit to the backend with `mode="DRY_RUN"`; the backend validates and reports without persistence.
+* `WRITE` - submit with `mode="WRITE"`, but only when both `BACKEND_SUBMISSION_MODE=WRITE` and `SCRAPER_LIVE_ENABLED=true` are set. If live mode is not enabled, the client automatically downgrades to `DRY_RUN` and records a warning.
+
+Configuration:
+
+```bash
+BACKEND_SUBMISSION_MODE=OFF
+BACKEND_URL=http://localhost:8000
+BACKEND_API_VERSION=v1
+SCRAPER_LIVE_ENABLED=false
+```
+
+The submission client reuses `ScraperContext`, the shared HTTP client, retry policy, timeout configuration, and scraper logger. Tests use mocked backend responses only. No scheduler, cron, Celery, Redis, frontend integration, or automatic persistence exists.
 ## Dry-Run Command
 
 Run all fixture placeholder scrapers through the dry-run ingestion pipeline:
@@ -157,10 +189,12 @@ The command prints:
 * live website parsing is limited to the opt-in ZSE announcements parser and is validated with saved HTML fixtures
 * no scheduler jobs
 * no database writes
-* backend ingestion API exists, but scraper infrastructure still performs no database writes
+* backend ingestion API exists; scraper submission is controlled by OFF/DRY_RUN/WRITE mode and defaults to no backend request
 * no sentiment, embeddings, RAG, or AI analysis
 
 Placeholder scrapers intentionally return local fixture articles through `fetch()` so tests can validate contracts without external network calls.
+
+
 
 
 

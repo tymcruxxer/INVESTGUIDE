@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from os import environ
-from typing import Mapping
+from typing import Literal, Mapping
 
 from scrapers.core.user_agent import DEFAULT_USER_AGENT
+
+BackendSubmissionMode = Literal["OFF", "DRY_RUN", "WRITE"]
 
 
 @dataclass(frozen=True)
@@ -21,6 +23,9 @@ class SourceConfig:
     user_agent: str = DEFAULT_USER_AGENT
     enabled: bool = True
     live_enabled: bool = False
+    backend_submission_mode: BackendSubmissionMode = "OFF"
+    backend_url: str = "http://localhost:8000"
+    backend_api_version: str = "v1"
 
     @classmethod
     def from_env(cls, source_id: str, env: Mapping[str, str] | None = None) -> "SourceConfig":
@@ -49,10 +54,33 @@ class SourceConfig:
 
         enabled = get_value("ENABLED")
         if enabled is not None:
-            updates["enabled"] = enabled.strip().lower() in {"1", "true", "yes", "on"}
+            updates["enabled"] = _truthy(enabled)
 
         live_enabled = values.get(f"{prefix}LIVE_ENABLED") or values.get("SCRAPER_LIVE_ENABLED")
         if live_enabled is not None:
-            updates["live_enabled"] = live_enabled.strip().lower() in {"1", "true", "yes", "on"}
+            updates["live_enabled"] = _truthy(live_enabled)
+
+        submission_mode = values.get(f"{prefix}BACKEND_SUBMISSION_MODE") or values.get("BACKEND_SUBMISSION_MODE")
+        if submission_mode is not None:
+            updates["backend_submission_mode"] = _parse_submission_mode(submission_mode)
+
+        backend_url = values.get(f"{prefix}BACKEND_URL") or values.get("BACKEND_URL")
+        if backend_url is not None:
+            updates["backend_url"] = backend_url.strip().rstrip("/")
+
+        backend_api_version = values.get(f"{prefix}BACKEND_API_VERSION") or values.get("BACKEND_API_VERSION")
+        if backend_api_version is not None:
+            updates["backend_api_version"] = backend_api_version.strip().strip("/")
 
         return replace(config, **updates)
+
+
+def _truthy(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_submission_mode(value: str) -> BackendSubmissionMode:
+    normalized = value.strip().upper()
+    if normalized in {"OFF", "DRY_RUN", "WRITE"}:
+        return normalized  # type: ignore[return-value]
+    return "OFF"

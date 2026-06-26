@@ -1471,3 +1471,71 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 015: optionally perform manual live ZSE validation after robots/terms review, then design an operator-approved backend submission workflow with explicit dry-run/write controls and no scheduler automation yet.
+
+---
+
+## Session 020
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 015 by implementing a controlled backend submission workflow for scraper output with OFF as the default, DRY_RUN support, and explicitly gated WRITE behavior.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Extended scraper configuration with `BACKEND_SUBMISSION_MODE`, `BACKEND_URL`, and `BACKEND_API_VERSION`.
+* Extended the shared HTTP abstraction with JSON POST request support while preserving injected transport testing.
+* Added `BackendSubmissionClient` as a reusable transport layer for backend ingestion submissions.
+* Added `SubmissionReport` covering payload count, accepted, rejected, duplicates, warnings, errors, backend execution time, request duration, mode, effective mode, submission state, and HTTP status.
+* Added OFF, DRY_RUN, and WRITE submission behavior.
+* Enforced WRITE safety by downgrading to DRY_RUN unless both `BACKEND_SUBMISSION_MODE=WRITE` and `SCRAPER_LIVE_ENABLED=true` are set.
+* Added `python -m scrapers.run_backend_submission` for controlled fixture-flow submission reporting.
+* Added mocked tests for OFF mode, DRY_RUN request construction, WRITE gating, retry handling, response parsing, and default no-network CLI behavior.
+* Updated scraper README, backend README, and project state documentation.
+
+Files Created:
+
+* `scrapers/pipeline/backend_client.py`
+* `scrapers/run_backend_submission.py`
+* `scrapers/tests/test_backend_submission.py`
+
+Files Modified:
+
+* `scrapers/core/http_client.py`
+* `scrapers/core/source_config.py`
+* `scrapers/README.md`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Backend submission is a reusable scraper transport layer rather than a source-specific news-only script.
+* Default mode is `OFF`, so the command can run safely without a backend service.
+* `DRY_RUN` submits to the backend ingestion endpoint for validation without persistence.
+* `WRITE` is allowed only when both backend submission mode is `WRITE` and scraper live mode is explicitly enabled.
+* The client reuses `ScraperContext`, `HttpClient`, retry policy, timeout configuration, and scraper logging.
+* Tests use mocked backend transports only and make no real network calls.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 98 tests passed.
+* `python -m scrapers.run_backend_submission`: passed in default OFF mode, produced a report with `submitted=false` and no backend HTTP request.
+* Network safety: unit tests use fake transports; default CLI mode does not contact the backend.
+* Database safety: scrapers still do not import backend database sessions or write directly to the database.
+
+Known Issues Update:
+
+* Resolved: scraper output could only be previewed; Sprint 015 added a controlled backend submission client and report path.
+* Unresolved: live backend DRY_RUN submission against a running FastAPI process was not executed in this session.
+* Unresolved: WRITE mode still requires a configured backend, valid PostgreSQL credentials, applied migrations, seeded assets, and explicit operator configuration.
+* Unresolved: live ZSE execution has not been manually run against the internet in this environment.
+* Unresolved: schedulers, automatic scraping, broad multi-source live scraping, AI, sentiment analysis, embeddings, RAG, authentication, analytics, and frontend integration remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 015 completed the controlled backend submission foundation. Scraper output can now be submitted through a reusable client only when configured, with OFF as the default and WRITE mode protected by an additional live-mode flag.
+
+Next Recommended Task:
+
+* Sprint 016: validate the controlled backend submission workflow against a running local backend in DRY_RUN mode and document remaining backend/PostgreSQL blockers before considering any operator-approved WRITE-mode smoke test.
