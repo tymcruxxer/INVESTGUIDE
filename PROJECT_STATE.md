@@ -9,31 +9,30 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 015
+Sprint Number: Sprint 016
 
-Sprint Goal: Implement a controlled backend submission workflow that can submit scraper output to the backend ingestion endpoint only when explicitly enabled, with OFF as the default and WRITE mode gated by live-mode confirmation.
+Sprint Goal: Validate the controlled backend submission workflow against a running local FastAPI backend in DRY_RUN mode only, without enabling WRITE mode, live scraping, or scheduling.
 
 Current Tasks:
 
-* [x] Added reusable backend submission client.
-* [x] Added OFF, DRY_RUN, and WRITE submission modes.
-* [x] Added backend submission configuration through `BACKEND_SUBMISSION_MODE`, `BACKEND_URL`, and `BACKEND_API_VERSION`.
-* [x] Added `SubmissionReport` for accepted, rejected, duplicate, warning, error, backend timing, and request timing results.
-* [x] Added controlled CLI command for backend submission reporting.
-* [x] Enforced WRITE downgrade to DRY_RUN unless `SCRAPER_LIVE_ENABLED=true` is also set.
-* [x] Added mocked tests for modes, request construction, retry handling, response parsing, and no-network default behavior.
+* [x] Added operator-run backend submission smoke script.
+* [x] Verified smoke script importability, backend unavailable handling, DRY_RUN request mode, response parsing, and WRITE refusal with mocked tests.
+* [x] Ran backend locally on port `8001`.
+* [x] Verified `GET /api/v1/health` returned healthy response.
+* [x] Submitted scraper-generated payloads to `/api/v1/ingestion/news` in DRY_RUN mode only.
+* [x] Documented PostgreSQL authentication blocker for article-level ingestion validation.
 * [x] Updated scraper, backend, project state, and context documentation.
 
 Sprint Exit Criteria:
 
-* Backend submission client exists.
-* OFF mode works and is default.
-* DRY_RUN mode works through mocked transport.
-* WRITE mode requires explicit enablement.
-* Backend submission report exists.
-* CLI command exists.
-* Tests pass.
-* No automatic persistence occurs.
+* Backend DRY_RUN submission workflow is validated or blocker is clearly documented.
+* Smoke command exists.
+* Smoke command never uses WRITE.
+* Default submission remains OFF.
+* Automated tests pass without backend dependency.
+* Backend HTTP submission is operator-controlled.
+* No live scraping occurs.
+* No database writes occur from scrapers.
 * Documentation is updated.
 ---
 ## Module Status
@@ -50,7 +49,7 @@ API: In Progress - health, read-only assets, read-only news, and internal news i
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
-Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, dry-run ingestion orchestration, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, and controlled backend submission client exist; live fetching is disabled by default and submission defaults to OFF
+Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, dry-run ingestion orchestration, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, controlled backend submission client, and operator-run DRY_RUN smoke script exist; live fetching is disabled by default and submission defaults to OFF
 
 Analytics Engine: Not Started
 
@@ -74,7 +73,7 @@ Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
 Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
 
-Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, dry-run ingestion orchestration, backend handoff preview formatting, and controlled backend submission reporting; one opt-in ZSE live scraper exists but is disabled by default; no Playwright, browser automation, scheduler, automatic backend posting, or scraper DB writes yet
+Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, dry-run ingestion orchestration, backend handoff preview formatting, and controlled backend submission reporting, and operator-run DRY_RUN smoke validation; one opt-in ZSE live scraper exists but is disabled by default; no Playwright, browser automation, scheduler, automatic backend posting, WRITE smoke, or scraper DB writes yet
 
 State Management: Zustand, TanStack Query
 
@@ -88,7 +87,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: `python -m pytest` from repository root runs backend and scraper tests; 98 tests pass
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 103 tests pass
 
 ---
 
@@ -143,9 +142,9 @@ The repository is a modular monorepo scaffold. The frontend foundation is stable
 
 The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migrations.
 
-The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, controlled backend submission client, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
+The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, controlled backend submission client, operator-run DRY_RUN smoke script, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
 
-The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer contains one opt-in live HTTP scraper for ZSE announcements, disabled by default, plus a controlled backend submission client that defaults to OFF and can use DRY_RUN or explicitly gated WRITE mode. It intentionally contains no browser automation, scheduling, sentiment, embeddings, RAG, or direct database persistence.
+The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer contains one opt-in live HTTP scraper for ZSE announcements, disabled by default, plus a controlled backend submission client that defaults to OFF, can use DRY_RUN, and has an operator-run DRY_RUN smoke script. It intentionally contains no browser automation, scheduling, sentiment, embeddings, RAG, or direct database persistence.
 
 ---
 
@@ -167,16 +166,16 @@ The backend intentionally contains no authentication, users, asset/news write ro
 
 ## Next Immediate Task
 
-Sprint 016 should validate the controlled backend submission workflow against a running local backend in DRY_RUN mode, then document any PostgreSQL or backend availability blockers. Do not add schedulers, authentication, AI, frontend integration, or broad multi-source scraping yet.
+Sprint 017 should fix local PostgreSQL credentials or provide a disposable local database path, then rerun DRY_RUN smoke until backend duplicate and asset checks complete without authentication errors. Do not enable WRITE, schedulers, authentication, AI, frontend integration, or broad multi-source scraping yet.
 
 ---
 
 ## Definition of Done
 
-Sprint 015 is complete because:
+Sprint 016 is complete because:
 
-* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, context factory, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff adapter, handoff preview command, controlled backend submission client, and backend submission command exist.
-* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, placeholder scraper context injection, the ZSE live scraper parser/opt-in guard, backend handoff preview behavior, and backend submission mode behavior.
+* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, context factory, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff adapter, handoff preview command, controlled backend submission client, backend submission command, and backend submission smoke command exist.
+* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, placeholder scraper context injection, the ZSE live scraper parser/opt-in guard, backend handoff preview behavior, backend submission mode behavior, and backend submission smoke behavior.
 * `python -m pytest` passes from repository root.
 * No automated live website requests, Playwright, Selenium, BeautifulSoup dependency, scheduler jobs, AI, sentiment, embeddings, RAG, frontend changes, authentication, or database writes were added.
 * Project documentation is updated.
@@ -187,19 +186,22 @@ Sprint 015 is complete because:
 
 * Date: 2026-06-26
 * AI Agent: Codex
-* Completed Task: Completed Sprint 015 controlled backend submission workflow foundation.
+* Completed Task: Completed Sprint 016 local DRY_RUN backend submission validation and smoke script.
 
 ---
 
 ## Validation Results
 
-* Full repository tests: `python -m pytest` passed from repository root, 98 tests passed.
+* Full repository tests: `python -m pytest` passed from repository root, 103 tests passed.
 * Handoff preview: `python -m scrapers.run_handoff_preview` printed DRY_RUN JSON for `/api/v1/ingestion/news` without backend submission.
 * Backend submission command: `python -m scrapers.run_backend_submission` completed in default OFF mode without contacting a backend.
-* Scraper validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, `ScraperContextFactory`, the opt-in ZSE live scraper, backend handoff preview adapter, and backend submission client.
+* Local backend smoke: FastAPI started on `http://127.0.0.1:8001`; health passed; `python -m scrapers.run_backend_submission_smoke` reached `/api/v1/ingestion/news` in DRY_RUN mode and received HTTP 200, with article-level errors caused by PostgreSQL authentication failure for `investguide_user`.
+* Scraper validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, `ScraperContextFactory`, the opt-in ZSE live scraper, backend handoff preview adapter, backend submission client, and backend submission smoke script.
 * Network safety: live scraper requests are disabled by default; ZSE live scraper tests use saved HTML fixtures and injected fake transports.
-* Database safety: scraper infrastructure, ZSE live scraper, and handoff preview do not import backend database sessions and perform no database writes.
+* Database safety: scraper infrastructure, ZSE live scraper, handoff preview, and submission smoke do not import backend database sessions and perform no direct database writes.
 * Existing backend validation remains covered by the repository test suite; live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication.
+
+
 
 
 

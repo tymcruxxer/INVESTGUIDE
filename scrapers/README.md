@@ -28,6 +28,7 @@ Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sp
 * opt-in ZSE live announcements scraper using saved fixtures and mocked transports in tests
 * backend ingestion handoff preview adapter and JSON preview command
 * controlled backend submission client and submission report command
+* operator-run backend DRY_RUN smoke command
 
 
 ## Core Scraper Infrastructure
@@ -133,6 +134,34 @@ Sprint 014 adds a contract-only adapter for the existing backend ingestion endpo
 The preview command runs the fixture scraper flow, normalizes and deduplicates articles, links asset tickers, attaches trust scores, builds dry-run payloads, and prints the backend request JSON. It does not send HTTP requests and does not write to the database.
 
 ZSE live validation notes live in `scrapers/zse/LIVE_VALIDATION.md`. Live mode remains disabled by default and manual live validation is optional, local, and gated by robots/terms review.
+## Local Backend DRY_RUN Smoke
+
+Sprint 016 adds an operator-run smoke script for validating the scraper-to-backend submission path against a running local FastAPI backend.
+
+* Command: `python -m scrapers.run_backend_submission_smoke`
+* Required mode: `BACKEND_SUBMISSION_MODE=DRY_RUN`
+* Target: configured `BACKEND_URL`, default `http://localhost:8000`
+* Safety: the smoke script never uses WRITE mode and exits cleanly if the backend is unavailable.
+
+Start the backend from `backend/` on an available port:
+
+```bash
+python -m uvicorn app.main:app --reload --port 8001
+```
+
+PowerShell smoke command from repository root:
+
+```powershell
+$env:BACKEND_SUBMISSION_MODE='DRY_RUN'; $env:BACKEND_URL='http://127.0.0.1:8001'; python -m scrapers.run_backend_submission_smoke; Remove-Item Env:BACKEND_SUBMISSION_MODE; Remove-Item Env:BACKEND_URL
+```
+
+Bash-compatible form:
+
+```bash
+BACKEND_SUBMISSION_MODE=DRY_RUN BACKEND_URL=http://127.0.0.1:8001 python -m scrapers.run_backend_submission_smoke
+```
+
+Current local validation result: backend health passed on port `8001`, and the DRY_RUN request reached `/api/v1/ingestion/news`. Article-level validation is still blocked by local PostgreSQL authentication for `investguide_user`; no scraper database write occurred.
 ## Controlled Backend Submission
 
 Sprint 015 adds a reusable backend submission client for scraper-generated ingestion payloads.
@@ -193,6 +222,8 @@ The command prints:
 * no sentiment, embeddings, RAG, or AI analysis
 
 Placeholder scrapers intentionally return local fixture articles through `fetch()` so tests can validate contracts without external network calls.
+
+
 
 
 

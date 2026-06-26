@@ -333,6 +333,25 @@ Scraper-side controls:
 * `BACKEND_API_VERSION` - API version path segment, currently `v1`.
 
 Backend-side controls still apply. `INGESTION_MODE` defaults to `DRY_RUN`, and live persistence requires the backend database to be configured, migrations to be applied, assets to be seeded, and the request mode/backend settings to allow writes. The scraper client does not bypass backend validation, duplicate checks, asset resolution, or transaction handling.
+### Local DRY_RUN Smoke Validation
+
+To validate scraper submission against a running local backend without enabling writes:
+
+1. Start the backend from `backend/`:
+
+```bash
+python -m uvicorn app.main:app --reload --port 8001
+```
+
+2. From the repository root, run the PowerShell smoke command:
+
+```powershell
+$env:BACKEND_SUBMISSION_MODE='DRY_RUN'; $env:BACKEND_URL='http://127.0.0.1:8001'; python -m scrapers.run_backend_submission_smoke; Remove-Item Env:BACKEND_SUBMISSION_MODE; Remove-Item Env:BACKEND_URL
+```
+
+The smoke command checks `/api/v1/health`, builds fixture scraper payloads, and posts to `/api/v1/ingestion/news` with `mode: "DRY_RUN"`. It never uses WRITE mode.
+
+Current local validation reached the ingestion endpoint and received HTTP 200, but article-level validation reported PostgreSQL authentication failure for `investguide_user`. Configure `DATABASE_URL`, apply migrations, and seed assets before expecting full DRY_RUN validation with duplicate and asset checks.
 ## Asset Domain Foundation
 
 The first domain model layer is implemented for investment assets:
@@ -422,3 +441,4 @@ backend/
 |-- README.md
 `-- requirements.txt
 ```
+

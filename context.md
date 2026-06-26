@@ -1539,3 +1539,69 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 016: validate the controlled backend submission workflow against a running local backend in DRY_RUN mode and document remaining backend/PostgreSQL blockers before considering any operator-approved WRITE-mode smoke test.
+
+---
+
+## Session 021
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 016 by validating the controlled backend submission workflow against a running local FastAPI backend in DRY_RUN mode only.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added `scrapers/run_backend_submission_smoke.py` as an operator-run local DRY_RUN smoke script.
+* Smoke script checks backend health, runs the existing fixture scraper pipeline, submits to the backend only in DRY_RUN mode, refuses WRITE mode, and exits cleanly if the backend is unavailable.
+* Added automated tests for smoke script importability, backend unavailable handling, DRY_RUN request mode, response parsing, and WRITE refusal.
+* Ran the full backend and scraper test suite.
+* Started the local FastAPI backend on port `8001`.
+* Verified `GET /api/v1/health` returned a healthy response.
+* Ran scraper-generated DRY_RUN submission against `POST /api/v1/ingestion/news` using PowerShell environment syntax.
+* Confirmed the request reached the backend and returned HTTP 200, while article-level validation reported the existing PostgreSQL authentication blocker for `investguide_user`.
+* Updated scraper README, backend README, and project state documentation.
+
+Files Created:
+
+* `scrapers/run_backend_submission_smoke.py`
+* `scrapers/tests/test_backend_submission_smoke.py`
+
+Files Modified:
+
+* `scrapers/README.md`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* The smoke script is operator-run only and is not part of automatic runtime execution.
+* The smoke script requires `BACKEND_SUBMISSION_MODE=DRY_RUN`; it never uses WRITE mode even if WRITE is configured.
+* Backend availability is checked before submission through `/api/v1/health`.
+* Automated tests mock backend responses and do not require a running backend.
+* No scheduler, live scraping, frontend integration, AI, authentication, or direct scraper database writes were added.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 103 tests passed.
+* `python -m scrapers.run_backend_submission`: passed in default OFF mode, produced `submitted=false`.
+* `python -m uvicorn app.main:app --reload --port 8001`: backend started successfully from `backend/`.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8001/api/v1/health`: returned `success=true`, `status=ok`, version `0.1.0-alpha`.
+* PowerShell smoke command: `$env:BACKEND_SUBMISSION_MODE='DRY_RUN'; $env:BACKEND_URL='http://127.0.0.1:8001'; python -m scrapers.run_backend_submission_smoke; Remove-Item Env:BACKEND_SUBMISSION_MODE; Remove-Item Env:BACKEND_URL`.
+* Smoke result: backend available, attempted submission true, effective mode DRY_RUN, HTTP status 200, payload count 8, rejected 8 due to PostgreSQL authentication failure for `investguide_user`.
+
+Known Issues Update:
+
+* Resolved: controlled backend submission had not been validated against a running FastAPI process; Sprint 016 confirmed transport and endpoint wiring in DRY_RUN mode.
+* Unresolved: full article-level DRY_RUN validation is blocked by local PostgreSQL authentication failure for `investguide_user`.
+* Unresolved: local PostgreSQL client commands `psql` and `pg_isready` remain unavailable on PATH.
+* Unresolved: WRITE mode was intentionally not tested.
+* Unresolved: live ZSE execution, schedulers, automatic scraping, broad multi-source live scraping, AI, sentiment analysis, embeddings, RAG, authentication, analytics, and frontend integration remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 016 completed the local DRY_RUN backend submission validation pass. The scraper pipeline can reach the running FastAPI ingestion endpoint safely in DRY_RUN mode, but backend article validation cannot complete until local PostgreSQL credentials are fixed.
+
+Next Recommended Task:
+
+* Sprint 017: fix local PostgreSQL credentials or provide a disposable local database path, apply migrations, seed assets, and rerun the DRY_RUN smoke until duplicate checks and asset resolution complete without authentication errors. Do not enable WRITE yet.
