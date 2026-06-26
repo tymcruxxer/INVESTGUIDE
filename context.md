@@ -1605,3 +1605,147 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 017: fix local PostgreSQL credentials or provide a disposable local database path, apply migrations, seed assets, and rerun the DRY_RUN smoke until duplicate checks and asset resolution complete without authentication errors. Do not enable WRITE yet.
+
+---
+
+## Session 022
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 017 by making the backend development database workflow reproducible with Docker Compose, bootstrap tooling, diagnostics, and richer health reporting.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Added root Docker Compose configuration for PostgreSQL 16 with persistent named volume, health check, restart policy, and standardized development credentials.
+* Updated backend configuration defaults and `.env.example` to use the standardized local development `DATABASE_URL`.
+* Added shared database diagnostics helpers for connection, Alembic revision, seed-data, and asset-count checks.
+* Extended `GET /api/v1/health` to report `database`, `migrations`, `environment`, `version`, and `status` without exposing secrets.
+* Added `backend/scripts/bootstrap_dev.py` to wait for PostgreSQL, apply migrations, seed development assets, and print a readiness summary.
+* Added `backend/scripts/check_database.py` to verify database reachability, credentials, migration status, seed data presence, and asset count with non-zero failure exit.
+* Added automated tests for health response metadata, diagnostics helpers, bootstrap helper behavior, and diagnostics CLI behavior without requiring Docker.
+* Updated backend README and root README with Docker setup, first-time workflow, bootstrap, diagnostics, health response, and troubleshooting notes.
+* Ran automated tests, Alembic current, backend startup, health smoke, and DRY_RUN backend submission smoke.
+
+Files Created:
+
+* `docker-compose.yml`
+* `backend/app/database/diagnostics.py`
+* `backend/scripts/__init__.py`
+* `backend/scripts/bootstrap_dev.py`
+* `backend/scripts/check_database.py`
+* `backend/tests/test_bootstrap_dev.py`
+* `backend/tests/test_check_database_script.py`
+* `backend/tests/test_database_diagnostics.py`
+
+Files Modified:
+
+* `README.md`
+* `backend/.env.example`
+* `backend/README.md`
+* `backend/alembic.ini`
+* `backend/app/api/v1/health.py`
+* `backend/app/core/config.py`
+* `backend/tests/test_health.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* PostgreSQL 16 via Docker Compose is the standardized local database workflow.
+* Development credentials in `docker-compose.yml` and `.env.example` are intentionally local-only defaults; real hosted credentials must stay in untracked `.env` files.
+* Bootstrap and diagnostics are explicit operator commands, not app startup side effects.
+* Health remains an application liveness endpoint while exposing database readiness fields in the response envelope.
+* Automated tests mock or use in-memory SQLite and must not require Docker or a live PostgreSQL service.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 112 tests passed.
+* `docker compose up -d`: failed because `docker` is not recognized on this machine.
+* `python backend/scripts/bootstrap_dev.py`: failed cleanly because the existing localhost PostgreSQL service rejects `investguide_user` credentials.
+* `python backend/scripts/check_database.py`: failed cleanly with database unavailable/authentication failure for `investguide_user`.
+* `python -m alembic current` from `backend/`: loaded Alembic configuration successfully and deferred revision lookup because PostgreSQL authentication failed for `investguide_user`.
+* `python -m uvicorn app.main:app --reload --port 8001` from `backend/`: started successfully for validation.
+* `Invoke-RestMethod -Uri http://127.0.0.1:8001/api/v1/health`: returned `success=true`, `status=ok`, `database=unavailable`, `migrations=unavailable`, `environment=development`, and version `0.1.0-alpha`.
+* PowerShell DRY_RUN smoke command reached `/api/v1/ingestion/news` and received HTTP 200, but rejected 8 article payloads due to PostgreSQL authentication failure for `investguide_user`.
+* Runtime cleanup: the Uvicorn validation process was stopped.
+
+Known Issues Update:
+
+* New blocker: Docker is not installed or not available on PATH, so the new Compose stack could not be started on this machine.
+* Unresolved: existing local PostgreSQL on port `5432` rejects `investguide_user`; full bootstrap and DRY_RUN article validation require the Docker Postgres service or corrected local credentials.
+* Unresolved: `psql` and `pg_isready` are not available on PATH.
+* Unresolved: full database-backed validation remains pending until PostgreSQL is reachable, migrated, and seeded.
+* Unresolved: WRITE mode, schedulers, authentication, AI, analytics, frontend integration, and broad live scraping remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 017 implemented the reproducible backend development environment foundation in repository code. A future developer can use Docker Compose, bootstrap, diagnostics, and the richer health endpoint once Docker is installed; this machine remains blocked by missing Docker and the pre-existing local PostgreSQL credential mismatch.
+
+Next Recommended Task:
+
+* Sprint 018: install or enable Docker Compose on the development machine, run `docker compose up -d`, execute `python backend/scripts/bootstrap_dev.py`, confirm `python backend/scripts/check_database.py` passes, then rerun the DRY_RUN backend submission smoke until duplicate checks and asset resolution complete without authentication errors. Do not enable WRITE mode yet.
+
+---
+
+## Session 023
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 017.1 by adding a single-command backend development launcher for the Docker Compose, bootstrap, and Uvicorn workflow.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Added `backend/scripts/dev.py` as the one-command backend development launcher.
+* Implemented Docker installed and Docker daemon checks with clear operator-facing failure messages.
+* Implemented Docker Compose startup using the repository root.
+* Reused the existing backend bootstrap readiness/migration/seed workflow instead of duplicating database setup behavior.
+* Added PostgreSQL readiness waiting before bootstrap when Docker startup is enabled.
+* Added Uvicorn startup from the backend directory with configurable port.
+* Added `--no-server`, `--port`, `--skip-docker`, and `--skip-bootstrap` flags.
+* Added tests covering Docker missing handling, Docker daemon unavailable handling, Compose command construction, PostgreSQL wait behavior, bootstrap delegation, Uvicorn command construction, and flag behavior.
+* Updated root README and backend README with the one-command workflow, flags, common errors, and safety notes.
+* Updated `PROJECT_STATE.md` for Sprint 017.1.
+
+Files Created:
+
+* `backend/scripts/dev.py`
+* `backend/tests/test_dev_launcher.py`
+
+Files Modified:
+
+* `README.md`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* The developer launcher is an operator command, not an application startup hook.
+* The launcher delegates migrations and seed work to `bootstrap_dev.py` so database setup remains centralized.
+* The launcher uses `subprocess.run` without shell interpolation and never prints credentials.
+* The launcher does not reset databases, delete Docker volumes, enable WRITE ingestion mode, start schedulers, start scrapers, run live scraping, or add product behavior.
+* Automated tests mock Docker, bootstrap, and Uvicorn execution; Docker is not required for pytest.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 122 tests passed.
+* `python backend/scripts/dev.py --no-server`: failed clearly with `Docker is not installed or not available on PATH. Install Docker Desktop or another Docker Compose runtime, then retry.`
+* Docker-backed `python backend/scripts/dev.py --port 8001`: not run because Docker is unavailable on this machine.
+
+Known Issues Update:
+
+* Unresolved: Docker is not installed or not available on PATH, so the full one-command launcher cannot start Compose locally yet.
+* Unresolved: existing local PostgreSQL on port `5432` rejects `investguide_user`, so database-backed bootstrap/diagnostics remain blocked without Docker or corrected local credentials.
+* Unresolved: `psql` and `pg_isready` are not available on PATH.
+* Unresolved: full DRY_RUN article validation still requires reachable, migrated, seeded PostgreSQL.
+* Unresolved: WRITE mode, schedulers, authentication, AI, analytics, frontend integration, and broad live scraping remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 017.1 added a safe single-command backend development launcher. Future developers can use `python backend/scripts/dev.py --port 8001` once Docker is installed, while `--no-server`, `--skip-docker`, and `--skip-bootstrap` support controlled troubleshooting paths.
+
+Next Recommended Task:
+
+* Sprint 018: install/enable Docker Compose, run `python backend/scripts/dev.py --no-server`, then run `python backend/scripts/dev.py --port 8001` and verify backend health plus DRY_RUN ingestion complete without PostgreSQL authentication errors. Do not enable WRITE mode yet.

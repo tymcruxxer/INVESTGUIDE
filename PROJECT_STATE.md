@@ -1,4 +1,4 @@
-﻿# InvestGuide Project State
+# InvestGuide Project State
 
 ## Project Summary
 
@@ -9,39 +9,39 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 016
+Sprint Number: Sprint 017.1
 
-Sprint Goal: Validate the controlled backend submission workflow against a running local FastAPI backend in DRY_RUN mode only, without enabling WRITE mode, live scraping, or scheduling.
+Sprint Goal: Add a single-command backend developer launcher on top of the Sprint 017 Docker/bootstrap workflow.
 
 Current Tasks:
 
-* [x] Added operator-run backend submission smoke script.
-* [x] Verified smoke script importability, backend unavailable handling, DRY_RUN request mode, response parsing, and WRITE refusal with mocked tests.
-* [x] Ran backend locally on port `8001`.
-* [x] Verified `GET /api/v1/health` returned healthy response.
-* [x] Submitted scraper-generated payloads to `/api/v1/ingestion/news` in DRY_RUN mode only.
-* [x] Documented PostgreSQL authentication blocker for article-level ingestion validation.
-* [x] Updated scraper, backend, project state, and context documentation.
+* [x] Added `python backend/scripts/dev.py` as the one-command backend development launcher.
+* [x] Added Docker installed and Docker daemon checks with clear failure messages.
+* [x] Added Docker Compose startup, PostgreSQL wait, bootstrap delegation, and Uvicorn launch flow.
+* [x] Added `--no-server`, `--port`, `--skip-docker`, and `--skip-bootstrap` flags.
+* [x] Added mocked tests for Docker failures, command construction, wait behavior, bootstrap delegation, Uvicorn startup, and flag behavior.
+* [x] Updated root and backend documentation with launcher workflow, flags, common errors, and safety notes.
+* [x] Validated automated tests and real missing-Docker launcher behavior.
+* [ ] Validate full one-command launch after Docker is installed or available on PATH.
 
 Sprint Exit Criteria:
 
-* Backend DRY_RUN submission workflow is validated or blocker is clearly documented.
-* Smoke command exists.
-* Smoke command never uses WRITE.
-* Default submission remains OFF.
-* Automated tests pass without backend dependency.
-* Backend HTTP submission is operator-controlled.
-* No live scraping occurs.
-* No database writes occur from scrapers.
-* Documentation is updated.
+* `backend/scripts/dev.py` exists.
+* One-command development workflow is documented.
+* Missing Docker and stopped Docker daemon cases fail clearly.
+* Launcher can start Docker Compose, bootstrap the backend, and start Uvicorn when Docker/PostgreSQL are available.
+* Tests pass without Docker.
+* No product features, frontend changes, auth, AI, analytics, scraping, scheduler, WRITE mode, new database models, or destructive database reset commands are added.
+
 ---
+
 ## Module Status
 
 Frontend: Stable
 
 Backend: Stable
 
-Database: In Progress - models and migrations exist; live migration execution remains blocked on valid local PostgreSQL credentials
+Database: In Progress - SQLAlchemy/Alembic models, Docker Compose workflow, bootstrap script, diagnostics script, and one-command dev launcher exist; local full validation is blocked because Docker is not installed or not on PATH on this machine
 
 Authentication: Not Started
 
@@ -49,7 +49,7 @@ API: In Progress - health, read-only assets, read-only news, and internal news i
 
 Market Data: In Progress - asset domain/API foundation exists; real market data ingestion not implemented
 
-Scrapers: In Progress - fixture-only scraper contracts, placeholders, core scraper infrastructure, `ScraperContext` dependency injection, pipeline utilities, dry-run ingestion orchestration, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, controlled backend submission client, and operator-run DRY_RUN smoke script exist; live fetching is disabled by default and submission defaults to OFF
+Scrapers: In Progress - fixture-only scraper contracts, core scraper infrastructure, opt-in ZSE live scraper, dry-run orchestration, backend handoff preview, controlled backend submission, and DRY_RUN smoke path exist; live fetching remains disabled by default
 
 Analytics Engine: Not Started
 
@@ -71,9 +71,11 @@ Frontend: Next.js 14.2.x, React 18.3.x, TypeScript 5.3.x
 
 Backend: Python 3.12+ target; validated on Python 3.13.2, FastAPI, Uvicorn
 
-Database: PostgreSQL planned; SQLAlchemy 2.x base/session configured; Alembic configured; asset and news domain models/migrations added; real migration/seed blocked by local PostgreSQL authentication
+Database: PostgreSQL 16 for local Docker development, PostgreSQL planned for hosted environments, SQLAlchemy 2.x, Alembic, psycopg 3
 
-Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, source registry, source config, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, dry-run ingestion orchestration, backend handoff preview formatting, and controlled backend submission reporting, and operator-run DRY_RUN smoke validation; one opt-in ZSE live scraper exists but is disabled by default; no Playwright, browser automation, scheduler, automatic backend posting, WRITE smoke, or scraper DB writes yet
+Developer Tooling: Docker Compose, `backend/scripts/dev.py`, `backend/scripts/bootstrap_dev.py`, `backend/scripts/check_database.py`
+
+Scraping: Python dataclass-based scraper contracts, fixture-only placeholder source modules, `ScraperContext`, context factory, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots metadata, metrics, logging, normalization, deduplication, asset linking, source trust scoring, dry-run ingestion orchestration, backend handoff preview formatting, and controlled backend submission reporting
 
 State Management: Zustand, TanStack Query
 
@@ -87,7 +89,7 @@ AI: RAG/OpenAI/Ollama strategy documented, not implemented
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: `python -m pytest` from repository root runs backend and scraper tests; 103 tests pass
+Testing: `python -m pytest` from repository root runs backend and scraper tests; 122 tests pass
 
 ---
 
@@ -99,33 +101,21 @@ investguide/
 |-- backend/
 |   |-- alembic/
 |   |-- app/
+|   |-- scripts/
+|   |   |-- bootstrap_dev.py
+|   |   |-- check_database.py
+|   |   `-- dev.py
 |   |-- tests/
 |   |-- .env.example
 |   |-- alembic.ini
 |   |-- README.md
 |   `-- requirements.txt
 |-- scrapers/
-|   |-- base_scraper.py
-|   |-- fixtures.py
-|   |-- run_dry_ingestion.py
-|   |-- news/
-|   |-- pipeline/
-|   |   |-- asset_linker.py
-|   |   |-- deduplicator.py
-|   |   |-- ingestion_contract.py
-|   |   |-- ingestion_orchestrator.py
-|   |   |-- normalizer.py
-|   |   `-- source_trust.py
-|   |-- rbz/
-|   |-- research/
-|   |-- tests/
-|   |-- vfex/
-|   |-- zse/
-|   `-- README.md
 |-- ai-services/
 |-- shared/
 |-- infrastructure/
 |-- docs/
+|-- docker-compose.yml
 |-- AGENT.md
 |-- PROJECT_STATE.md
 |-- context.md
@@ -138,25 +128,24 @@ investguide/
 
 ## Current Architecture
 
-The repository is a modular monorepo scaffold. The frontend foundation is stable. The backend foundation is stable. The database foundation includes SQLAlchemy metadata naming conventions, declarative base, timestamp mixin conventions, model import registry, session factory, and Alembic migration scaffolding wired to application settings.
+The repository remains a modular monorepo. The frontend foundation is stable. The backend foundation is stable and now includes reproducible local database infrastructure plus a single-command development launcher. The launcher coordinates Docker checks, Compose startup, PostgreSQL readiness, bootstrap migrations/seeding, and Uvicorn startup without adding app startup side effects or destructive database behavior.
 
-The asset foundation includes the asset domain model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` many-to-many association table, asset-news relationships, read-only service, read-only `/api/v1/news` API, development sample news data, and migrations.
+The asset foundation includes the asset model, migration, development seed command, read-only service, and read-only API. The news intelligence foundation includes the news article model, persisted unique/indexed `content_hash`, `asset_news` relationship, read-only service/API, development sample data, and backend ingestion adapter.
 
-The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, `ScraperContext` dependency injection, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff preview adapter, controlled backend submission client, operator-run DRY_RUN smoke script, normalization, deduplication, explicit asset linking, backend-compatible ingestion payloads, source trust scoring, and dry-run ingestion orchestration. The dry-run command reports what would be persisted but does not write to any database. The backend ingestion adapter now accepts normalized payloads, validates them, checks duplicates with URL and indexed content-hash lookups, resolves asset relationships, supports DRY_RUN and WRITE modes, and persists news records through article-level transaction boundaries.
+The scraper foundation includes source-independent contracts, fixture-only source placeholders, reusable core scraper infrastructure, one opt-in ZSE live announcements scraper, backend handoff preview adapter, controlled backend submission client, and operator-run DRY_RUN smoke script. Scrapers do not write directly to the database.
 
-The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The scraper layer contains one opt-in live HTTP scraper for ZSE announcements, disabled by default, plus a controlled backend submission client that defaults to OFF, can use DRY_RUN, and has an operator-run DRY_RUN smoke script. It intentionally contains no browser automation, scheduling, sentiment, embeddings, RAG, or direct database persistence.
+The backend intentionally contains no authentication, users, asset/news write routes, analytics, AI, notifications, or frontend integration. The launcher intentionally does not enable WRITE ingestion mode, schedulers, scrapers, live scraping, AI, or analytics jobs.
 
 ---
 
 ## Current Blockers
 
+* Docker is not installed or not available on PATH on this machine, so the full one-command launcher cannot start the Compose stack locally yet.
+* Existing local PostgreSQL on port `5432` rejects the Compose development credentials for `investguide_user`, so bootstrap, diagnostics, Alembic revision lookup, and article-level DRY_RUN ingestion remain database-blocked until Docker PostgreSQL is available or credentials are corrected.
 * Local PostgreSQL client commands `psql` and `pg_isready` are not available on PATH.
-* Port `8000` still has a persistent listener on PID `4288`; current-app smoke testing can use alternate port `8001` until that local process is cleared.
-* Real migration execution is blocked by PostgreSQL authentication failure for the configured local development user.
-* Real seed execution is blocked by the same PostgreSQL authentication failure.
-* Live database-backed asset/news endpoint success is blocked until PostgreSQL credentials are configured, migrations are applied, and data is seeded/ingested.
+* Real seed execution is blocked until PostgreSQL credentials match the configured `DATABASE_URL` and migrations are applied.
+* Full database-backed asset/news endpoint validation is blocked until PostgreSQL is reachable, migrated, and seeded.
 * Real scraper fetching is implemented only as a disabled-by-default ZSE announcements pattern; broad live scraping remains intentionally unimplemented.
-* Resolved: dry-run ingestion can now hand normalized payloads to the backend ingestion adapter; persistence is available only through explicit WRITE mode.
 * Frontend data workflows are blocked by missing frontend integration and broader business APIs.
 * Authentication-dependent features are blocked because auth is not implemented.
 * `docs/ai/ai-agent-rules.md` is empty.
@@ -166,19 +155,13 @@ The backend intentionally contains no authentication, users, asset/news write ro
 
 ## Next Immediate Task
 
-Sprint 017 should fix local PostgreSQL credentials or provide a disposable local database path, then rerun DRY_RUN smoke until backend duplicate and asset checks complete without authentication errors. Do not enable WRITE, schedulers, authentication, AI, frontend integration, or broad multi-source scraping yet.
+Sprint 018 should install/enable Docker Desktop or another Docker Compose runtime, rerun `python backend/scripts/dev.py --no-server`, then run `python backend/scripts/dev.py --port 8001` and verify backend health plus DRY_RUN ingestion without PostgreSQL authentication errors. Do not enable WRITE mode, schedulers, authentication, AI, or frontend integration yet.
 
 ---
 
 ## Definition of Done
 
-Sprint 016 is complete because:
-
-* Source registry, source configuration, HTTP abstraction, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, logger, source metadata, `ScraperContext`, context factory, one opt-in ZSE live announcements scraper, ZSE live validation checklist, backend handoff adapter, handoff preview command, controlled backend submission client, backend submission command, and backend submission smoke command exist.
-* Core scraper tests cover registry behavior, environment loading, retry/backoff behavior, rate limiting, HTTP transport injection, robots metadata, metrics, user agents, logging redaction, context creation, factory wiring, source-specific config loading, placeholder scraper context injection, the ZSE live scraper parser/opt-in guard, backend handoff preview behavior, backend submission mode behavior, and backend submission smoke behavior.
-* `python -m pytest` passes from repository root.
-* No automated live website requests, Playwright, Selenium, BeautifulSoup dependency, scheduler jobs, AI, sentiment, embeddings, RAG, frontend changes, authentication, or database writes were added.
-* Project documentation is updated.
+Sprint 017.1 is implemented in repository code because the launcher, flags, tests, and documentation exist. Full local runtime acceptance is pending host Docker availability.
 
 ---
 
@@ -186,26 +169,13 @@ Sprint 016 is complete because:
 
 * Date: 2026-06-26
 * AI Agent: Codex
-* Completed Task: Completed Sprint 016 local DRY_RUN backend submission validation and smoke script.
+* Completed Task: Added Sprint 017.1 one-command backend developer launcher and documented the Docker host blocker.
 
 ---
 
 ## Validation Results
 
-* Full repository tests: `python -m pytest` passed from repository root, 103 tests passed.
-* Handoff preview: `python -m scrapers.run_handoff_preview` printed DRY_RUN JSON for `/api/v1/ingestion/news` without backend submission.
-* Backend submission command: `python -m scrapers.run_backend_submission` completed in default OFF mode without contacting a backend.
-* Local backend smoke: FastAPI started on `http://127.0.0.1:8001`; health passed; `python -m scrapers.run_backend_submission_smoke` reached `/api/v1/ingestion/news` in DRY_RUN mode and received HTTP 200, with article-level errors caused by PostgreSQL authentication failure for `investguide_user`.
-* Scraper validation: offline tests cover source registry, source config, HTTP abstraction with fake transport, retry policy, rate limiter, user-agent manager, robots policy, metrics collector, scraper logger, `ScraperContext`, `ScraperContextFactory`, the opt-in ZSE live scraper, backend handoff preview adapter, backend submission client, and backend submission smoke script.
-* Network safety: live scraper requests are disabled by default; ZSE live scraper tests use saved HTML fixtures and injected fake transports.
-* Database safety: scraper infrastructure, ZSE live scraper, handoff preview, and submission smoke do not import backend database sessions and perform no direct database writes.
-* Existing backend validation remains covered by the repository test suite; live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication.
-
-
-
-
-
-
-
-
-
+* Tests: `python -m pytest` passed from repository root, 122 tests passed.
+* Launcher validation: `python backend/scripts/dev.py --no-server` failed clearly because Docker is not installed or not available on PATH.
+* Docker-backed launch: not run because Docker is unavailable on this machine.
+* Product safety: no frontend changes, API features, auth, AI, analytics, scraping, scheduler, WRITE mode, new models, destructive database commands, or database reset behavior were added.

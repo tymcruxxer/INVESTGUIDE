@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
 
     database_url: str = Field(
-        default="postgresql+psycopg://postgres:postgres@localhost:5432/investguide",
+        default="postgresql+psycopg://investguide_user:investguide_password@localhost:5432/investguide",
         validation_alias="DATABASE_URL",
     )
 

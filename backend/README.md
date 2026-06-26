@@ -1,4 +1,4 @@
-﻿# InvestGuide Backend
+# InvestGuide Backend
 
 FastAPI backend foundation for InvestGuide.
 
@@ -9,7 +9,8 @@ Business features such as authentication, asset/news write endpoints, analytics,
 ## Requirements
 
 * Python 3.12+
-* PostgreSQL for migration execution, seeding, and live database-backed asset endpoints
+* Docker Desktop or another Docker Compose compatible runtime for reproducible local PostgreSQL
+* PostgreSQL for hosted/manual migration execution, seeding, and live database-backed asset endpoints
 
 ## Install
 
@@ -41,27 +42,93 @@ Environment variables:
 
 Do not commit real database passwords or hosted database credentials.
 
-## Local PostgreSQL Setup
+## One-Command Development Launcher
 
-Install PostgreSQL server and client tools, and ensure commands such as `psql` are available on your PATH. Start the PostgreSQL service before running migrations.
-
-Create a local development database and user using your PostgreSQL client. Example SQL:
-
-```sql
-CREATE DATABASE investguide_dev;
-CREATE USER investguide_user WITH PASSWORD 'replace_me';
-GRANT ALL PRIVILEGES ON DATABASE investguide_dev TO investguide_user;
-```
-
-Then set `DATABASE_URL` in `.env`:
+Sprint 017.1 adds a single backend development entry point. From the repository root, run:
 
 ```bash
-DATABASE_URL=postgresql+psycopg://investguide_user:replace_me@localhost:5432/investguide_dev
+python backend/scripts/dev.py --port 8001
 ```
 
-If you use the default local `postgres` user, update the username and password to match your machine. The repository does not include real credentials.
+The launcher:
 
-## Hosted PostgreSQL Setup
+* verifies Docker is installed and the Docker daemon is running
+* starts `docker compose up -d` unless `--skip-docker` is provided
+* waits for PostgreSQL to accept the configured backend connection
+* runs the existing backend bootstrap unless `--skip-bootstrap` is provided
+* starts FastAPI with Uvicorn unless `--no-server` is provided
+* prints a clear status summary
+
+Available flags:
+
+* `--no-server` - prepare Docker/database state but do not start FastAPI
+* `--port 8001` - choose the Uvicorn port
+* `--skip-docker` - assume the database already exists and do not start Docker Compose
+* `--skip-bootstrap` - do not apply migrations or seed development assets
+
+Safety notes:
+
+* the launcher never prints database credentials
+* it does not delete volumes, reset databases, or run destructive commands
+* it does not enable WRITE ingestion mode
+* it does not start schedulers, scrapers, live scraping, AI, or analytics jobs
+
+Common errors:
+
+* `Docker is not installed or not available on PATH` - install Docker Desktop or another Docker Compose runtime
+* `Docker daemon is not running` - start Docker Desktop or your Docker service
+* `PostgreSQL did not become reachable` - check Docker health, port `5432`, and `backend/.env`
+## Docker Compose Development Database
+
+Sprint 017 standardizes the local development database with Docker Compose.
+
+From the repository root:
+
+```bash
+docker compose up -d
+```
+
+This starts PostgreSQL 16 with:
+
+* database: `investguide`
+* user: `investguide_user`
+* password: `investguide_password`
+* host port: `5432`
+* named volume: `investguide_postgres_data`
+
+Copy the backend environment example:
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+```
+
+The default development URL is:
+
+```text
+DATABASE_URL=postgresql+psycopg://investguide_user:investguide_password@localhost:5432/investguide
+```
+
+Do not commit `.env` or real hosted credentials.
+
+## Bootstrap Local Development
+
+After starting Docker Compose, prepare the backend database from the repository root:
+
+```bash
+python backend/scripts/bootstrap_dev.py
+```
+
+The bootstrap script waits for PostgreSQL, verifies the connection, applies Alembic migrations, runs the development asset seed command, and prints a summary.
+
+Check the database at any time:
+
+```bash
+python backend/scripts/check_database.py
+```
+
+The diagnostics command checks database reachability, credentials, migration status, seed data presence, and asset count. It exits non-zero when a critical check fails.
+
+## Manual or Hosted PostgreSQL Setup
 
 For hosted PostgreSQL providers such as Supabase, Neon, Railway, or Render:
 
@@ -151,7 +218,7 @@ Health check:
 curl http://127.0.0.1:8000/api/v1/health
 ```
 
-Expected response:
+Expected response shape:
 
 ```json
 {
@@ -159,10 +226,15 @@ Expected response:
   "message": "Backend is healthy",
   "data": {
     "status": "ok",
+    "database": "connected",
+    "migrations": "current",
+    "environment": "development",
     "version": "0.1.0-alpha"
   }
 }
 ```
+
+If PostgreSQL is unavailable, the endpoint still reports FastAPI liveness with `database: "unavailable"` and `migrations: "unavailable"`; it does not expose credentials.
 
 ## Asset Read API
 
@@ -441,4 +513,5 @@ backend/
 |-- README.md
 `-- requirements.txt
 ```
+
 
