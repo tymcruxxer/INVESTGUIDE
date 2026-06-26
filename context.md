@@ -1410,3 +1410,64 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 014: perform an explicit manual live-mode validation of the ZSE announcements scraper after robots/terms review, then design the controlled persistence handoff into the existing backend ingestion adapter. Do not add AI, scheduling, authentication, frontend integration, or broad multi-source scraping yet.
+
+---
+
+## Session 019
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 014 by safely validating the ZSE live scraper workflow documentation and designing a controlled handoff from scraper dry-run output into the backend ingestion adapter without sending HTTP requests or writing to the database.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant architecture documentation before implementation.
+* Added a ZSE live validation checklist documenting target URL, robots/terms review status, live-mode enablement, rate limits, timeout, user-agent, expected output, and rollback notes.
+* Added a pure backend handoff adapter for formatting dry-run ingestion payloads into the backend `/api/v1/ingestion/news` request contract.
+* Added a handoff preview command that runs the fixture scraper flow and prints backend request JSON without sending it.
+* Added tests for backend handoff payload shape, ZSE scraper compatibility, handoff preview importability, no backend HTTP calls, no database imports/writes, and disabled-by-default live mode.
+* Updated scraper documentation and project state.
+
+Files Created:
+
+* `scrapers/zse/LIVE_VALIDATION.md`
+* `scrapers/pipeline/backend_handoff.py`
+* `scrapers/run_handoff_preview.py`
+* `scrapers/tests/test_backend_handoff.py`
+
+Files Modified:
+
+* `scrapers/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Scraper-to-backend handoff remains a formatting/contract layer only.
+* The handoff adapter targets `/api/v1/ingestion/news` and defaults to `DRY_RUN` mode.
+* The preview command prints JSON for operator review and does not import backend database sessions or send HTTP requests.
+* ZSE live validation remains manual and opt-in; automated validation remains fixture/mock based.
+* No new live sources were added.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 91 tests passed.
+* Network safety: handoff preview tests guard against backend HTTP calls; live scraper remains disabled by default.
+* Database safety: handoff preview tests guard against backend database imports and no scraper database writes occur.
+
+Known Issues Update:
+
+* Resolved: scraper output had no explicit backend ingestion request preview; Sprint 014 added a contract-only handoff adapter and preview command.
+* Unresolved: live ZSE execution has not been manually run against the internet in this environment.
+* Unresolved: robots.txt and source terms must be manually reviewed before enabling live scraping in shared or production environments.
+* Unresolved: actual backend submission from scrapers remains intentionally unimplemented until an operator-approved path is designed.
+* Unresolved: broad multi-source scraping, scheduler jobs, AI, sentiment analysis, embeddings, RAG, authentication, analytics, and frontend integration remain intentionally unimplemented.
+* Unresolved: live PostgreSQL migration/seed/ingestion validation remains blocked by local PostgreSQL authentication failure.
+
+Session Summary:
+
+* Sprint 014 completed the safe handoff design layer. The scraper pipeline can now preview the exact backend ingestion request JSON while preserving the project boundary that scrapers do not post to the backend or write to the database.
+
+Next Recommended Task:
+
+* Sprint 015: optionally perform manual live ZSE validation after robots/terms review, then design an operator-approved backend submission workflow with explicit dry-run/write controls and no scheduler automation yet.

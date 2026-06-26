@@ -2,7 +2,7 @@
 
 The scraper package contains InvestGuide's data ingestion and scraper infrastructure foundation.
 
-Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 added reusable production-grade scraper infrastructure. Sprint 013 adds the first opt-in live scraper pattern for ZSE announcements while keeping live requests disabled by default and automated tests offline.
+Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sprint 010 added dry-run ingestion orchestration. Sprint 012 added reusable production-grade scraper infrastructure. Sprint 013 added the first opt-in live scraper pattern for ZSE announcements while keeping live requests disabled by default and automated tests offline. Sprint 014 adds a live-validation checklist and a backend handoff preview adapter that formats scraper output for `/api/v1/ingestion/news` without sending HTTP requests.
 
 ## Current Capabilities
 
@@ -26,6 +26,7 @@ Sprint 009 introduced scraper contracts and fixture-only source placeholders. Sp
 * scraper lifecycle logger
 * scraper dependency context and context factory
 * opt-in ZSE live announcements scraper using saved fixtures and mocked transports in tests
+* backend ingestion handoff preview adapter and JSON preview command
 
 
 ## Core Scraper Infrastructure
@@ -113,6 +114,18 @@ Source and request policy:
 
 The parser extracts announcement-like links, normalizes relative URLs, supports ISO datetime values when available, and gracefully handles missing dates/content. It returns `ScrapedArticle` objects compatible with the normalizer, deduplicator, asset linker, and ingestion payload builder. It does not write to the backend database.
 
+## Backend Handoff Preview
+
+Sprint 014 adds a contract-only adapter for the existing backend ingestion endpoint.
+
+* Adapter: `scrapers/pipeline/backend_handoff.py`
+* Preview command: `python -m scrapers.run_handoff_preview`
+* Target endpoint: `/api/v1/ingestion/news`
+* Default request mode: `DRY_RUN`
+
+The preview command runs the fixture scraper flow, normalizes and deduplicates articles, links asset tickers, attaches trust scores, builds dry-run payloads, and prints the backend request JSON. It does not send HTTP requests and does not write to the database.
+
+ZSE live validation notes live in `scrapers/zse/LIVE_VALIDATION.md`. Live mode remains disabled by default and manual live validation is optional, local, and gated by robots/terms review.
 ## Dry-Run Command
 
 Run all fixture placeholder scrapers through the dry-run ingestion pipeline:
@@ -148,3 +161,6 @@ The command prints:
 * no sentiment, embeddings, RAG, or AI analysis
 
 Placeholder scrapers intentionally return local fixture articles through `fetch()` so tests can validate contracts without external network calls.
+
+
+
