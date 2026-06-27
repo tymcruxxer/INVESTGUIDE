@@ -1,4 +1,4 @@
-"""Pydantic schemas for investor personalization profiles."""
+﻿"""Pydantic schemas for investor personalization profiles."""
 
 from __future__ import annotations
 
@@ -26,19 +26,17 @@ class InvestorProfileBase(BaseModel):
     @field_validator("preferred_asset_types", "investment_goals", "education_focus", mode="before")
     @classmethod
     def normalize_list_values(cls, value: Any) -> list[str]:
-        """Accept strings or lists and normalize preference values."""
+        """Normalize list preference values and reject malformed list payloads."""
         if value is None:
             return []
-        if isinstance(value, str):
-            value = [value]
-        if isinstance(value, list):
-            normalized: list[str] = []
-            for item in value:
-                text = str(item).strip().lower().replace(" ", "_")
-                if text and text not in normalized:
-                    normalized.append(text)
-            return normalized
-        return value
+        if not isinstance(value, list):
+            raise ValueError("Value must be a JSON list")
+        normalized: list[str] = []
+        for item in value:
+            text = str(item).strip().lower().replace(" ", "_")
+            if text and text not in normalized:
+                normalized.append(text)
+        return normalized
 
     @field_validator("investment_horizon", "planned_investment_range", mode="before")
     @classmethod
@@ -46,7 +44,7 @@ class InvestorProfileBase(BaseModel):
         """Trim optional text fields and store blanks as null."""
         if value is None:
             return None
-        text = str(value).strip()
+        text = str(value).strip().lower().replace(" ", "_")
         return text or None
 
 
@@ -70,7 +68,7 @@ class InvestorProfileUpdate(BaseModel):
     @field_validator("preferred_asset_types", "investment_goals", "education_focus", mode="before")
     @classmethod
     def normalize_list_values(cls, value: Any) -> list[str] | None:
-        """Accept strings or lists and normalize preference values."""
+        """Normalize list preference values and reject malformed list payloads."""
         if value is None:
             return None
         return InvestorProfileBase.normalize_list_values(value)

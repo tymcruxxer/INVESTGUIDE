@@ -1,14 +1,18 @@
-"""Investor profile SQLAlchemy model for personalization foundations."""
+﻿"""Investor profile SQLAlchemy model for personalization foundations."""
 
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, Index, Integer, JSON, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Enum, ForeignKey, Index, Integer, JSON, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 from app.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class ExperienceLevel(StrEnum):
@@ -45,13 +49,18 @@ class InvestorProfile(TimestampMixin, Base):
 
     __tablename__ = "investor_profiles"
     __table_args__ = (
+        UniqueConstraint("user_id", name="uq_investor_profiles_user_id"),
         Index("ix_investor_profiles_user_id", "user_id"),
         Index("ix_investor_profiles_experience_level", "experience_level"),
         Index("ix_investor_profiles_risk_appetite", "risk_appetite"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    user_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     experience_level: Mapped[ExperienceLevel] = mapped_column(
         Enum(
             ExperienceLevel,
@@ -99,3 +108,5 @@ class InvestorProfile(TimestampMixin, Base):
         server_default=PreferredLanguageLevel.SIMPLE.value,
     )
     education_focus: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+
+    user: Mapped[User | None] = relationship("User", back_populates="investor_profile")

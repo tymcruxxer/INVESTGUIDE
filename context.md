@@ -1817,3 +1817,183 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 019: decide the authentication/profile boundary, then add controlled investor profile read/write API endpoints or internal service integration only if explicitly requested. Do not implement AI recommendations or frontend onboarding yet.
+
+---
+
+## Session 025
+
+Date: 2026-06-26
+
+Objective: Complete Sprint 019 by exposing investor personalization through controlled authentication-independent backend API endpoints.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Expanded `app/services/personalization_service.py` into a reusable service layer with investor profile retrieval, creation, update, validation, sensible defaults, and typed schema returns.
+* Added `backend/app/api/v1/investor_profile.py` with `GET`, `POST`, and `PUT` endpoints under `/api/v1/investor-profile`.
+* Registered the investor profile router in `backend/app/api/v1/router.py`.
+* Documented and implemented current-profile resolution as the first `investor_profiles` row until authentication exists.
+* Tightened schema validation so malformed JSON list fields are rejected.
+* Added business-rule validation for investment horizons, preferred asset types, and investment goals.
+* Added development demo profile seed data in `app/database/seed_investor_profile.py`.
+* Extended the existing manual seed workflow to insert the demo investor profile only when `python -m app.database.seed` is run.
+* Updated validation error serialization so Pydantic validation contexts remain JSON-safe in API error envelopes.
+* Added tests for profile API routes, service methods, validation failures, default behavior, missing profile behavior, schema serialization, and seed behavior.
+* Updated `backend/README.md` and `PROJECT_STATE.md`.
+* Ran the full repository test suite successfully.
+
+Files Created:
+
+* `backend/app/api/v1/investor_profile.py`
+* `backend/app/database/seed_investor_profile.py`
+* `backend/tests/test_investor_profile_routes.py`
+* `backend/tests/test_investor_profile_service.py`
+* `backend/tests/test_seed_investor_profile.py`
+
+Files Modified:
+
+* `backend/app/api/v1/router.py`
+* `backend/app/core/exceptions.py`
+* `backend/app/database/seed.py`
+* `backend/app/schemas/investor_profile.py`
+* `backend/app/services/personalization_service.py`
+* `backend/tests/test_investor_profile_schema.py`
+* `backend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Investor profile API remains authentication-independent and resolves the current profile as the first profile row until auth exists.
+* Development profile seed data is inserted only through the existing manual seed command and never on FastAPI startup.
+* Profile validation lives in the service layer while Pydantic handles enum/list shape validation.
+* Malformed JSON list values are rejected instead of silently coerced.
+* No authentication, AI recommendations, frontend onboarding, dashboards, watchlists, portfolio tracking, payments, live scraping, or scheduler work was added.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 153 tests passed.
+* Warning: pytest could not write its cache under `.pytest_cache` due Windows access denial; this did not fail tests.
+* Local backend endpoint smoke was not run because Docker/PostgreSQL remains unavailable on this machine.
+
+Known Issues Update:
+
+* Unresolved: profile endpoints use first-row development behavior until authentication is designed and implemented.
+* Unresolved: Docker is not installed or not available on PATH, so full local database-backed runtime validation remains blocked.
+* Unresolved: existing local PostgreSQL on port `5432` rejects `investguide_user` credentials.
+* Unresolved: frontend onboarding, AI recommendations, adaptive dashboards, portfolio tracking, watchlists, payments, live scraping, and schedulers remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 019 completed the Investor Profile API foundation. InvestGuide now exposes authentication-independent create/read/update profile endpoints with validation, service-layer business rules, development-only seed behavior, and tests passing.
+
+Next Recommended Task:
+
+* Sprint 020: decide whether to implement authentication before binding profiles to real users, or explicitly build frontend onboarding against the temporary first-profile development behavior. Do not add AI recommendations yet.
+
+---
+
+## Session 026
+
+Date: 2026-06-27
+
+Objective: Complete Sprint 020 by adding the authentication and user identity foundation, then binding investor profiles to authenticated users while preserving development-only fallback behavior.
+
+Completed:
+
+* Read the project documentation and continued from the existing backend architecture.
+* Added `User` SQLAlchemy model with unique email, optional username, hashed password, active/verified flags, and timestamps.
+* Added JWT and password hashing configuration using `python-jose`, `passlib`, and bcrypt.
+* Added authentication schemas for signup, login, public user reads, token responses, and decoded token payloads.
+* Added authentication service functions for user registration, credential verification, password hashing, password verification, access token creation, token decoding, and current-user dependencies.
+* Added `POST /api/v1/auth/signup`, `POST /api/v1/auth/login`, and `GET /api/v1/auth/me` using the existing response envelope.
+* Linked `InvestorProfile.user_id` to `users.id` with a foreign key and one-profile-per-user uniqueness constraint.
+* Updated investor profile retrieval, creation, and update behavior to use the authenticated user when supplied.
+* Preserved unauthenticated first-profile fallback only in development mode.
+* Added Alembic migration `20260626_0005_create_users_and_link_investor_profiles.py` without modifying previous migrations.
+* Added tests for user model metadata, password hashing, JWT generation/validation, signup, duplicate email, login success/failure, current user, unauthorized access, migration registration, authenticated investor profile behavior, development fallback, and user-owned service behavior.
+* Updated `backend/README.md`, `backend/.env.example`, `PROJECT_STATE.md`, and this context log.
+* Ran backend and full repository validation.
+
+Files Created:
+
+* `backend/alembic/versions/20260626_0005_create_users_and_link_investor_profiles.py`
+* `backend/app/api/v1/auth.py`
+* `backend/app/models/user.py`
+* `backend/app/schemas/auth.py`
+* `backend/app/services/auth_service.py`
+* `backend/tests/test_auth_routes.py`
+* `backend/tests/test_auth_service.py`
+* `backend/tests/test_user_model.py`
+
+Files Modified:
+
+* `backend/.env.example`
+* `backend/README.md`
+* `backend/app/api/v1/investor_profile.py`
+* `backend/app/api/v1/router.py`
+* `backend/app/core/config.py`
+* `backend/app/models/__init__.py`
+* `backend/app/models/investor_profile.py`
+* `backend/app/services/personalization_service.py`
+* `backend/requirements.txt`
+* `backend/tests/test_investor_profile_migration.py`
+* `backend/tests/test_investor_profile_model.py`
+* `backend/tests/test_investor_profile_routes.py`
+* `backend/tests/test_investor_profile_service.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architectural Decisions:
+
+* Authentication is a backend-only identity foundation; no roles, RBAC, OAuth, MFA, email verification, frontend auth UI, AI, recommendations, portfolios, watchlists, payments, notifications, scrapers, or schedulers were added.
+* Passwords are stored only as bcrypt hashes through `passlib`.
+* JWTs are signed through `python-jose` and include `sub`, `email`, and `exp` claims.
+* `InvestorProfile.user_id` is nullable to preserve local development fallback but now references `users.id` for authenticated ownership.
+* Authenticated investor profile requests resolve by current user; unauthenticated fallback is allowed only when `APP_ENV=development`.
+* One investor profile per authenticated user is enforced with a uniqueness constraint on `investor_profiles.user_id`.
+
+Validation Results:
+
+* `python -m pip install -r requirements.txt`: passed; installed `passlib`, `python-jose`, and JWT transitive dependencies.
+* `python -m pytest` from `backend/`: passed, 131 tests passed.
+* `python -m pytest` from repository root: passed, 182 tests passed.
+* Warning: pytest could not write its cache under `.pytest_cache` due Windows access denial; this did not fail tests.
+* `python -m alembic current`: Alembic loaded successfully but revision lookup was deferred because local PostgreSQL rejects `investguide_user` credentials.
+* `python -m uvicorn app.main:app --reload --port 8001`: backend started successfully.
+* `GET /api/v1/health`: returned success with `database: unavailable` and `migrations: unavailable`.
+* `GET /api/v1/auth/me` without a bearer token: returned 401 envelope.
+* `POST /api/v1/auth/signup`: reached the auth service but failed with existing local PostgreSQL password authentication blocker.
+
+Known Issues Update:
+
+* Unresolved: local PostgreSQL on port `5432` rejects `investguide_user`, so database-backed signup/login/profile smoke testing requires Docker PostgreSQL or corrected credentials plus migrations.
+* Unresolved: Docker remains unavailable on PATH in this environment unless installed outside this session.
+* Unresolved: frontend authentication UI, onboarding, AI recommendations, portfolio tracking, watchlists, payments, notifications, live scraping, schedulers, RBAC, OAuth, MFA, and email verification remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 020 completed the authentication and user identity foundation. InvestGuide now has a user model, JWT signup/login/me endpoints, bcrypt password hashing, current-user dependency, and authenticated investor profile ownership while preserving development-only fallback behavior.
+
+Next Recommended Task:
+
+* Sprint 021: validate the auth migration against Docker PostgreSQL or a corrected local PostgreSQL database, then add protected frontend auth integration or profile ownership hardening. Do not add AI recommendations, portfolios, watchlists, payments, live scraping, or schedulers yet.
+
+---
+
+## Architectural Backlog Note
+
+Date: 2026-06-27
+
+Topic: Future `AuthContext` pattern.
+
+Decision:
+
+* Record a future enhancement to introduce an `AuthContext` object once authentication-dependent services grow beyond the current foundation.
+* The future context should mirror the successful `ScraperContext` pattern and may bundle `user`, JWT claims, investor profile, permissions, feature flags, locale, onboarding completion, and future organization/tenant state.
+* Future protected services could accept `AuthContext` instead of passing several separate auth-related objects.
+* This is a backlog/design note only. No implementation was added in this session.
+
+Reason:
+
+* A single auth context will keep service signatures stable as permissions, personalization, onboarding, and feature flags mature, while preserving consistency with InvestGuide's existing context-oriented scraper architecture.

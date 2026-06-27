@@ -1,4 +1,6 @@
-"""Global exception handlers."""
+﻿"""Global exception handlers."""
+
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -8,6 +10,18 @@ from app.core.logging import get_logger
 from app.core.responses import error_response
 
 logger = get_logger(__name__)
+
+
+def _json_safe_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert Pydantic validation errors into JSON-serializable dictionaries."""
+    safe_errors: list[dict[str, Any]] = []
+    for error in errors:
+        safe_error = dict(error)
+        ctx = safe_error.get("ctx")
+        if isinstance(ctx, dict):
+            safe_error["ctx"] = {key: str(value) for key, value in ctx.items()}
+        safe_errors.append(safe_error)
+    return safe_errors
 
 
 async def http_exception_handler(
@@ -35,18 +49,19 @@ async def validation_exception_handler(
     exc: RequestValidationError,
 ) -> JSONResponse:
     """Handle request validation errors with the response envelope."""
+    errors = _json_safe_validation_errors(exc.errors())
     logger.warning(
         "Validation error on %s %s: %s",
         request.method,
         request.url.path,
-        exc.errors(),
+        errors,
     )
     return JSONResponse(
         status_code=422,
         content=error_response(
             message="Request validation failed",
             error_code="VALIDATION_ERROR",
-            details=exc.errors(),
+            details=errors,
         ),
     )
 

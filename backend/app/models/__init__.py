@@ -14,6 +14,7 @@ from app.models.investor_profile import (
 )
 from app.models.mixins import TimestampMixin
 from app.models.news import News
+from app.models.user import User
 
 __all__ = [
     "Asset",
@@ -27,5 +28,6 @@ __all__ = [
     "RiskAppetite",
     "News",
     "TimestampMixin",
+    "User",
     "asset_news",
 ]

@@ -1,4 +1,4 @@
-"""Application configuration."""
+﻿"""Application configuration."""
 
 import json
 from functools import lru_cache
@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     ingestion_mode: Literal["DRY_RUN", "WRITE"] = Field(
         default="DRY_RUN",
         validation_alias="INGESTION_MODE",
+    )
+    jwt_secret_key: str = Field(
+        default="investguide-development-secret-change-me",
+        validation_alias="JWT_SECRET_KEY",
+    )
+    jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        default=60,
+        validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
 
     model_config = SettingsConfigDict(

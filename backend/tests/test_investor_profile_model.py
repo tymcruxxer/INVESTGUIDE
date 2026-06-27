@@ -1,4 +1,4 @@
-"""Investor profile model tests."""
+﻿"""Investor profile model tests."""
 
 from sqlalchemy import JSON
 
@@ -51,3 +51,11 @@ def test_investor_profile_indexes_support_future_lookup_and_segments() -> None:
     assert "ix_investor_profiles_user_id" in index_names
     assert "ix_investor_profiles_experience_level" in index_names
     assert "ix_investor_profiles_risk_appetite" in index_names
+
+def test_investor_profile_user_id_has_foreign_key_and_unique_constraint() -> None:
+    """InvestorProfile links to users while nullable dev fallback remains possible."""
+    user_id = InvestorProfile.__table__.columns.user_id
+    unique_constraints = {constraint.name for constraint in InvestorProfile.__table__.constraints}
+
+    assert user_id.foreign_keys
+    assert "uq_investor_profiles_user_id" in unique_constraints

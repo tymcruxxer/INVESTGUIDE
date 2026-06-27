@@ -1,10 +1,10 @@
-# InvestGuide Backend
+﻿# InvestGuide Backend
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes, and persisted content hashes for scalable duplicate detection.
+This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes, persisted content hashes for scalable duplicate detection, and a JWT authentication foundation with user-owned investor profiles.
 
-Business features such as authentication, asset/news write endpoints, analytics, AI, scrapers, notifications, and production deployment are intentionally not implemented yet.
+Business features such as asset/news write endpoints, analytics, AI, production notifications, production deployment, portfolio tracking, watchlists, payments, and frontend personalization are intentionally not implemented yet.
 
 ## Requirements
 
@@ -39,6 +39,9 @@ Environment variables:
 * `DATABASE_URL` - SQLAlchemy database URL
 * `CORS_ORIGINS` - comma-separated allowed origins or a JSON array string
 * `INGESTION_MODE` - internal ingestion adapter mode, `DRY_RUN` or `WRITE`; defaults to `DRY_RUN`
+* `JWT_SECRET_KEY` - JWT signing secret; use the development value locally only and replace in deployed environments
+* `JWT_ALGORITHM` - JWT signing algorithm, default `HS256`
+* `ACCESS_TOKEN_EXPIRE_MINUTES` - access token lifetime in minutes
 
 Do not commit real database passwords or hosted database credentials.
 
@@ -200,6 +203,25 @@ The seed command:
 
 If `DATABASE_URL` is not configured or the assets table has not been migrated, real seed execution will fail until the database is ready.
 
+## Authentication Foundation
+
+The backend now includes a basic JWT identity layer for future personalization, watchlists, portfolios, alerts, and learning progress.
+
+Implemented endpoints:
+
+* `POST /api/v1/auth/signup` - creates a user with a bcrypt-hashed password and returns `user`, `access_token`, and `token_type`
+* `POST /api/v1/auth/login` - verifies email/password credentials and returns `access_token`, `token_type`, and `user`
+* `GET /api/v1/auth/me` - returns the authenticated user from a bearer token
+
+JWT tokens include:
+
+* `sub` - authenticated user id
+* `email` - authenticated user email
+* `exp` - token expiry
+
+Authentication logic lives in `app/services/auth_service.py`. Future protected routes should use `Depends(get_current_user)`. The backend currently supports a single basic user identity model only; it does not implement roles, RBAC, email verification, OAuth, MFA, sessions, or social login.
+
+Passwords are never stored in plaintext. The backend uses `passlib` with bcrypt for password hashing and `python-jose` for JWT encode/decode.
 ## Run API
 
 ```bash
@@ -444,8 +466,25 @@ pytest
 
 Automated tests use mocks or in-memory SQLite where database behavior is needed, so they do not require live PostgreSQL credentials.
 
-## Investor Personalization Foundation
+## Investor Profile API
 
+Sprint 020 connects investor profiles to authenticated users while preserving a development-only fallback:
+
+* `GET /api/v1/investor-profile` - returns the authenticated user's profile, or the development profile only when `APP_ENV=development` and no bearer token is supplied
+* `POST /api/v1/investor-profile` - creates a profile attached to the authenticated user; in development without auth, creates a fallback development profile
+* `PUT /api/v1/investor-profile` - updates the authenticated user's profile; in development without auth, updates the fallback development profile
+
+Production identity rule:
+
+* With a valid bearer token, profile lookup is by `investor_profiles.user_id`.
+* Without authentication outside development, the API returns `401 AUTHENTICATION_REQUIRED`.
+* The first-row profile fallback exists only to keep local development workflows usable while frontend auth/onboarding remains unimplemented.
+
+The `InvestorProfile.user_id` column now references `users.id` and has a one-profile-per-user uniqueness constraint. Existing development seed behavior remains manual through `python -m app.database.seed`; no profile is created automatically during FastAPI startup.
+
+Authentication is intentionally limited to identity. This sprint does not add AI recommendations, frontend onboarding, dashboards, watchlists, portfolio tracking, payments, notifications, live scraping, or scheduler behavior.
+
+## Investor Personalization Foundation
 Sprint 018 adds the backend foundation for investor personalization without adding authentication, frontend onboarding, AI recommendations, or public personalization routes.
 
 Implemented foundation pieces:
@@ -458,7 +497,7 @@ Implemented foundation pieces:
 
 The `investor_profiles` table stores:
 
-* nullable `user_id` placeholder for future authentication
+* nullable `user_id` foreign key to `users.id` for authenticated profile ownership, while still allowing a development fallback profile
 * `experience_level`: `beginner`, `intermediate`, `advanced`
 * `risk_appetite`: `conservative`, `moderate`, `aggressive`
 * `investment_horizon`
@@ -539,5 +578,7 @@ backend/
 |-- README.md
 `-- requirements.txt
 ```
+
+
 
 

@@ -27,16 +27,22 @@ def test_investor_profile_create_defaults_to_beginner_friendly_profile() -> None
 
 
 def test_investor_profile_create_normalizes_preference_lists() -> None:
-    """Preference fields accept strings/lists and normalize values."""
+    """Preference list fields normalize list values."""
     schema = InvestorProfileCreate(
         preferred_asset_types=[" ZSE Equities ", "REITs", "zse equities"],
-        investment_goals="Passive Income",
+        investment_goals=["Passive Income"],
         education_focus=["Dividend Yield", " risk "],
     )
 
     assert schema.preferred_asset_types == ["zse_equities", "reits"]
     assert schema.investment_goals == ["passive_income"]
     assert schema.education_focus == ["dividend_yield", "risk"]
+
+
+def test_investor_profile_schema_rejects_malformed_list_values() -> None:
+    """Preference list fields reject malformed JSON list payloads."""
+    with pytest.raises(ValidationError):
+        InvestorProfileCreate(investment_goals="Passive Income")
 
 
 def test_investor_profile_schema_rejects_invalid_experience_level() -> None:
