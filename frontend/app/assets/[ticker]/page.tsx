@@ -15,6 +15,8 @@ import {
   getEducationSummary,
   getExplainLikeIm18,
 } from "@/utils/demo-content";
+import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
+import { CardSkeleton } from "@/components/skeleton";
 
 function formatMoney(value: number | undefined, currency: string) {
   if (typeof value !== "number") return "Unavailable";
@@ -37,6 +39,14 @@ export default function AssetDetailPage() {
     queryFn: () => newsService.getNewsFeed({ asset: ticker, limit: 4, sort: "desc" }),
     retry: 1,
     enabled: Boolean(ticker),
+  });
+
+  const assessmentQuery = useQuery({
+    queryKey: ["asset-assessment", ticker],
+    queryFn: () => assetService.getAssetAssessment(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 5,
   });
 
   const backendAsset = mapAsset(assetQuery.data?.data);
@@ -111,18 +121,36 @@ export default function AssetDetailPage() {
               </div>
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="space-y-6">
-                <div className="rounded-lg border border-border bg-card p-6">
-                  <h2 className="text-xl font-semibold">Analytics section</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Connected to the Analytics Engine foundation. Real calculations are intentionally not implemented yet.</p>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {ANALYTICS_PLACEHOLDERS.map((metric) => (
-                      <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-4">
-                        <p className="font-medium">{metric.label}</p>
-                        <p className="mt-2 text-sm text-muted-foreground">Calculation coming soon</p>
-                      </div>
-                    ))}
+            <section className="space-y-6">
+              <div>
+                {assessmentQuery.isLoading ? (
+                  <CardSkeleton />
+                ) : assessmentQuery.isError ? (
+                  <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                    Assessment currently unavailable.
+                  </div>
+                ) : assessmentQuery.data?.data ? (
+                  <AssetAssessmentPanel assessment={assessmentQuery.data.data} />
+                ) : (
+                  <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                    Assessment currently unavailable.
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+                <div className="space-y-6">
+                  <div className="rounded-lg border border-border bg-card p-6">
+                    <h2 className="text-xl font-semibold">Analytics section</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Connected to the Analytics Engine foundation. Real calculations are intentionally not implemented yet.</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {ANALYTICS_PLACEHOLDERS.map((metric) => (
+                        <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-4">
+                          <p className="font-medium">{metric.label}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">Calculation coming soon</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

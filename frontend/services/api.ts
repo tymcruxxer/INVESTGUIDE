@@ -8,6 +8,7 @@ import {
   ApiError,
   ApiResponse,
   Asset,
+  AssetAssessment,
   AuthResponse,
   InvestorProfile,
   InvestorProfilePayload,
@@ -167,6 +168,8 @@ export const assetService = {
   } = {}) => get<Asset[]>("/assets", params),
 
   getAssetByTicker: (ticker: string) => get<Asset>(`/assets/${ticker}`),
+
+  getAssetAssessment: (ticker: string) => get<AssetAssessment>(`/assets/${ticker}/assessment`),
 
   getHistoricalPrices: (ticker: string, params?: { days?: number }) =>
     get(`/assets/${ticker}/prices`, params),

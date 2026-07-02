@@ -79,6 +79,19 @@ export interface AssetDetail extends Asset {
   dividend_yield?: number;
 }
 
+export interface AssetAssessment {
+  ticker: string;
+  overall_assessment: string;
+  evidence_strength: string;
+  investment_horizon: string;
+  key_strengths: string[];
+  things_to_watch: string[];
+  educational_summary: string;
+  explain_like_im_18: string;
+  generated_at: string;
+  assessment_version: string;
+}
+
 // ============================================================================
 // Sentiment Types
 // ============================================================================

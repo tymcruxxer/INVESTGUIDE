@@ -167,6 +167,8 @@ const { data, isLoading } = useQuery({
 });
 ```
 
+The asset detail page now also consumes the `/assets/{ticker}/assessment` endpoint through `assetService.getAssetAssessment(ticker)`, and renders a reusable `AssetAssessmentPanel` component on the asset detail page.
+
 ### API Services
 - `assetService` - Asset list and detail operations
 - `newsService` - News feed and asset-linked news operations
