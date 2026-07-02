@@ -1997,3 +1997,589 @@ Decision:
 Reason:
 
 * A single auth context will keep service signatures stable as permissions, personalization, onboarding, and feature flags mature, while preserving consistency with InvestGuide's existing context-oriented scraper architecture.
+
+---
+
+## Session 027
+
+Date: 2026-06-27
+
+Objective: Complete Sprint 021 by validating backend authentication and user-owned investor profiles against the local database workflow, and applying only brief auth hardening where needed.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and relevant documentation under `docs/` before implementation.
+* Ran the development launcher validation command `python backend/scripts/dev.py --no-server`.
+* Ran database diagnostics with `python backend/scripts/check_database.py`.
+* Ran Alembic validation with `python -m alembic current` from `backend/`.
+* Ran full repository tests with `python -m pytest`.
+* Started FastAPI with `python -m uvicorn app.main:app --reload --port 8001` for runtime smoke validation.
+* Smoke-tested `GET /api/v1/health` and unauthenticated `GET /api/v1/auth/me`.
+* Attempted `POST /api/v1/auth/signup`; request reached the auth service but failed because local PostgreSQL rejects `investguide_user` credentials.
+* Added focused hardening tests for expired JWT rejection and inactive-user access rejection.
+* Updated `backend/README.md` and `PROJECT_STATE.md`.
+
+Files Created:
+
+* None.
+
+Files Modified:
+
+* `backend/README.md`
+* `backend/tests/test_auth_routes.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Hardening Changes:
+
+* Added automated coverage proving expired bearer tokens return 401.
+* Added automated coverage proving inactive users with otherwise valid tokens cannot access `/api/v1/auth/me`.
+* No new auth systems, roles, OAuth, MFA, frontend UI, AI, portfolios, watchlists, payments, notifications, schedulers, or product features were added.
+
+Validation Results:
+
+* `python backend/scripts/dev.py --no-server`: failed clearly because Docker is not installed or not available on PATH.
+* `python backend/scripts/check_database.py`: failed because local PostgreSQL rejects `investguide_user` credentials.
+* `python -m alembic current`: Alembic configuration loaded successfully, but current revision lookup was deferred until PostgreSQL is reachable.
+* `python -m pytest`: passed from repository root, 184 tests passed.
+* Warning: pytest could not write its cache under `.pytest_cache` due Windows access denial; this did not fail tests.
+* `python -m uvicorn app.main:app --reload --port 8001`: backend started successfully.
+* `GET /api/v1/health`: returned success with `database: unavailable` and `migrations: unavailable`.
+* `GET /api/v1/auth/me` without bearer token: returned 401 envelope.
+* `POST /api/v1/auth/signup`: reached auth service but failed with the existing local PostgreSQL password authentication blocker.
+
+Database Status:
+
+* PostgreSQL connection is not usable with current `DATABASE_URL` credentials.
+* Migrations could not be applied or verified against a live database.
+* Users table existence, `investor_profiles.user_id` FK existence, seed data, and asset count could not be verified locally due the database blocker.
+
+Known Issues Update:
+
+* Unresolved: Docker is not installed or not available on PATH, so the Compose PostgreSQL workflow cannot run here.
+* Unresolved: local PostgreSQL on port `5432` rejects `investguide_user`, so database-backed signup/login/profile smoke testing remains blocked.
+* Unresolved: full authenticated profile runtime validation requires reachable PostgreSQL, migrations, and seed data.
+* Unresolved: frontend auth UI, onboarding UI, AI recommendations, portfolios, watchlists, payments, notifications, schedulers, OAuth, MFA, RBAC, email verification, and live scraping remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 021 validated the backend auth foundation as far as the local environment allows. Automated tests pass with additional token-expiry and inactive-user hardening coverage. Runtime app startup and non-DB auth behavior work; full database-backed auth/profile smoke is deferred until Docker PostgreSQL is available or local credentials are corrected.
+
+Next Recommended Task:
+
+* Sprint 022: install/enable Docker PostgreSQL or correct local PostgreSQL credentials, then run migrations, seed data, and complete full database-backed signup/login/me/investor-profile smoke validation before building frontend auth or onboarding UI.
+
+---
+
+## Session 028
+
+Date: 2026-06-27
+
+Objective: Complete Sprint 022 by building the frontend authentication and onboarding flow that captures investor personalization information and connects to the backend auth/profile API contracts.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, `docs/product/personalization-and-adaptive-intelligence.md`, and relevant frontend/backend docs under `docs/` before implementation.
+* Added `/auth/login` page with email/password fields, submit action, loading state, error state, and signup link.
+* Added `/auth/signup` page with email/password/confirm-password fields, submit action, loading state, error state, and login link.
+* Added `/onboarding` page with seven-step investor personalization flow covering experience level, investment goals, preferred asset types, risk appetite, investment horizon, planned investment range, and language preference.
+* Updated frontend shared types for backend auth responses, user shape, investor profile, and investor profile payloads.
+* Updated frontend API client with `authService` and `investorProfileService`, including bearer token support.
+* Replaced placeholder frontend auth store behavior with real token persistence, current-user hydration, investor profile loading, logout, and onboarding completion.
+* Added `AuthSessionProvider` to hydrate persisted auth state on app load.
+* Added client-side route protection through the existing `AppShell`: unauthenticated users redirect to `/auth/login`, and authenticated users without a profile redirect to `/onboarding`.
+* Updated navbar to display the authenticated email and sidebar logout to clear auth state.
+* Updated `frontend/README.md` and `PROJECT_STATE.md`.
+* Ran frontend lint, type-check, build, and repository pytest validation successfully.
+
+Files Created:
+
+* `frontend/app/auth/login/page.tsx`
+* `frontend/app/auth/signup/page.tsx`
+* `frontend/app/onboarding/page.tsx`
+* `frontend/providers/auth-session.tsx`
+
+Files Modified:
+
+* `frontend/README.md`
+* `frontend/components/layout/app-shell.tsx`
+* `frontend/components/layout/navbar.tsx`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/providers/index.tsx`
+* `frontend/services/api.ts`
+* `frontend/store/index.ts`
+* `frontend/types/index.ts`
+* `PROJECT_STATE.md`
+* `context.md`
+
+UI/UX Decisions:
+
+* Used the existing `PublicLayout` for auth and onboarding routes to keep the flow focused and separate from the private app shell.
+* Kept forms compact, responsive, dark/light compatible, and aligned with existing theme tokens.
+* Used a step progress indicator in onboarding and simple educational copy for beginner-friendly context.
+* Preserved dashboard shell density and added route protection without creating new dashboard features.
+
+State Management Decisions:
+
+* Kept auth state in the existing Zustand store instead of introducing a new state library.
+* Persisted the access token in localStorage for development only, matching the sprint scope and explicitly avoiding advanced production auth security.
+* Hydrated sessions on app load by calling `/api/v1/auth/me` when a token exists.
+* Treated a missing investor profile as incomplete onboarding and redirected authenticated users to `/onboarding`.
+
+Validation Results:
+
+* `npm.cmd run lint` from `frontend/`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check` from `frontend/`: passed.
+* `npm.cmd run build` from `frontend/`: passed; generated 12 routes including `/auth/login`, `/auth/signup`, and `/onboarding`.
+* `python -m pytest` from repository root: passed, 184 tests passed.
+* Warning: pytest could not write `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Known Issues Update:
+
+* Unresolved: live end-to-end signup/login/onboarding persistence requires backend PostgreSQL to be reachable, migrated, and seeded.
+* Unresolved: Docker is not installed or not available on PATH, and local PostgreSQL still rejects `investguide_user` credentials.
+* Unresolved: auth token persistence is localStorage-based for development and must be revisited before production hardening.
+* Unresolved: frontend OAuth, MFA, email verification, RBAC, portfolios, watchlists, payments, notifications, AI recommendations, live scraping, and schedulers remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 022 made InvestGuide feel like a user-facing product for the first time: users now have frontend signup/login screens, auth state hydration, protected navigation, and a guided onboarding flow that submits investor personalization payloads to the backend profile API contract.
+
+Next Recommended Task:
+
+* Sprint 023: resolve the Docker/PostgreSQL blocker and perform full end-to-end signup, login, auth/me, onboarding, investor profile create/update, and dashboard route-protection smoke testing against a real migrated backend database. Do not add AI, portfolios, watchlists, payments, live scraping, OAuth, MFA, or RBAC yet.
+
+---
+
+## Architectural Backlog Note
+
+Date: 2026-06-27
+
+Topic: Future auth orchestration and token storage hardening.
+
+Decision:
+
+* Record a future enhancement to move auth orchestration into a dedicated `AuthProvider` once InvestGuide grows beyond the MVP auth flow.
+* The future provider should manage login, logout, session hydration, redirects, onboarding status, auth loading state, future session refresh, roles, subscription plans, premium gates, permissions, and feature flags.
+* Zustand should eventually focus on storing current auth/session state rather than owning the full auth workflow.
+* Record a future production security improvement to move away from localStorage JWT persistence once the backend/database path is stable.
+* Candidate future direction: HTTP-only cookies, refresh tokens, CSRF protection, and silent token refresh.
+* This is a roadmap note only. No implementation was added in this session.
+
+Reason:
+
+* Auth behavior will become cross-cutting as onboarding, permissions, subscriptions, and premium features mature. A dedicated provider will keep orchestration centralized, while stronger token storage will improve production security beyond the MVP localStorage approach.
+
+---
+
+## Session 029
+
+Date: 2026-06-27
+
+Objective: Complete Sprint 023 integration validation by proving the frontend, backend, auth system, onboarding flow, and database workflow as far as the local environment allows, without adding product features.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, `backend/README.md`, and `frontend/README.md` before validation.
+* Attempted to start the Docker Compose PostgreSQL stack.
+* Ran backend bootstrap and database diagnostics to verify local database readiness.
+* Started the FastAPI backend on port `8001`.
+* Smoke-tested backend health, auth, investor profile, assets, and news endpoints.
+* Started the Next.js frontend dev server on port `3000` with `NEXT_PUBLIC_API_URL=http://localhost:8001/api/v1`.
+* Smoke-tested frontend `/auth/signup`, `/auth/login`, `/onboarding`, and `/dashboard` route availability.
+* Ran the full backend/scraper pytest suite.
+* Ran frontend lint, type-check, and production build.
+* Updated `README.md`, `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md` with Sprint 023 results.
+
+Files Created:
+
+* None.
+
+Files Modified:
+
+* `README.md`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Integration Bugs Fixed:
+
+* None. The validation surfaced an environment/database blocker rather than an application integration bug.
+
+Validation Results:
+
+* `docker compose up -d`: failed because Docker is not installed or not available on PATH.
+* `python backend/scripts/bootstrap_dev.py`: failed clearly because local PostgreSQL rejects `investguide_user` credentials.
+* `python backend/scripts/check_database.py`: failed because PostgreSQL is unreachable with the configured credentials.
+* `python -m alembic current` from `backend/`: Alembic configuration loaded successfully; current revision lookup remains deferred until PostgreSQL is reachable.
+* `python -m uvicorn app.main:app --reload --port 8001` from `backend/`: backend started successfully.
+* `GET /api/v1/health`: returned 200 with `database: unavailable` and `migrations: unavailable`.
+* `GET /api/v1/auth/me` without bearer token: returned 401 envelope.
+* `POST /api/v1/auth/signup`: reached the backend but returned 500 due PostgreSQL credential failure.
+* `POST /api/v1/auth/login`: reached the backend but returned 500 due PostgreSQL credential failure.
+* `GET /api/v1/investor-profile`: blocked by PostgreSQL credential failure.
+* `GET /api/v1/assets`: blocked by PostgreSQL credential failure.
+* `GET /api/v1/news`: returned 200 using development sample/fallback data.
+* Frontend dev server: started on port `3000`.
+* Frontend route smoke: `/auth/signup`, `/auth/login`, `/onboarding`, and `/dashboard` returned 200.
+* `python -m pytest`: passed from repository root, 184 tests passed.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 12 app routes.
+* Warning: pytest could not write `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Database Status:
+
+* Docker is unavailable on PATH, so the standardized PostgreSQL 16 Compose stack could not be started.
+* A local PostgreSQL server appears to exist on port `5432`, but rejects the configured development credentials for `investguide_user`.
+* Migrations, seed data, users table, investor profile ownership FK, and asset count could not be verified against a live local database.
+
+Backend Runtime Status:
+
+* Backend application startup succeeds.
+* Health and unauthenticated auth error envelopes behave correctly.
+* DB-backed endpoints cannot complete until PostgreSQL is reachable with valid credentials.
+
+Frontend Runtime Status:
+
+* Next.js dev server starts successfully.
+* Auth, onboarding, and dashboard routes are served successfully.
+* Browser-level persisted signup/login/onboarding/profile flow could not be completed because backend database writes are blocked.
+
+Known Issues Update:
+
+* Unresolved: Docker is not installed or not available on PATH.
+* Unresolved: local PostgreSQL rejects `investguide_user` credentials.
+* Unresolved: full end-to-end signup, login, onboarding save, logout, login again, and profile persistence validation requires reachable PostgreSQL, migrations, and seed data.
+* Unresolved: a stale Windows TCP listener entry briefly remained for port `8001` after Uvicorn shutdown even though the owning process was no longer visible in `tasklist`.
+* Unresolved: analytics, AI recommendations, portfolios, watchlists, payments, alerts, schedulers, live scraping, OAuth, MFA, RBAC, email verification, and production auth hardening remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 023 proved that the backend and frontend start, the frontend auth/onboarding/dashboard routes compile and serve, and all automated tests/builds pass. The only blocker to full persisted end-to-end validation remains local PostgreSQL availability/credentials, not a frontend or backend contract issue discovered in this session.
+
+Next Recommended Task:
+
+* Sprint 024: install or enable Docker on PATH, or correct local PostgreSQL credentials for `investguide_user`, then rerun bootstrap, diagnostics, migrations, seed data, signup/login/me, investor profile create/read/update, assets, news, and browser-level onboarding persistence validation before adding analytics or AI features.
+
+---
+
+## Architectural Backlog Note
+
+Date: 2026-06-27
+
+Topic: Environment diagnostics and developer verification tooling.
+
+Decision:
+
+* Record a future development-only internal diagnostics endpoint, for example `GET /api/v1/system/status`.
+* The endpoint should summarize database connectivity, migration status, scraper enablement, ingestion mode, Docker/PostgreSQL readiness, and environment metadata without exposing secrets.
+* The endpoint must be development-only or otherwise explicitly protected before production use.
+* Record a future lightweight developer verification command: `python backend/scripts/doctor.py`.
+* The doctor command should check Docker availability, PostgreSQL connectivity, Alembic revision, required environment variables, seed status, and API health, then print a clear pass/fail report.
+* This is a roadmap note only. No endpoint, script, API route, or product behavior was implemented in this session.
+
+Reason:
+
+* Sprint 023 showed that environment problems are currently discovered only after workflows fail. A dedicated diagnostics endpoint and doctor command would make future setup issues faster to identify, easier to explain, and less dependent on scattered manual checks.
+
+---
+
+## Session 030
+
+Date: 2026-07-01
+
+Objective: Complete Sprint 024 by resolving or validating the local Docker/PostgreSQL environment and attempting fully persisted end-to-end auth/onboarding/profile validation without adding product features.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, `backend/README.md`, and `frontend/README.md` before validation.
+* Checked Docker CLI availability with `docker --version`.
+* Checked Docker Compose availability with `docker compose version`.
+* Checked Docker daemon status with `docker info`.
+* Attempted `docker compose up -d`.
+* Ran backend bootstrap with `python backend/scripts/bootstrap_dev.py`.
+* Ran database diagnostics with `python backend/scripts/check_database.py`.
+* Ran Alembic validation with `python -m alembic current` from `backend/`.
+* Started FastAPI without reload on port `8001` for runtime smoke validation.
+* Smoke-tested backend health, auth signup/login, auth/me, investor profile, assets, and news endpoint behavior.
+* Started Next.js on port `3000` with `NEXT_PUBLIC_API_URL=http://localhost:8001/api/v1`.
+* Smoke-tested frontend `/auth/signup`, `/auth/login`, `/onboarding`, and `/dashboard` route availability.
+* Ran repository pytest validation.
+* Ran frontend lint, type-check, and production build validation.
+* Updated `README.md`, `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md` with Sprint 024 results.
+
+Files Created:
+
+* None.
+
+Files Modified:
+
+* `README.md`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Environment Fixes Made:
+
+* None. Docker is not available on PATH, and no persistence bypass or fake storage was added.
+
+Integration Bugs Fixed:
+
+* None. The validation surfaced the same machine-level Docker/PostgreSQL blocker rather than an application contract bug.
+
+Validation Results:
+
+* `docker --version`: failed because `docker` is not recognized as a command.
+* `docker compose version`: failed because `docker` is not recognized as a command.
+* `docker info`: failed because `docker` is not recognized as a command.
+* `docker compose up -d`: failed because `docker` is not recognized as a command.
+* `python backend/scripts/bootstrap_dev.py`: failed clearly because local PostgreSQL rejects `investguide_user` credentials.
+* `python backend/scripts/check_database.py`: failed because PostgreSQL is unavailable or unreachable with the configured credentials.
+* `python -m alembic current`: Alembic configuration loaded successfully; current revision lookup remains deferred until PostgreSQL is reachable.
+* `python -m uvicorn app.main:app --port 8001`: backend started successfully without reload.
+* `GET /api/v1/health`: returned 200 with `database: unavailable` and `migrations: unavailable`.
+* `POST /api/v1/auth/signup`: reached backend but returned 500 due PostgreSQL credential failure.
+* `POST /api/v1/auth/login`: reached backend but returned 500 due PostgreSQL credential failure.
+* `GET /api/v1/auth/me` without bearer token: returned 401.
+* `GET /api/v1/investor-profile`: blocked by PostgreSQL credential failure.
+* `GET /api/v1/assets`: blocked by PostgreSQL credential failure.
+* `GET /api/v1/news`: returned 200 using development sample/fallback data.
+* Frontend dev server: started on port `3000`.
+* Frontend route smoke: `/auth/signup`, `/auth/login`, `/onboarding`, and `/dashboard` returned 200.
+* `python -m pytest`: passed from repository root, 184 tests passed.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 12 app routes.
+* Warning: pytest could not write `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Docker/PostgreSQL Result:
+
+* Docker cannot be used because `docker` is not installed or not available on PATH.
+* The expected Compose PostgreSQL 16 service could not be started.
+* Local PostgreSQL is not usable with the configured development credentials for `investguide_user`.
+* Migrations, seed data, users table, investor profile ownership FK, asset seed count, and news tables could not be verified against a live persisted database.
+
+Backend Persisted Auth/Profile Result:
+
+* Backend liveness works.
+* Signup/login cannot persist users because the database connection fails.
+* Authenticated investor profile create/read/update cannot be validated because no real token can be obtained without a working database-backed user.
+
+Frontend Persisted Onboarding Result:
+
+* Frontend auth and onboarding routes serve correctly.
+* Browser-level persisted signup, login, onboarding save, logout, login again, and profile reload could not be completed because backend persistence is blocked by the database environment.
+
+Known Issues Update:
+
+* Unresolved: Docker is not installed or not available on PATH.
+* Unresolved: local PostgreSQL rejects `investguide_user` credentials or is intermittently unreachable on port `5432`.
+* Unresolved: full persisted end-to-end auth/onboarding/profile validation requires Docker PostgreSQL or corrected local PostgreSQL database/user credentials.
+* Unresolved: analytics, AI recommendations, portfolios, watchlists, payments, alerts, schedulers, live scraping, OAuth, MFA, RBAC, email verification, stock outlook pages, comparison engine, and production auth hardening remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 024 proved the current application foundation still cannot complete persisted local E2E validation until the machine-level Docker/PostgreSQL environment is fixed. Backend and frontend runtime smoke checks are healthy where they do not require persistence, and automated tests/builds pass. No product features, persistence bypasses, fake storage, or architectural changes were added.
+
+Next Recommended Task:
+
+* Sprint 025: fix the local development database environment before adding product features. Install/enable Docker on PATH or create the expected local PostgreSQL database/user, then rerun Compose startup, bootstrap, diagnostics, Alembic migrations, seed, backend auth/profile/assets/news smoke, and browser-level persisted onboarding/profile reload validation.
+
+---
+
+## Session 031
+
+Date: 2026-07-01
+
+Objective: Complete Sprint 025 by documenting InvestGuide's long-term transformation into an AI Financial Intelligence Platform without implementing new product modules.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, `docs/architecture/architecture.md`, `docs/architecture/technical-planning.md`, `docs/product/prd.md`, and `docs/product/personalization-and-adaptive-intelligence.md` before changes.
+* Created the official product philosophy document with mission, vision, values, responsible AI principles, educational-first philosophy, AI-first philosophy, and financial decision-making philosophy.
+* Documented the five permanent product pillars: Learn, Plan, Invest, Manage, and Grow.
+* Documented future AI capabilities, including AI Financial Assistant, AI News Intelligence, AI Portfolio Intelligence, AI Roadmaps, AI Financial Health, AI Learning Engine, AI Simulations, Explain Like I Am 18, AI Risk Analysis, and AI Recommendation Engine.
+* Created personalization architecture documentation covering profile evolution, beginner/intermediate/advanced experiences, adaptive dashboards, adaptive education, and adaptive analytics.
+* Created platform module roadmap documentation for investment intelligence, portfolio intelligence, budgeting, savings, debt, retirement, emergency fund, SME intelligence, news intelligence, knowledge base, learning platform, financial health, roadmaps, simulators, comparison engine, and opportunity radar.
+* Created the ideal user journey from landing page through long-term engagement and described AI's role at each stage.
+* Created the analytics roadmap covering future scores and calculation philosophy without implementing calculations.
+* Created the phased feature backlog with implemented, in-progress, planned, and future categories.
+* Updated `README.md` and `PROJECT_STATE.md`.
+* Ran backend/scraper tests and frontend lint, type-check, and build validation.
+
+Files Created:
+
+* `docs/product/product-philosophy.md`
+* `docs/product/product-pillars.md`
+* `docs/product/ai-capabilities.md`
+* `docs/product/personalization.md`
+* `docs/product/platform-modules.md`
+* `docs/product/user-journey.md`
+* `docs/product/analytics-roadmap.md`
+* `docs/product/feature-backlog.md`
+
+Files Modified:
+
+* `README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Product Architecture Decisions:
+
+* Define InvestGuide as an AI Financial Intelligence Platform, not merely an investment platform.
+* Adopt the permanent product question: "Does this help the user make a better financial decision?"
+* Formalize five permanent product pillars: Learn, Plan, Invest, Manage, and Grow.
+* Keep AI as an explanatory, educational, source-grounded intelligence layer that interprets analytics rather than replacing them.
+* Treat recommendations, analytics, simulations, portfolios, budgets, learning, and roadmaps as future modules that require reliable data, safety boundaries, and documented methodology before implementation.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 184 tests passed.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 12 app routes.
+* Warning: pytest could not write `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Known Issues Update:
+
+* Unresolved: Docker is not installed or not available on PATH.
+* Unresolved: local PostgreSQL rejects `investguide_user` credentials or is intermittently unreachable on port `5432`.
+* Unresolved: full persisted end-to-end auth/onboarding/profile validation requires Docker PostgreSQL or corrected local PostgreSQL database/user credentials.
+* Unresolved: analytics calculations, AI models, portfolio engine, budget engine, recommendation engine, learning platform, simulations, and roadmaps remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 025 established InvestGuide's long-term product architecture as an AI Financial Intelligence Platform. The sprint produced durable product philosophy, pillars, AI capability, personalization, module, journey, analytics, and backlog documentation while leaving implementation unchanged. Validation passed.
+
+Next Recommended Task:
+
+* Sprint 026: choose the next implementation layer deliberately. Recommended first step remains fixing the local Docker/PostgreSQL blocker before implementing further data or analytics modules. If documentation is considered sufficient, the next implementation sprint should begin with a narrow data/analytics foundation, not AI recommendations.
+
+---
+
+## Architectural Backlog Note
+
+Date: 2026-07-01
+
+Topic: Future data flow and system map documentation.
+
+Decision:
+
+* Record a future `docs/product/data-flow.md` document to explain how information moves through InvestGuide.
+* The data-flow document should cover source-to-user pipelines such as news source -> scrapers -> normalization -> deduplication -> database -> analytics engine -> AI intelligence layer -> frontend -> user.
+* It should also describe onboarding -> personalization, portfolio -> analytics -> AI, macro data -> asset outlooks, education -> learning engine -> roadmap, and financial profile -> health score flows.
+* Record a future `docs/architecture/system-map.md` document as the high-level platform diagram.
+* The system map should cover frontend, backend, AI layer, analytics engine, scrapers, PostgreSQL, future vector database, future cache, authentication, and background workers.
+* This is a roadmap note only. No files, diagrams, product modules, or implementation were added in this session.
+
+Reason:
+
+* As InvestGuide gains more contributors and modules, shared data-flow and system-map documentation will make dependencies, responsibilities, and integration paths easier to understand before implementation work begins.
+
+---
+
+## Session 032
+
+Date: 2026-07-02
+
+Objective: Complete Sprint 026 by building the Analytics Engine Foundation as the centralized architecture for future asset intelligence, portfolio intelligence, AI assistant context, news intelligence, comparison engine, opportunity radar, financial health, and recommendation systems.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, all files under `docs/architecture/`, and all files under `docs/product/` before implementation.
+* Expanded `backend/app/analytics/` into a real analytics foundation package.
+* Added `AnalyticsContext` for future asset, historical price, news, macro, financial statement, user profile, and metadata inputs.
+* Added `AnalyticsResult` as the standard analytics output envelope with metric name, value, confidence, methodology, inputs used, warnings, timestamp, and version.
+* Added `BaseAnalytics` abstract class with `calculate()`, `validate()`, `metadata()`, `explanation()`, and `planned_inputs()` contracts.
+* Added `AnalyticsRegistry` with `register()`, `unregister()`, `calculate()`, `calculate_all()`, and `metadata()`.
+* Added `AnalyticsEngine` for centralized execution, result aggregation, warning collection, and version metadata.
+* Added purpose-only score modules for quality, growth, dividend, value, liquidity, risk, macro, and confidence.
+* Added deterministic `AnalyticsExplanation` template layer. This is not AI.
+* Added analytics-specific exceptions and version constants.
+* Created `docs/architecture/analytics-engine.md`.
+* Expanded analytics foundation tests.
+* Updated `README.md` and `PROJECT_STATE.md`.
+* Ran focused analytics tests, full backend/scraper tests, frontend lint, frontend type-check, and frontend build.
+
+Files Created:
+
+* `backend/app/analytics/base.py`
+* `backend/app/analytics/confidence.py`
+* `backend/app/analytics/dividend.py`
+* `backend/app/analytics/engine.py`
+* `backend/app/analytics/explanation.py`
+* `backend/app/analytics/growth.py`
+* `backend/app/analytics/liquidity.py`
+* `backend/app/analytics/macro.py`
+* `backend/app/analytics/quality.py`
+* `backend/app/analytics/registry.py`
+* `backend/app/analytics/risk.py`
+* `backend/app/analytics/scores.py`
+* `backend/app/analytics/valuation.py`
+* `backend/app/analytics/version.py`
+* `docs/architecture/analytics-engine.md`
+
+Files Modified:
+
+* `backend/app/analytics/__init__.py`
+* `backend/app/analytics/context.py`
+* `backend/app/analytics/exceptions.py`
+* `backend/app/analytics/result.py`
+* `backend/tests/test_analytics_foundation.py`
+* `README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* The analytics engine is the single source of truth for future financial intelligence.
+* Future modules must consume analytics through `AnalyticsEngine` and `AnalyticsRegistry` rather than calculating metrics independently.
+* All analytics modules must return `AnalyticsResult`.
+* Score modules are purpose-only in Sprint 026 and deliberately return no real financial values.
+* `ConfidenceScoreAnalytics` is included to support future AI reliability and caveat logic.
+* `AnalyticsExplanation` is deterministic template text, not AI.
+* Engine and methodology versions are exposed through `ENGINE_VERSION` and `METHODOLOGY_VERSION`.
+
+Validation Results:
+
+* `python -m pytest backend/tests/test_analytics_foundation.py`: passed, 10 tests passed.
+* `python -m pytest`: passed from repository root, 194 tests passed.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 12 app routes.
+* Warning: pytest could not write `.pytest_cache` due Windows access denial; this did not fail tests.
+
+Known Limitations:
+
+* No real scores, PE calculations, DCF, dividend models, macro calculations, recommendations, portfolio analytics, AI, comparisons, predictions, frontend charts, or analytics APIs were implemented.
+* Score modules currently document purpose, inputs, methodology, and future notes, then return structured foundation results with warnings.
+* Full persisted runtime validation remains blocked until Docker or local PostgreSQL credentials are fixed.
+
+Session Summary:
+
+* Sprint 026 established the central analytics architecture that future InvestGuide intelligence modules should depend on. The package now has a real engine, registry, context, result contract, explanation layer, exceptions, versioning, score module contracts, documentation, and tests without implementing real financial calculations.
+
+Next Recommended Task:
+
+* Sprint 027: add historical price data models and ingestion-ready context builders, or fix the Docker/PostgreSQL blocker before implementing the first real analytics calculation. Avoid AI recommendations until analytics, data quality, and safety methodology are mature.
+
+---
+
+## Architectural Backlog Note
+
+Date: 2026-07-02
+
+Topic: Future `AnalyticsPipeline` execution layer.
+
+Decision:
+
+* Record a future `AnalyticsPipeline` or analytics execution pipeline between `AnalyticsContext`, `AnalyticsRegistry`, and analytics modules.
+* The pipeline should be considered once analytics execution needs dependency ordering, caching, parallel execution, timeout handling, partial failure handling, execution metrics, or audit logging.
+* Keep this as a future enhancement only. It should not delay Sprint 026 and should not be implemented before analytics execution complexity justifies it.
+
+Reason:
+
+* Separating execution mechanics from `AnalyticsEngine` will keep the engine focused on orchestration while allowing the analytics execution model to evolve safely as InvestGuide adds more metrics and data sources.

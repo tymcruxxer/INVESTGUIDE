@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 from app.database.base import Base
 from app.database.session import get_db
 from app.main import app
+from app.services.auth_service import create_access_token, get_user_by_email
 
 
 @pytest.fixture()
@@ -150,6 +152,38 @@ def test_me_requires_authentication(client: TestClient) -> None:
 def test_me_rejects_invalid_token(client: TestClient) -> None:
     """Invalid bearer tokens are rejected."""
     response = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer bad-token"})
+    body = response.json()
+
+    assert response.status_code == 401
+    assert body["success"] is False
+    assert body["error_code"] == "HTTP_ERROR"
+
+
+
+def test_me_rejects_expired_token(client: TestClient, db_session: Session) -> None:
+    """Expired bearer tokens are rejected with a 401 envelope."""
+    _signup(client)
+    user = get_user_by_email(db_session, "user@example.com")
+    assert user is not None
+    expired_token = create_access_token(user, expires_delta=timedelta(minutes=-1))
+
+    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {expired_token}"})
+    body = response.json()
+
+    assert response.status_code == 401
+    assert body["success"] is False
+    assert body["error_code"] == "HTTP_ERROR"
+
+
+def test_inactive_user_cannot_access_me(client: TestClient, db_session: Session) -> None:
+    """Inactive users with otherwise valid tokens cannot access the current-user endpoint."""
+    token = _signup(client)
+    user = get_user_by_email(db_session, "user@example.com")
+    assert user is not None
+    user.is_active = False
+    db_session.commit()
+
+    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
     body = response.json()
 
     assert response.status_code == 401

@@ -1,9 +1,10 @@
-/**
+﻿/**
  * Global Providers
  * Combines all application providers
  */
 
 import React from "react";
+import { AuthSessionProvider } from "./auth-session";
 import { ReactQueryProvider } from "./react-query";
 import { ThemeProvider } from "./theme-provider";
 
@@ -15,7 +16,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
       <ReactQueryProvider>
-        {children}
+        <AuthSessionProvider>{children}</AuthSessionProvider>
       </ReactQueryProvider>
     </ThemeProvider>
   );

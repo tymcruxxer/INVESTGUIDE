@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Top Navigation Bar Component
  * Header with user profile, theme toggle, and notifications
  */
@@ -6,31 +6,30 @@
 "use client";
 
 import React from "react";
-import { useThemeStore } from "@/store";
-import { Moon, Sun, Bell } from "lucide-react";
+import { Bell, Moon, Sun, UserCircle } from "lucide-react";
+import { useAuthStore, useThemeStore } from "@/store";
 
 export function Navbar() {
   const { theme, toggleTheme } = useThemeStore();
+  const user = useAuthStore((state) => state.user);
 
   return (
-    <nav className="sticky top-0 h-16 bg-background-secondary border-b border-border z-20">
-      <div className="h-full px-4 lg:px-6 flex items-center justify-between">
-        {/* Left section - breadcrumb (future) */}
+    <nav className="sticky top-0 z-20 h-16 border-b border-border bg-background-secondary">
+      <div className="flex h-full items-center justify-between px-4 lg:px-6">
         <div className="flex-1" />
-
-        {/* Right section - actions */}
-        <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <button className="relative p-2 hover:bg-background-tertiary rounded-lg smooth-transition">
+        <div className="flex items-center gap-3">
+          <button
+            className="relative rounded-lg p-2 smooth-transition hover:bg-background-tertiary"
+            aria-label="Notifications"
+          >
             <Bell size={20} className="text-muted-foreground" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
           </button>
-
-          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 hover:bg-background-tertiary rounded-lg smooth-transition"
+            className="rounded-lg p-2 smooth-transition hover:bg-background-tertiary"
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            aria-label="Toggle theme"
           >
             {theme === "dark" ? (
               <Sun size={20} className="text-muted-foreground" />
@@ -38,11 +37,10 @@ export function Navbar() {
               <Moon size={20} className="text-muted-foreground" />
             )}
           </button>
-
-          {/* User Profile (placeholder) */}
-          <button className="ml-2 px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 smooth-transition text-sm font-medium">
-            Profile
-          </button>
+          <div className="ml-1 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+            <UserCircle size={18} />
+            <span className="max-w-[180px] truncate">{user?.email ?? "Investor"}</span>
+          </div>
         </div>
       </div>
     </nav>

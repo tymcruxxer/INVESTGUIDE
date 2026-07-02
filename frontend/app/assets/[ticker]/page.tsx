@@ -1,137 +1,108 @@
-/**
- * Assets Page - Asset Detail
- * Display detailed information about a specific asset
- */
-
 "use client";
 
-import React from "react";
+import Link from "next/link";
+import { useMemo } from "react";
+import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout";
-import { ChartSkeleton, CardSkeleton, Skeleton } from "@/components/skeleton";
-import { motion } from "framer-motion";
+import { ANALYTICS_PLACEHOLDERS, DEMO_ASSETS, DEMO_NEWS, getEducationSummary, getExplainLikeIm18 } from "@/utils/demo-content";
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+export default function AssetDetailPage() {
+  const params = useParams<{ ticker: string }>();
+  const ticker = (params?.ticker ?? "DLTA").toUpperCase();
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
-};
+  const asset = useMemo(() => DEMO_ASSETS.find((item) => item.ticker === ticker) ?? DEMO_ASSETS[0], [ticker]);
+  const assetNews = useMemo(() => DEMO_NEWS.filter((item) => item.asset_ticker === ticker), [ticker]);
+  const education = useMemo(() => getExplainLikeIm18(asset), [asset]);
 
-interface AssetDetailPageProps {
-  params: {
-    ticker: string;
-  };
-}
-
-export default function AssetDetailPage({ params: _params }: AssetDetailPageProps) {
   return (
     <AppShell>
-      <motion.div
-        className="space-y-6"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        {/* Asset Header */}
-        <motion.div variants={item} className="bg-card border border-border rounded-lg p-6">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-6 w-48" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i}>
-                  <Skeleton className="h-4 w-20 mb-2" />
-                  <Skeleton className="h-6 w-32" />
-                </div>
-              ))}
+      <div className="space-y-6">
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">{asset.exchange}</p>
+              <h1 className="mt-2 text-4xl font-bold">{asset.company_name}</h1>
+              <p className="mt-3 max-w-2xl text-muted-foreground">{asset.description}</p>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Price Chart */}
-        <motion.div variants={item} className="space-y-4">
-          <h2 className="text-2xl font-semibold">Price Chart</h2>
-          <ChartSkeleton />
-        </motion.div>
-
-        {/* Main Grid */}
-        <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* AI Summary */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">AI Summary</h2>
-              <CardSkeleton />
-            </div>
-
-            {/* Key Metrics */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Key Metrics</h2>
-              <div className="bg-card border border-border rounded-lg p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i}>
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-6 w-32" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Sentiment Analysis */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Sentiment Analysis</h2>
-              <CardSkeleton />
-            </div>
-
-            {/* News */}
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Latest News</h2>
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
+            <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
+              <p className="font-semibold">{asset.ticker}</p>
+              <p className="mt-1 text-primary/80">{asset.asset_type}</p>
             </div>
           </div>
 
-          {/* Right Column - Sidebar */}
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-background-secondary p-4">
+              <p className="text-sm text-muted-foreground">Asset type</p>
+              <p className="mt-1 font-semibold">{asset.asset_type}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background-secondary p-4">
+              <p className="text-sm text-muted-foreground">Sector</p>
+              <p className="mt-1 font-semibold">{asset.sector}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-background-secondary p-4">
+              <p className="text-sm text-muted-foreground">Exchange</p>
+              <p className="mt-1 font-semibold">{asset.exchange}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
-            {/* Add to Watchlist */}
-            <button className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 smooth-transition">
-              Add to Watchlist
-            </button>
-
-            {/* Risk Indicator */}
-            <CardSkeleton />
-
-            {/* Macroeconomic Exposure */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Macro Exposure</h2>
-              <CardSkeleton />
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">Company overview</h2>
+              <p className="mt-3 text-sm text-muted-foreground">{asset.description}</p>
             </div>
 
-            {/* Comparison */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Similar Assets</h2>
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">Analytics section</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {ANALYTICS_PLACEHOLDERS.map((metric) => (
+                  <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-4">
+                    <p className="font-medium">{metric.label}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Calculation coming soon</p>
+                  </div>
                 ))}
               </div>
             </div>
+
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">News</h2>
+              <div className="mt-4 space-y-3">
+                {assetNews.length > 0 ? assetNews.map((item) => (
+                  <div key={item.id} className="rounded-lg border border-border bg-background-secondary p-4">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{item.source} · {item.published_at}</p>
+                    <p className="mt-2 text-sm">{item.summary}</p>
+                  </div>
+                )) : <p className="text-sm text-muted-foreground">No linked news available yet.</p>}
+              </div>
+            </div>
           </div>
-        </motion.div>
-      </motion.div>
+
+          <div className="space-y-6">
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">Educational section</h2>
+              <p className="mt-3 text-sm text-muted-foreground">{getEducationSummary(asset)}</p>
+              <div className="mt-4 rounded-lg border border-border bg-background-secondary p-4">
+                <h3 className="font-semibold">Explain Like I&apos;m 18</h3>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  {education.map((line) => (
+                    <li key={line} className="leading-6">{line}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">Quick actions</h2>
+              <div className="mt-4 flex flex-col gap-3">
+                <Link href="/compare" className="rounded-lg bg-primary px-4 py-3 text-center font-medium text-primary-foreground">Compare this asset</Link>
+                <Link href="/assets" className="rounded-lg border border-border px-4 py-3 text-center font-medium">Back to explorer</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </AppShell>
   );
 }

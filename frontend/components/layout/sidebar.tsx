@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Navigation Sidebar Component
  * Left sidebar with navigation links and branding
  */
@@ -7,80 +7,62 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/utils";
-import { useUIStore } from "@/store";
+import { useAuthStore, useUIStore } from "@/store";
 import {
   BarChart3,
-  TrendingUp,
-  Briefcase,
   BookOpen,
-  Settings,
+  Briefcase,
   LogOut,
   Menu,
+  Settings,
+  TrendingUp,
   X,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    icon: BarChart3,
-  },
-  {
-    href: "/markets",
-    label: "Markets",
-    icon: TrendingUp,
-  },
-  {
-    href: "/assets",
-    label: "Assets",
-    icon: Briefcase,
-  },
-  {
-    href: "/ai-assistant",
-    label: "AI Assistant",
-    icon: BarChart3,
-  },
-  {
-    href: "/education",
-    label: "Education",
-    icon: BookOpen,
-  },
+  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+  { href: "/markets", label: "Markets", icon: TrendingUp },
+  { href: "/assets", label: "Assets", icon: Briefcase },
+  { href: "/ai-assistant", label: "AI Assistant", icon: BarChart3 },
+  { href: "/education", label: "Education", icon: BookOpen },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/auth/login");
+  };
 
   return (
     <>
-      {/* Mobile Sidebar Toggle */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-primary text-primary-foreground rounded-lg"
+        className="fixed left-4 top-4 z-40 rounded-lg bg-primary p-2 text-primary-foreground lg:hidden"
+        aria-label="Toggle navigation"
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-screen w-64 bg-background-secondary border-r border-border smooth-transition z-40",
-          "lg:translate-x-0 lg:relative",
+          "fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-background-secondary smooth-transition",
+          "lg:relative lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        {/* Header */}
-        <div className="p-6 border-b border-border">
+        <div className="border-b border-border p-6">
           <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Investment Intelligence
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Investment Intelligence</p>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        <nav className="space-y-2 p-4">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
@@ -90,9 +72,9 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg smooth-transition",
+                  "flex items-center gap-3 rounded-lg px-4 py-3 smooth-transition",
                   isActive
-                    ? "bg-primary text-primary-foreground font-medium"
+                    ? "bg-primary font-medium text-primary-foreground"
                     : "text-muted-foreground hover:bg-background-tertiary hover:text-foreground"
                 )}
               >
@@ -103,12 +85,11 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2 border-t border-border">
+        <div className="absolute bottom-0 left-0 right-0 space-y-2 border-t border-border p-4">
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg smooth-transition",
+              "flex items-center gap-3 rounded-lg px-4 py-3 smooth-transition",
               pathname === "/settings"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-background-tertiary"
@@ -117,18 +98,21 @@ export function Sidebar() {
             <Settings size={20} />
             <span>Settings</span>
           </Link>
-          <button className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-background-tertiary rounded-lg smooth-transition">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground smooth-transition hover:bg-background-tertiary"
+          >
             <LogOut size={20} />
             <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+        <button
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={toggleSidebar}
+          aria-label="Close navigation"
         />
       )}
     </>

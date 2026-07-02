@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Type Definitions for InvestGuide Frontend
  * Shared TypeScript types used across the application
  */
@@ -82,9 +82,9 @@ export interface AssetDetail extends Asset {
 // ============================================================================
 
 export interface SentimentAnalysis {
-  sentiment_score: number; // -1.0 to 1.0
+  sentiment_score: number;
   sentiment_label: SentimentLabel;
-  confidence_score: number; // 0.0 to 1.0
+  confidence_score: number;
   model_used: string;
   processed_at: string;
 }
@@ -103,17 +103,17 @@ export interface MarketSentiment {
 // ============================================================================
 
 export interface AnalyticsMetrics {
-  performance_score: number; // 0-100
-  risk_score: number; // 0-100
-  momentum_score: number; // 0-100
-  dividend_stability: number; // 0-100
-  volatility: number; // percentage
+  performance_score: number;
+  risk_score: number;
+  momentum_score: number;
+  dividend_stability: number;
+  volatility: number;
   risk_level: RiskLevel;
-  liquidity_score: number; // 0-100
+  liquidity_score: number;
 }
 
 export interface RecommendationScore {
-  final_score: number; // 0-100
+  final_score: number;
   recommendation: "strong" | "moderate" | "caution";
   performance_weight: number;
   risk_weight: number;
@@ -157,7 +157,7 @@ export interface AiSummary {
 
 export interface MacroIndicator {
   id: number;
-  indicator_name: string; // inflation, exchange_rate, interest_rate, gold_price
+  indicator_name: string;
   indicator_value: number;
   indicator_unit: string;
   source: "RBZ" | "ZIMSTAT";
@@ -177,36 +177,73 @@ export interface MacroOverview {
 }
 
 // ============================================================================
-// User & Authentication Types
+// User, Authentication & Personalization Types
 // ============================================================================
 
-export type UserRole = "user" | "admin" | "moderator";
 export type RiskProfile = "conservative" | "moderate" | "aggressive";
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+export type PreferredLanguageLevel = "simple" | "balanced" | "technical";
 
 export interface User {
   id: number;
-  full_name: string;
   email: string;
-  subscription_plan: "free" | "premium";
-  risk_profile: RiskProfile;
-  experience_level: ExperienceLevel;
-  preferred_investments?: string[];
+  username?: string | null;
+  is_active: boolean;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface AuthTokens {
   access_token: string;
-  refresh_token: string;
   token_type: "bearer";
-  expires_in: number;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+}
+
+export interface SignupResponse {
+  user: User;
+  access_token: string;
+  token_type: "bearer";
+}
+
+export interface InvestorProfile {
+  id: number;
+  user_id?: number | null;
+  experience_level: ExperienceLevel;
+  risk_appetite: RiskProfile;
+  investment_horizon?: string | null;
+  planned_investment_range?: string | null;
+  preferred_asset_types: string[];
+  investment_goals: string[];
+  preferred_language_level: PreferredLanguageLevel;
+  education_focus: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvestorProfilePayload {
+  experience_level?: ExperienceLevel;
+  risk_appetite?: RiskProfile;
+  investment_horizon?: string | null;
+  planned_investment_range?: string | null;
+  preferred_asset_types?: string[];
+  investment_goals?: string[];
+  preferred_language_level?: PreferredLanguageLevel;
+  education_focus?: string[];
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
   tokens: AuthTokens | null;
+  investorProfile: InvestorProfile | null;
+  onboardingComplete: boolean;
+  hydrated: boolean;
   loading: boolean;
   error: string | null;
 }

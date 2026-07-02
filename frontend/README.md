@@ -267,3 +267,80 @@ Follow the coding patterns established in existing components:
 ---
 
 **InvestGuide** - AI-powered investment intelligence for Zimbabwe 🇿🇼
+
+## Sprint 022 Auth and Onboarding Flow
+
+Sprint 022 adds the first user-facing authentication and personalization flow.
+
+Implemented frontend routes:
+
+* `/auth/login` - email/password login with loading and error states
+* `/auth/signup` - email/password signup with confirm-password validation
+* `/onboarding` - seven-step investor personalization flow for experience level, investment goals, preferred asset types, risk appetite, investment horizon, planned investment range, and language preference
+
+Auth state lives in `store/index.ts` and persists the current access token in localStorage for development. On app load, `AuthSessionProvider` hydrates the session and calls `/api/v1/auth/me` when a token exists.
+
+API support lives in `services/api.ts`:
+
+* `authService.login`
+* `authService.signup`
+* `authService.me`
+* `investorProfileService.getProfile`
+* `investorProfileService.createProfile`
+* `investorProfileService.updateProfile`
+
+Route protection is client-side for now. Existing private pages use `AppShell`, which redirects unauthenticated users to `/auth/login` and authenticated users without a completed investor profile to `/onboarding`.
+
+Set the backend URL with:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8001/api/v1
+```
+
+Known limitation: full end-to-end signup/login/profile persistence still requires the backend PostgreSQL blocker to be resolved. The frontend compiles against the backend contract, but live persistence depends on a reachable migrated database.
+
+## Sprint 023 Frontend Integration Validation
+
+Sprint 023 validated the frontend against the locally running backend URL:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8001/api/v1
+```
+
+Route smoke results from the Next.js dev server on port `3000`:
+
+* `/auth/signup`: 200
+* `/auth/login`: 200
+* `/onboarding`: 200
+* `/dashboard`: 200
+
+Validation commands:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.
+
+Known limitation: browser-level signup/login/onboarding persistence could not be completed because the backend database remains unavailable with the configured local PostgreSQL credentials. The frontend routes and build are healthy; persistence depends on resolving the Docker/PostgreSQL blocker.
+
+## Sprint 024 Frontend Runtime Validation
+
+Sprint 024 revalidated frontend route availability with the backend URL set to:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8001/api/v1
+```
+
+Route smoke results from the Next.js dev server on port `3000`:
+
+* `/auth/signup`: 200
+* `/auth/login`: 200
+* `/onboarding`: 200
+* `/dashboard`: 200
+
+Validation commands:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.
+
+Persisted browser validation remains pending because backend signup/login/profile writes are blocked by the local Docker/PostgreSQL environment.

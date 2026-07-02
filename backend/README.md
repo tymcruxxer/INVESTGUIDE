@@ -582,3 +582,72 @@ backend/
 
 
 
+
+## Sprint 021 Authentication Validation Notes
+
+Sprint 021 validated the authentication foundation and added only focused hardening tests.
+
+Validation summary:
+
+* `python backend/scripts/dev.py --no-server` failed clearly because Docker is not installed or not available on PATH.
+* `python backend/scripts/check_database.py` failed because local PostgreSQL rejects `investguide_user` credentials.
+* `python -m alembic current` loaded Alembic configuration successfully, but current revision lookup was deferred until PostgreSQL is reachable.
+* `python -m pytest` from the repository root passed with 184 tests.
+* `python -m uvicorn app.main:app --reload --port 8001` started successfully.
+* `GET /api/v1/health` returned a healthy application response with `database: unavailable` and `migrations: unavailable`.
+* `GET /api/v1/auth/me` without a bearer token returned a 401 response envelope.
+* `POST /api/v1/auth/signup` reached the auth service but could not complete because the configured PostgreSQL credentials are rejected.
+
+Hardening added:
+
+* Expired bearer tokens are covered by automated tests and return 401.
+* Inactive users with otherwise valid tokens are covered by automated tests and return 401.
+
+Full authenticated signup/login/profile runtime smoke requires Docker PostgreSQL or corrected local PostgreSQL credentials, followed by migrations and seed data.
+
+## Sprint 023 End-to-End Validation Notes
+
+Sprint 023 started FastAPI successfully on port `8001` and confirmed `/api/v1/health` returns 200 with `database: unavailable` and `migrations: unavailable` while PostgreSQL is blocked.
+
+Database validation results:
+
+* `docker compose up -d` could not run because Docker is not installed or not available on PATH.
+* `python backend/scripts/bootstrap_dev.py` failed clearly because local PostgreSQL rejects `investguide_user` credentials.
+* `python backend/scripts/check_database.py` failed for the same PostgreSQL authentication reason.
+* `python -m alembic current` loads Alembic configuration, but current revision lookup remains deferred until PostgreSQL is reachable.
+
+Runtime endpoint results:
+
+* `GET /api/v1/health`: 200.
+* `GET /api/v1/auth/me` without a token: 401 envelope.
+* `POST /api/v1/auth/signup`: reached the backend and returned 500 because the database connection failed.
+* `POST /api/v1/auth/login`: reached the backend and returned 500 because the database connection failed.
+* `GET /api/v1/investor-profile` and `GET /api/v1/assets`: blocked by the same database credential issue.
+* `GET /api/v1/news`: 200 using development sample/fallback data.
+
+No backend code changes were required in Sprint 023. Full persisted auth/profile validation requires Docker PostgreSQL or corrected local PostgreSQL credentials.
+
+## Sprint 024 Persisted Environment Validation Notes
+
+Sprint 024 revalidated the local database workflow and confirmed the blocker remains machine-level environment setup.
+
+Docker/PostgreSQL results:
+
+* `docker --version`: failed because `docker` is not recognized on PATH.
+* `docker compose version`: failed because `docker` is not recognized on PATH.
+* `docker info`: failed because `docker` is not recognized on PATH.
+* `docker compose up -d`: failed because `docker` is not recognized on PATH.
+* `python backend/scripts/bootstrap_dev.py`: failed because local PostgreSQL rejects `investguide_user` credentials.
+* `python backend/scripts/check_database.py`: failed because PostgreSQL is unavailable or unreachable with the configured credentials.
+* `python -m alembic current`: Alembic configuration loads, but current revision lookup is deferred until PostgreSQL is reachable.
+
+Runtime results:
+
+* `python -m uvicorn app.main:app --port 8001`: backend starts successfully without reload.
+* `GET /api/v1/health`: 200 with `database: unavailable` and `migrations: unavailable`.
+* `POST /api/v1/auth/signup`: 500 due PostgreSQL connection failure.
+* `POST /api/v1/auth/login`: 500 due PostgreSQL connection failure.
+* `GET /api/v1/investor-profile` and `GET /api/v1/assets`: blocked by PostgreSQL connection failure.
+* `GET /api/v1/news`: 200 using development sample/fallback data.
+
+No backend code changes or persistence bypasses were made. Full persisted auth/profile validation requires Docker PostgreSQL or corrected local PostgreSQL credentials.
