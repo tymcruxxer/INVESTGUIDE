@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API Service Layer
  * Centralized API client for all backend communication
  */
@@ -7,9 +7,11 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import {
   ApiError,
   ApiResponse,
+  Asset,
   AuthResponse,
   InvestorProfile,
   InvestorProfilePayload,
+  NewsArticle,
   SignupResponse,
   User,
 } from "@/types";
@@ -160,9 +162,11 @@ export const assetService = {
     search?: string;
     exchange?: string;
     sector?: string;
-  }) => get("/assets", params),
+    asset_type?: string;
+    status?: string;
+  } = {}) => get<Asset[]>("/assets", params),
 
-  getAssetByTicker: (ticker: string) => get(`/assets/${ticker}`),
+  getAssetByTicker: (ticker: string) => get<Asset>(`/assets/${ticker}`),
 
   getHistoricalPrices: (ticker: string, params?: { days?: number }) =>
     get(`/assets/${ticker}/prices`, params),
@@ -174,18 +178,26 @@ export const assetService = {
   getAiSummary: (ticker: string) => get(`/assets/${ticker}/ai-summary`),
 
   getAssetNews: (ticker: string, params?: { limit?: number }) =>
-    get(`/assets/${ticker}/news`, params),
+    get<NewsArticle[]>("/news", { ...(params ?? {}), asset: ticker }),
 };
-
 // ============================================================================
 // News Services
 // ============================================================================
 
 export const newsService = {
-  getNewsFeed: (params: { page?: number; limit?: number; category?: string }) =>
-    get("/news", params),
+  getNewsFeed: (params: {
+    page?: number;
+    limit?: number;
+    source?: string;
+    asset?: string;
+    search?: string;
+    sort?: "asc" | "desc";
+  } = {}) => get<NewsArticle[]>("/news", params),
 
-  getNewsByAsset: (ticker: string) => get(`/assets/${ticker}/news`),
+  getNewsById: (id: number) => get<NewsArticle>(`/news/${id}`),
+
+  getNewsByAsset: (ticker: string, params?: { limit?: number }) =>
+    get<NewsArticle[]>("/news", { ...(params ?? {}), asset: ticker }),
 };
 
 // ============================================================================

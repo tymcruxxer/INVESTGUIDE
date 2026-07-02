@@ -6,7 +6,7 @@ export interface DemoNewsItem {
   source: string;
   published_at: string;
   summary: string;
-  asset_ticker?: string;
+  asset_tickers: string[];
 }
 
 export const DEMO_ASSETS: Asset[] = [
@@ -40,15 +40,15 @@ export const DEMO_ASSETS: Asset[] = [
   },
   {
     id: 3,
-    ticker: "CMCL",
-    company_name: "Caledonia Mining Corporation Plc",
-    exchange: "VFEX",
-    sector: "Basic Materials",
-    industry: "Gold Mining",
+    ticker: "INN",
+    company_name: "Innscor Africa Limited",
+    exchange: "ZSE",
+    sector: "Consumer Staples",
+    industry: "Food Production",
     asset_type: "equity",
-    currency: "USD",
-    description: "Caledonia is a mid-tier gold producer with exposure to global commodity cycles and FX dynamics.",
-    market_cap: 900000000,
+    currency: "ZWG",
+    description: "Innscor gives investors exposure to consumer staples, food manufacturing, and regional demand trends.",
+    market_cap: 1250000000,
     status: "active",
     created_at: "2024-01-01T00:00:00Z",
   },
@@ -68,7 +68,21 @@ export const DEMO_ASSETS: Asset[] = [
   },
   {
     id: 5,
-    ticker: "TRB",
+    ticker: "CMCL",
+    company_name: "Caledonia Mining Corporation Plc",
+    exchange: "VFEX",
+    sector: "Basic Materials",
+    industry: "Gold Mining",
+    asset_type: "equity",
+    currency: "USD",
+    description: "Caledonia is a gold producer with exposure to global commodity cycles and foreign-currency dynamics.",
+    market_cap: 900000000,
+    status: "active",
+    created_at: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: 6,
+    ticker: "TBILL",
     company_name: "Treasury Bills",
     exchange: "ZSE",
     sector: "Government",
@@ -80,46 +94,32 @@ export const DEMO_ASSETS: Asset[] = [
     status: "active",
     created_at: "2024-01-01T00:00:00Z",
   },
-  {
-    id: 6,
-    ticker: "MMF",
-    company_name: "Money Market Fund",
-    exchange: "ZSE",
-    sector: "Financials",
-    industry: "Money Market",
-    asset_type: "bond",
-    currency: "ZWG",
-    description: "A low-volatility cash management option for investors prioritizing stability and predictable access.",
-    market_cap: 1200000000,
-    status: "active",
-    created_at: "2024-01-01T00:00:00Z",
-  },
 ];
 
 export const DEMO_NEWS: DemoNewsItem[] = [
   {
     id: 1,
-    title: "Local equities steady as inflation expectations cool",
-    source: "Bloomberg Lite",
-    published_at: "2026-07-01",
-    summary: "Market participants are watching rate signals and company earnings as the local market stabilizes.",
-    asset_ticker: "DLTA",
+    title: "Sample: ZSE market liquidity watch for retail investors",
+    source: "InvestGuide Sample Data",
+    published_at: "2026-06-25T08:00:00Z",
+    summary: "Development placeholder discussing how investors might monitor turnover, breadth, and liquidity on the ZSE.",
+    asset_tickers: [],
   },
   {
     id: 2,
-    title: "REITs gain attention from income-focused investors",
-    source: "InvestGuide Desk",
-    published_at: "2026-06-30",
-    summary: "Distribution yield and portfolio diversification continue to attract cautious investors.",
-    asset_ticker: "TIGZ",
+    title: "Sample: Delta Corporation company-news placeholder",
+    source: "InvestGuide Sample Data",
+    published_at: "2026-06-24T12:00:00Z",
+    summary: "Development placeholder for future Delta-related news, filings, or analyst commentary.",
+    asset_tickers: ["DLTA"],
   },
   {
     id: 3,
-    title: "Gold miners remain in focus as US dollar demand strengthens",
-    source: "Market Brief",
-    published_at: "2026-06-29",
-    summary: "Mining names are supported by commodity demand and investor appetite for inflation hedges.",
-    asset_ticker: "CMCL",
+    title: "Sample: REIT income themes for Zimbabwean investors",
+    source: "InvestGuide Sample Data",
+    published_at: "2026-06-23T08:30:00Z",
+    summary: "Development placeholder covering REIT education and income-focused monitoring themes.",
+    asset_tickers: ["TIGZ"],
   },
 ];
 
@@ -157,28 +157,43 @@ export function buildRoadmap(profile: InvestorProfile | null | undefined) {
   return roadmap;
 }
 
-export function buildRecommendedAssets(profile: InvestorProfile | null | undefined) {
+export function buildRecommendedAssets(profile: InvestorProfile | null | undefined, assets: Asset[]) {
+  const catalog = assets.length > 0 ? assets : DEMO_ASSETS;
   const risk = profile?.risk_appetite ?? "moderate";
-  const goals = profile?.investment_goals ?? [];
+  const preferred = new Set((profile?.preferred_asset_types ?? []).map((item) => item.toLowerCase()));
+  const goals = new Set((profile?.investment_goals ?? []).map((item) => item.toLowerCase()));
 
-  if (risk === "conservative" || goals.includes("capital_preservation")) {
-    return [DEMO_ASSETS[4], DEMO_ASSETS[5], DEMO_ASSETS[3]];
-  }
+  const scored = catalog.map((asset) => {
+    let score = 0;
+    const type = asset.asset_type.toLowerCase();
+    const sector = asset.sector.toLowerCase();
+    if (preferred.has(type) || preferred.has(asset.exchange.toLowerCase()) || preferred.has(sector)) score += 3;
+    if (risk === "conservative" && (type === "reit" || type === "bond" || sector.includes("government"))) score += 3;
+    if (risk === "moderate" && (type === "reit" || sector.includes("consumer") || sector.includes("financial"))) score += 2;
+    if (risk === "aggressive" && (asset.exchange === "VFEX" || sector.includes("mining") || sector.includes("telecommunications"))) score += 3;
+    if (goals.has("passive_income") && (type === "reit" || type === "bond")) score += 2;
+    if (goals.has("growth") && type === "equity") score += 2;
+    return { asset, score };
+  });
 
-  if (risk === "aggressive") {
-    return [DEMO_ASSETS[2], DEMO_ASSETS[0], DEMO_ASSETS[1]];
-  }
+  return scored
+    .sort((left, right) => right.score - left.score || left.asset.company_name.localeCompare(right.asset.company_name))
+    .slice(0, 4)
+    .map(({ asset }) => asset);
+}
 
-  return [DEMO_ASSETS[0], DEMO_ASSETS[3], DEMO_ASSETS[2]];
+export function getRecommendationReason(asset: Asset, profile: InvestorProfile | null | undefined) {
+  const risk = profile?.risk_appetite ?? "moderate";
+  if (asset.asset_type === "REIT") return "REIT exposure can suit investors who want income themes and diversification.";
+  if (asset.asset_type === "bond") return "Fixed-income instruments can suit capital preservation and liquidity planning.";
+  if (risk === "aggressive" && asset.exchange === "VFEX") return "VFEX exposure may appeal to investors comfortable with USD-linked growth themes.";
+  if (asset.sector.toLowerCase().includes("consumer")) return "Consumer-facing businesses can be easier for beginners to understand and monitor.";
+  return "This asset matches your profile or adds useful market coverage for comparison.";
 }
 
 export function getEducationSummary(asset: Asset) {
-  if (asset.asset_type === "REIT") {
-    return "REITs can provide income, but property values and occupancy trends still matter.";
-  }
-  if (asset.asset_type === "bond") {
-    return "Bonds are often used for capital preservation and predictable cash flows.";
-  }
+  if (asset.asset_type === "REIT") return "REITs can provide income, but property values and occupancy trends still matter.";
+  if (asset.asset_type === "bond") return "Bonds are often used for capital preservation and predictable cash flows.";
   return "Equities can offer growth potential, but individual company performance and risk still matter.";
 }
 
@@ -198,15 +213,15 @@ export function getPersonalizationCopy(profile: InvestorProfile | null | undefin
   if (experience === "advanced") {
     return {
       tone: "technical",
-      intro: "Your profile is set up for more detail, so the dashboard stays concise and data-minded.",
-      helper: "You can expect ticker-level context, exchange context, and sector framing.",
+      intro: "Your dashboard is concise and data-minded, with ticker, exchange, sector, and methodology context visible.",
+      helper: "Advanced mode keeps educational notes available while surfacing more market terminology.",
     };
   }
 
   if (experience === "intermediate") {
     return {
       tone: "balanced",
-      intro: "Your dashboard stays practical and clear, with enough context to help you compare choices.",
+      intro: "Your dashboard stays practical and clear, with enough context to compare choices responsibly.",
       helper: "You will see plain-language explanations alongside the core market details.",
     };
   }

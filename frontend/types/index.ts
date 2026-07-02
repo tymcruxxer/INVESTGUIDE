@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Type Definitions for InvestGuide Frontend
  * Shared TypeScript types used across the application
  */
@@ -31,7 +31,7 @@ export interface ApiError {
 // ============================================================================
 
 export type Exchange = "ZSE" | "VFEX";
-export type AssetType = "equity" | "REIT" | "bond";
+export type AssetType = "equity" | "REIT" | "bond" | "money_market" | "alternative";
 export type Currency = "ZWG" | "USD";
 export type SentimentLabel = "positive" | "neutral" | "negative";
 export type RiskLevel = "low" | "moderate" | "high" | "speculative";
@@ -50,8 +50,9 @@ export interface Asset {
   official_website?: string;
   market_cap?: number;
   listing_date?: string;
-  status: "active" | "suspended";
+  status: "active" | "suspended" | "delisted";
   created_at: string;
+  updated_at?: string;
 }
 
 export interface HistoricalPrice {
@@ -66,6 +67,7 @@ export interface HistoricalPrice {
   volume: number;
   currency: Currency;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AssetDetail extends Asset {
@@ -129,16 +131,22 @@ export interface RecommendationScore {
 
 export interface NewsArticle {
   id: number;
-  source_name: string;
-  source_url: string;
-  article_title: string;
-  article_content: string;
-  summary?: string;
-  publication_date: string;
-  author?: string;
-  category: "markets" | "macro" | "company" | "research";
-  sentiment_status: "pending" | "processed";
+  title: string;
+  summary?: string | null;
+  content?: string | null;
+  content_hash?: string | null;
+  source: string;
+  author?: string | null;
+  published_at: string;
+  url?: string | null;
+  image_url?: string | null;
+  language: string;
+  sentiment?: number | string | null;
+  relevance_score?: number | string | null;
+  credibility_score?: number | string | null;
+  asset_tickers: string[];
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AiSummary {
@@ -164,6 +172,7 @@ export interface MacroIndicator {
   reporting_date: string;
   category: "monetary" | "fiscal" | "commodity";
   created_at: string;
+  updated_at?: string;
 }
 
 export interface MacroOverview {
@@ -258,6 +267,7 @@ export interface Watchlist {
   asset_id: number;
   asset?: Asset;
   created_at: string;
+  updated_at?: string;
 }
 
 export type AlertType = "price_change" | "sentiment" | "dividend" | "macro";
@@ -271,6 +281,7 @@ export interface Alert {
   is_active: boolean;
   triggered_at?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 // ============================================================================

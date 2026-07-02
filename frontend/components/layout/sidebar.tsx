@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Navigation Sidebar Component
  * Left sidebar with navigation links and branding
  */
@@ -14,6 +14,7 @@ import {
   BarChart3,
   BookOpen,
   Briefcase,
+  GitCompare,
   LogOut,
   Menu,
   Settings,
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/markets", label: "Markets", icon: TrendingUp },
   { href: "/assets", label: "Assets", icon: Briefcase },
+  { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/ai-assistant", label: "AI Assistant", icon: BarChart3 },
   { href: "/education", label: "Education", icon: BookOpen },
 ];

@@ -1,111 +1,115 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout";
-import { ANALYTICS_PLACEHOLDERS, DEMO_ASSETS } from "@/utils/demo-content";
+import { assetService } from "@/services/api";
+import { mapAssets } from "@/lib/mappers/data-mappers";
+import { ANALYTICS_PLACEHOLDERS, DEMO_ASSETS, getEducationSummary } from "@/utils/demo-content";
 
 export default function ComparePage() {
   const [leftTicker, setLeftTicker] = useState("DLTA");
   const [rightTicker, setRightTicker] = useState("TIGZ");
 
-  const left = useMemo(() => DEMO_ASSETS.find((asset) => asset.ticker === leftTicker) ?? DEMO_ASSETS[0], [leftTicker]);
-  const right = useMemo(() => DEMO_ASSETS.find((asset) => asset.ticker === rightTicker) ?? DEMO_ASSETS[3], [rightTicker]);
+  const assetsQuery = useQuery({
+    queryKey: ["assets", "compare"],
+    queryFn: () => assetService.getAssets({ limit: 100, status: "active" }),
+    retry: 1,
+  });
+
+  const backendAssets = useMemo(() => mapAssets(assetsQuery.data?.data), [assetsQuery.data]);
+  const usingFallback = assetsQuery.isError || (!assetsQuery.isLoading && backendAssets.length === 0);
+  const assets = usingFallback ? DEMO_ASSETS : backendAssets;
+
+  useEffect(() => {
+    if (assets.length === 0) return;
+    if (!assets.some((asset) => asset.ticker === leftTicker)) setLeftTicker(assets[0].ticker);
+    if (!assets.some((asset) => asset.ticker === rightTicker)) setRightTicker(assets[1]?.ticker ?? assets[0].ticker);
+  }, [assets, leftTicker, rightTicker]);
+
+  const left = assets.find((asset) => asset.ticker === leftTicker) ?? assets[0];
+  const right = assets.find((asset) => asset.ticker === rightTicker) ?? assets[1] ?? assets[0];
 
   return (
     <AppShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-4xl font-bold">Compare assets</h1>
-          <p className="mt-2 text-muted-foreground">Choose two assets to compare their profile, analytics placeholders, and education framing.</p>
+          <p className="mt-2 text-muted-foreground">Choose two backend catalog assets and compare their profile, education framing, and analytics placeholders.</p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <label className="rounded-lg border border-border bg-card p-4">
-            <span className="mb-2 block text-sm font-medium">Asset one</span>
-            <select value={leftTicker} onChange={(event) => setLeftTicker(event.target.value)} className="w-full rounded-lg border border-border bg-background-secondary px-3 py-2">
-              {DEMO_ASSETS.map((asset) => (
-                <option key={asset.ticker} value={asset.ticker}>
-                  {asset.ticker} · {asset.company_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="rounded-lg border border-border bg-card p-4">
-            <span className="mb-2 block text-sm font-medium">Asset two</span>
-            <select value={rightTicker} onChange={(event) => setRightTicker(event.target.value)} className="w-full rounded-lg border border-border bg-background-secondary px-3 py-2">
-              {DEMO_ASSETS.map((asset) => (
-                <option key={asset.ticker} value={asset.ticker}>
-                  {asset.ticker} · {asset.company_name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold">Quick comparison</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Asset type</p>
-                <p className="mt-1 font-semibold">{left.asset_type}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Asset type</p>
-                <p className="mt-1 font-semibold">{right.asset_type}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Sector</p>
-                <p className="mt-1 font-semibold">{left.sector}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Sector</p>
-                <p className="mt-1 font-semibold">{right.sector}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Exchange</p>
-                <p className="mt-1 font-semibold">{left.exchange}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Exchange</p>
-                <p className="mt-1 font-semibold">{right.exchange}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Dividend availability</p>
-                <p className="mt-1 font-semibold">{left.asset_type === "REIT" ? "Likely" : "Pending"}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background-secondary p-4">
-                <p className="text-sm text-muted-foreground">Dividend availability</p>
-                <p className="mt-1 font-semibold">{right.asset_type === "REIT" ? "Likely" : "Pending"}</p>
-              </div>
-            </div>
+        {usingFallback ? (
+          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
+            Backend unavailable. Showing demo data for preview only.
           </div>
+        ) : null}
 
-          <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold">Analytics placeholders</h2>
-              <div className="mt-4 space-y-3">
-                {ANALYTICS_PLACEHOLDERS.map((metric) => (
-                  <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <span>{metric.label}</span>
-                      <span className="text-sm text-muted-foreground">Calculation coming soon</span>
+        {assetsQuery.isLoading ? (
+          <div className="h-56 animate-pulse rounded-lg border border-border bg-card" />
+        ) : assets.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
+            <h2 className="text-xl font-semibold">No assets available</h2>
+            <p className="mt-2 text-sm text-muted-foreground">The backend asset catalog returned no records.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <label className="rounded-lg border border-border bg-card p-4">
+                <span className="mb-2 block text-sm font-medium">Asset one</span>
+                <select value={leftTicker} onChange={(event) => setLeftTicker(event.target.value)} className="w-full rounded-lg border border-border bg-background-secondary px-3 py-2">
+                  {assets.map((asset) => <option key={asset.ticker} value={asset.ticker}>{asset.ticker} - {asset.company_name}</option>)}
+                </select>
+              </label>
+              <label className="rounded-lg border border-border bg-card p-4">
+                <span className="mb-2 block text-sm font-medium">Asset two</span>
+                <select value={rightTicker} onChange={(event) => setRightTicker(event.target.value)} className="w-full rounded-lg border border-border bg-background-secondary px-3 py-2">
+                  {assets.map((asset) => <option key={asset.ticker} value={asset.ticker}>{asset.ticker} - {asset.company_name}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {[left, right].map((asset) => (
+                <section key={asset.ticker} className="rounded-lg border border-border bg-card p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.16em] text-muted-foreground">{asset.exchange}</p>
+                      <h2 className="mt-2 text-2xl font-semibold">{asset.ticker}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">{asset.company_name}</p>
                     </div>
+                    <Link href={`/assets/${asset.ticker.toLowerCase()}`} className="text-sm font-medium text-primary">Open</Link>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 text-sm">
+                    <div className="flex justify-between gap-4 rounded-lg border border-border bg-background-secondary p-3"><span className="text-muted-foreground">Asset type</span><span>{asset.asset_type}</span></div>
+                    <div className="flex justify-between gap-4 rounded-lg border border-border bg-background-secondary p-3"><span className="text-muted-foreground">Sector</span><span>{asset.sector}</span></div>
+                    <div className="flex justify-between gap-4 rounded-lg border border-border bg-background-secondary p-3"><span className="text-muted-foreground">Exchange</span><span>{asset.exchange}</span></div>
+                    <div className="flex justify-between gap-4 rounded-lg border border-border bg-background-secondary p-3"><span className="text-muted-foreground">Currency</span><span>{asset.currency}</span></div>
+                    <div className="flex justify-between gap-4 rounded-lg border border-border bg-background-secondary p-3"><span className="text-muted-foreground">Risk placeholder</span><span>Methodology coming soon</span></div>
+                  </div>
+
+                  <div className="mt-5 rounded-lg border border-border bg-background-secondary p-4">
+                    <h3 className="font-semibold">Educational summary</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{getEducationSummary(asset)}</p>
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <section className="rounded-lg border border-border bg-card p-6">
+              <h2 className="text-xl font-semibold">Analytics placeholders</h2>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                {ANALYTICS_PLACEHOLDERS.map((metric) => (
+                  <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-4">
+                    <p className="font-medium">{metric.label}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Calculation coming soon</p>
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold">Educational summaries</h2>
-              <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                <p>{left.description}</p>
-                <p>{right.description}</p>
-              </div>
-              <Link href="/dashboard" className="mt-4 inline-flex text-sm font-medium text-primary">Return to dashboard →</Link>
-            </div>
-          </div>
-        </div>
+            </section>
+          </>
+        )}
       </div>
     </AppShell>
   );

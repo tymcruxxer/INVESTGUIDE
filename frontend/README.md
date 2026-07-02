@@ -155,7 +155,7 @@ npm run format:check    # Check formatting
 
 ## API Integration
 
-The frontend communicates with the backend via a centralized API service layer:
+The frontend now communicates with the backend via a centralized API service layer for assets, news, and investor profile data:
 
 ```tsx
 import { assetService } from "@/services/api";
@@ -168,11 +168,21 @@ const { data, isLoading } = useQuery({
 ```
 
 ### API Services
-- `assetService` - Asset operations
-- `newsService` - News feed operations
+- `assetService` - Asset list and detail operations
+- `newsService` - News feed and asset-linked news operations
+- `investorProfileService` - Investor profile retrieval and update
 - `macroService` - Macroeconomic data
 - `watchlistService` - Watchlist operations
 - `aiService` - AI assistant operations
+
+### Backend-connected pages
+- Dashboard uses backend assets, news, and investor profile state where available.
+- Asset explorer uses backend assets with search, exchange, type, and sector filters.
+- Asset detail uses backend asset details plus linked news.
+- Comparison uses the backend asset catalog as its selectable source.
+
+### Fallback strategy
+If the backend is unavailable, the UI displays an explicit message and falls back to demo content for preview only.
 
 ## Component Patterns
 
@@ -344,3 +354,28 @@ Validation commands:
 * `npm.cmd run build`: passed.
 
 Persisted browser validation remains pending because backend signup/login/profile writes are blocked by the local Docker/PostgreSQL environment.
+
+## Sprint 028 Backend-Connected Asset & News Data
+
+Sprint 028 connects the frontend showcase pages to the existing backend data APIs while keeping explicit demo fallback for unavailable local backend/database states.
+
+Connected APIs:
+
+* `GET /api/v1/assets`
+* `GET /api/v1/assets/{ticker}`
+* `GET /api/v1/news`
+* `GET /api/v1/news/{id}` through the service layer
+* `GET /api/v1/investor-profile`
+
+Updated pages:
+
+* Dashboard uses backend investor profile, assets, and news when available.
+* Asset Explorer at `/assets` and Markets at `/markets` use backend assets with search, exchange, asset type, and sector filters.
+* Asset detail pages use backend asset detail plus related news through the news API.
+* Compare uses the backend asset catalog for selecting two assets.
+
+Fallback strategy:
+
+* Demo content is used only when backend data is unavailable or empty.
+* The UI displays: `Backend unavailable. Showing demo data for preview only.`
+* Demo content should not be treated as live market data.
