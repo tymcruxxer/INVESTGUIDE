@@ -92,6 +92,35 @@ export interface AssetAssessment {
   assessment_version: string;
 }
 
+export interface Company {
+  id: number;
+  name: string;
+  legal_name?: string | null;
+  ticker: string;
+  exchange: Exchange;
+  sector?: string | null;
+  industry?: string | null;
+  country?: string | null;
+  headquarters?: string | null;
+  website?: string | null;
+  description?: string | null;
+  founded_year?: number | null;
+  employee_count?: number | null;
+  market?: string | null;
+  currency?: Currency | null;
+  status: "active" | "suspended" | "delisted";
+  logo_url?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface CompanyDetail {
+  company: Company;
+  related_assets: Asset[];
+  latest_news: NewsArticle[];
+  assessment_available: boolean;
+}
+
 // ============================================================================
 // Sentiment Types
 // ============================================================================

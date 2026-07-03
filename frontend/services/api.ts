@@ -10,6 +10,8 @@ import {
   Asset,
   AssetAssessment,
   AuthResponse,
+  Company,
+  CompanyDetail,
   InvestorProfile,
   InvestorProfilePayload,
   NewsArticle,
@@ -201,6 +203,21 @@ export const newsService = {
 
   getNewsByAsset: (ticker: string, params?: { limit?: number }) =>
     get<NewsArticle[]>("/news", { ...(params ?? {}), asset: ticker }),
+};
+
+export const companyService = {
+  getCompanies: (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    exchange?: string;
+    sector?: string;
+    industry?: string;
+  } = {}) => get<Company[]>("/companies", params),
+
+  getCompanyByTicker: (ticker: string) => get<CompanyDetail>(`/companies/${ticker}`),
+
+  getCompanyAssessment: (ticker: string) => get<AssetAssessment>(`/companies/${ticker}/assessment`),
 };
 
 // ============================================================================

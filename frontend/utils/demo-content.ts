@@ -1,4 +1,4 @@
-import type { Asset, InvestorProfile } from "@/types";
+import type { Asset, Company, InvestorProfile } from "@/types";
 
 export interface DemoNewsItem {
   id: number;
@@ -96,6 +96,45 @@ export const DEMO_ASSETS: Asset[] = [
   },
 ];
 
+export const DEMO_COMPANIES: Company[] = DEMO_ASSETS.filter((asset) => asset.asset_type !== "bond").map((asset) => ({
+  id: asset.id,
+  name: asset.company_name,
+  legal_name: asset.company_name,
+  ticker: asset.ticker,
+  exchange: asset.exchange,
+  sector: asset.sector,
+  industry: asset.industry,
+  country: "Zimbabwe",
+  headquarters: asset.ticker === "CMCL" ? "Jersey / Zimbabwe operations" : "Harare",
+  website: asset.official_website ?? null,
+  description: asset.description,
+  founded_year: asset.ticker === "DLTA" ? 1946 : null,
+  employee_count: null,
+  market: asset.exchange,
+  currency: asset.currency,
+  status: asset.status,
+  logo_url: asset.logo_url ?? null,
+  created_at: asset.created_at,
+  updated_at: asset.updated_at,
+}));
+
+export const COMPANY_SLUGS: Record<string, string> = {
+  delta: "DLTA",
+  dlta: "DLTA",
+  econet: "ECO",
+  eco: "ECO",
+  innscor: "INN",
+  inn: "INN",
+  tigere: "TIGZ",
+  tigz: "TIGZ",
+  caledonia: "CMCL",
+  cmcl: "CMCL",
+};
+
+export function resolveCompanyTicker(slug: string) {
+  const normalized = slug.trim().toLowerCase();
+  return COMPANY_SLUGS[normalized] ?? slug.trim().toUpperCase();
+}
 export const DEMO_NEWS: DemoNewsItem[] = [
   {
     id: 1,

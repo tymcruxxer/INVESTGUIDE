@@ -381,3 +381,40 @@ Fallback strategy:
 * Demo content is used only when backend data is unavailable or empty.
 * The UI displays: `Backend unavailable. Showing demo data for preview only.`
 * Demo content should not be treated as live market data.
+
+## Sprint 031 Company Intelligence Frontend
+
+Sprint 031 adds the first Company Intelligence page while preserving the existing frontend design system.
+
+Frontend page:
+
+* `/company/[ticker]` - company overview page with profile, quick facts, related investments, latest news, deterministic assessment summary, educational context, and quick actions.
+
+API service additions:
+
+* `companyService.getCompanies()` uses `GET /api/v1/companies`.
+* `companyService.getCompanyByTicker(ticker)` uses `GET /api/v1/companies/{ticker}`.
+* `companyService.getCompanyAssessment(ticker)` uses `GET /api/v1/companies/{ticker}/assessment`.
+
+Search routing:
+
+* The top navigation search now recognizes Company, Asset, and News result types.
+* Searches such as `delta`, `reit`, and `treasury` offer relevant routes.
+
+Company page sections:
+
+* Overview.
+* Company profile.
+* Related investments.
+* Latest news.
+* Quick facts.
+* Assessment.
+* Quick actions: View Assets, Compare, Latest News, Assessment, Financial Statements Coming Soon, and Watchlist Coming Soon.
+
+Fallback remains explicit. If backend company data is unavailable, demo company data is used for preview only. No AI, predictions, recommendations, portfolio features, watchlists, live prices, financial statements, dividends, scrapers, or auth changes were added.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.

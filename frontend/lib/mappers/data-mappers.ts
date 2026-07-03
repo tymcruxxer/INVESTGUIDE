@@ -1,4 +1,4 @@
-import type { Asset, NewsArticle } from "@/types";
+import type { Asset, Company, NewsArticle } from "@/types";
 
 export interface BackendAssetLike {
   id?: number;
@@ -18,6 +18,28 @@ export interface BackendAssetLike {
   created_at?: string;
   updated_at?: string;
 }
+export interface BackendCompanyLike {
+  id?: number;
+  name?: string;
+  legal_name?: string | null;
+  ticker?: string;
+  exchange?: string;
+  sector?: string | null;
+  industry?: string | null;
+  country?: string | null;
+  headquarters?: string | null;
+  website?: string | null;
+  description?: string | null;
+  founded_year?: number | null;
+  employee_count?: number | null;
+  market?: string | null;
+  currency?: string | null;
+  status?: string;
+  logo_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 
 export interface BackendNewsLike {
   id?: number;
@@ -87,6 +109,40 @@ export function mapAssets(assets: BackendAssetLike[] | null | undefined): Asset[
   return (assets ?? []).map((asset) => mapAsset(asset)).filter((asset): asset is Asset => Boolean(asset));
 }
 
+export function mapCompany(company: BackendCompanyLike | null | undefined): Company | null {
+  if (!company) return null;
+
+  const ticker = typeof company.ticker === "string" ? company.ticker.trim().toUpperCase() : "";
+  if (!ticker) return null;
+
+  return {
+    id: company.id ?? 0,
+    name: company.name?.trim() || ticker,
+    legal_name: company.legal_name ?? undefined,
+    ticker,
+    exchange: (company.exchange ?? "ZSE") as Company["exchange"],
+    sector: company.sector?.trim() || "General",
+    industry: company.industry?.trim() || "General",
+    country: company.country?.trim() || "Zimbabwe",
+    headquarters: company.headquarters ?? undefined,
+    website: company.website ?? undefined,
+    description: company.description?.trim() || "No company profile is available yet.",
+    founded_year: company.founded_year ?? undefined,
+    employee_count: company.employee_count ?? undefined,
+    market: company.market ?? company.exchange ?? undefined,
+    currency: (company.currency ?? undefined) as Company["currency"],
+    status: (company.status ?? "active") as Company["status"],
+    logo_url: company.logo_url ?? undefined,
+    created_at: company.created_at ?? new Date().toISOString(),
+    updated_at: company.updated_at,
+  };
+}
+
+export function mapCompanies(companies: BackendCompanyLike[] | null | undefined): Company[] {
+  return (companies ?? [])
+    .map((company) => mapCompany(company))
+    .filter((company): company is Company => Boolean(company));
+}
 export function mapNewsArticle(article: BackendNewsLike | null | undefined): MappedNewsItem | null {
   if (!article) return null;
 
