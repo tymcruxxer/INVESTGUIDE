@@ -1,4 +1,4 @@
-import type { Asset, Company, NewsArticle } from "@/types";
+import type { Asset, Company, CompanyProfile, CompanyProfileVerification, NewsArticle } from "@/types";
 
 export interface BackendAssetLike {
   id?: number;
@@ -41,6 +41,31 @@ export interface BackendCompanyLike {
 }
 
 
+export interface BackendCompanyProfileLike {
+  id?: number | null;
+  company_id?: number | null;
+  business_summary?: string | null;
+  primary_business?: string | null;
+  products_services?: string[] | null;
+  industry?: string | null;
+  sub_industry?: string | null;
+  headquarters?: string | null;
+  founded_year?: number | null;
+  website?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  exchange?: string | null;
+  currency?: string | null;
+  employees?: number | null;
+  status?: string | null;
+  research_status?: string | null;
+  last_verified?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
 export interface BackendNewsLike {
   id?: number;
   title?: string;
@@ -142,6 +167,46 @@ export function mapCompanies(companies: BackendCompanyLike[] | null | undefined)
   return (companies ?? [])
     .map((company) => mapCompany(company))
     .filter((company): company is Company => Boolean(company));
+}
+export function mapCompanyProfile(profile: BackendCompanyProfileLike | null | undefined): CompanyProfile | null {
+  if (!profile) return null;
+
+  return {
+    id: profile.id ?? null,
+    company_id: profile.company_id ?? null,
+    business_summary: profile.business_summary ?? null,
+    primary_business: profile.primary_business ?? null,
+    products_services: Array.isArray(profile.products_services) ? profile.products_services.filter(Boolean) : [],
+    industry: profile.industry ?? null,
+    sub_industry: profile.sub_industry ?? null,
+    headquarters: profile.headquarters ?? null,
+    founded_year: profile.founded_year ?? null,
+    website: profile.website ?? null,
+    email: profile.email ?? null,
+    phone: profile.phone ?? null,
+    country: profile.country ?? null,
+    exchange: (profile.exchange ?? null) as CompanyProfile["exchange"],
+    currency: (profile.currency ?? null) as CompanyProfile["currency"],
+    employees: profile.employees ?? null,
+    status: (profile.status ?? null) as CompanyProfile["status"],
+    research_status: (profile.research_status ?? "unavailable") as CompanyProfile["research_status"],
+    last_verified: profile.last_verified ?? null,
+    source_name: profile.source_name ?? null,
+    source_url: profile.source_url ?? null,
+    created_at: profile.created_at ?? null,
+    updated_at: profile.updated_at ?? null,
+  };
+}
+
+export function mapCompanyProfileVerification(
+  verification: Partial<CompanyProfileVerification> | null | undefined
+): CompanyProfileVerification {
+  return {
+    last_verified: verification?.last_verified ?? null,
+    source_name: verification?.source_name ?? null,
+    source_url: verification?.source_url ?? null,
+    research_status: verification?.research_status ?? "unavailable",
+  };
 }
 export function mapNewsArticle(article: BackendNewsLike | null | undefined): MappedNewsItem | null {
   if (!article) return null;

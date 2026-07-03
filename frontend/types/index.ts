@@ -114,6 +114,48 @@ export interface Company {
   updated_at?: string;
 }
 
+
+export type ResearchStatus = "development" | "verified" | "needs_review" | "unavailable";
+
+export interface CompanyProfile {
+  id?: number | null;
+  company_id?: number | null;
+  business_summary?: string | null;
+  primary_business?: string | null;
+  products_services: string[];
+  industry?: string | null;
+  sub_industry?: string | null;
+  headquarters?: string | null;
+  founded_year?: number | null;
+  website?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  exchange?: Exchange | null;
+  currency?: Currency | null;
+  employees?: number | null;
+  status?: "active" | "suspended" | "delisted" | null;
+  research_status: ResearchStatus;
+  last_verified?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface CompanyProfileVerification {
+  last_verified?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  research_status: ResearchStatus;
+}
+
+export interface CompanyProfileDetail {
+  company: Company;
+  profile: CompanyProfile | null;
+  verification: CompanyProfileVerification;
+}
+
 export interface CompanyDetail {
   company: Company;
   related_assets: Asset[];

@@ -12,6 +12,7 @@ import {
   AuthResponse,
   Company,
   CompanyDetail,
+  CompanyProfileDetail,
   InvestorProfile,
   InvestorProfilePayload,
   NewsArticle,
@@ -218,6 +219,8 @@ export const companyService = {
   getCompanyByTicker: (ticker: string) => get<CompanyDetail>(`/companies/${ticker}`),
 
   getCompanyAssessment: (ticker: string) => get<AssetAssessment>(`/companies/${ticker}/assessment`),
+
+  getCompanyProfile: (ticker: string) => get<CompanyProfileDetail>(`/companies/${ticker}/profile`),
 };
 
 // ============================================================================

@@ -10,14 +10,23 @@ import { AppShell } from "@/components/layout";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
 import { CardSkeleton } from "@/components/skeleton";
 import { companyService } from "@/services/api";
-import { formatDisplayDate, mapAssets, mapCompany, mapNewsArticles } from "@/lib/mappers/data-mappers";
+import {
+  formatDisplayDate,
+  mapAssets,
+  mapCompany,
+  mapCompanyProfile,
+  mapCompanyProfileVerification,
+  mapNewsArticles,
+} from "@/lib/mappers/data-mappers";
 import {
   DEMO_ASSETS,
   DEMO_COMPANIES,
+  DEMO_COMPANY_PROFILES,
   DEMO_NEWS,
   getExplainLikeIm18,
   resolveCompanyTicker,
 } from "@/utils/demo-content";
+import type { ResearchStatus } from "@/types";
 
 const quickActions = [
   { label: "View Assets", href: "#related-assets", icon: TrendingUp, disabled: false },
@@ -28,6 +37,13 @@ const quickActions = [
   { label: "Watchlist", href: "#", icon: Building2, disabled: true },
 ];
 
+const statusLabels: Record<ResearchStatus, string> = {
+  development: "Development",
+  verified: "Verified",
+  needs_review: "Needs Review",
+  unavailable: "Unavailable",
+};
+
 export default function CompanyDetailPage() {
   const params = useParams<{ ticker: string }>();
   const routeTicker = params?.ticker ?? "";
@@ -36,6 +52,13 @@ export default function CompanyDetailPage() {
   const companyQuery = useQuery({
     queryKey: ["company-detail", ticker],
     queryFn: () => companyService.getCompanyByTicker(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+  });
+
+  const profileQuery = useQuery({
+    queryKey: ["company-profile", ticker],
+    queryFn: () => companyService.getCompanyProfile(ticker),
     retry: 1,
     enabled: Boolean(ticker),
   });
@@ -57,6 +80,12 @@ export default function CompanyDetailPage() {
     if (backendAssets.length > 0) return backendAssets;
     return DEMO_ASSETS.filter((asset) => asset.ticker === ticker);
   }, [backendDetail, ticker]);
+
+  const profileData = profileQuery.data?.data;
+  const profile = mapCompanyProfile(profileData?.profile) ?? DEMO_COMPANY_PROFILES[ticker] ?? null;
+  const verification = profileData?.verification
+    ? mapCompanyProfileVerification(profileData.verification)
+    : mapCompanyProfileVerification(profile);
 
   const news = useMemo(() => {
     const backendNews = mapNewsArticles(backendDetail?.latest_news);
@@ -122,6 +151,45 @@ export default function CompanyDetailPage() {
                     <QuickFact label="Founded" value={company.founded_year ? String(company.founded_year) : "Unavailable"} />
                     <QuickFact label="Website" value={company.website ?? "Unavailable"} href={company.website ?? undefined} />
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-border bg-card p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold">Company Intelligence</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">Structured facts with source transparency.</p>
+                    </div>
+                    <ResearchStatusBadge status={verification.research_status} />
+                  </div>
+                  {profileQuery.isLoading ? (
+                    <div className="mt-4 h-40 animate-pulse rounded-lg border border-border bg-background-secondary" />
+                  ) : profile ? (
+                    <div className="mt-4 space-y-4">
+                      <p className="text-sm text-muted-foreground">{profile.business_summary ?? "No business summary is available yet."}</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <QuickFact label="Primary business" value={profile.primary_business ?? "Unavailable"} />
+                        <QuickFact label="Industry" value={profile.industry ?? "Unavailable"} />
+                        <QuickFact label="Headquarters" value={profile.headquarters ?? "Unavailable"} />
+                        <QuickFact label="Founded" value={profile.founded_year ? String(profile.founded_year) : "Unavailable"} />
+                        <QuickFact label="Website" value={profile.website ?? "Unavailable"} href={profile.website ?? undefined} />
+                        <QuickFact label="Source" value={verification.source_name ?? "Unavailable"} href={verification.source_url ?? undefined} />
+                      </div>
+                      <div className="rounded-lg border border-border bg-background-secondary p-4">
+                        <p className="text-sm text-muted-foreground">Products & Services</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {profile.products_services.length > 0 ? profile.products_services.map((item) => (
+                            <span key={item} className="rounded-lg border border-border px-3 py-1 text-sm">{item}</span>
+                          )) : <span className="text-sm text-muted-foreground">Unavailable</span>}
+                        </div>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <QuickFact label="Research status" value={statusLabels[verification.research_status]} />
+                        <QuickFact label="Last verified" value={formatDisplayDate(verification.last_verified)} />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-muted-foreground">Company intelligence profile is unavailable.</p>
+                  )}
                 </div>
 
                 <div id="related-assets" className="rounded-lg border border-border bg-card p-6">
@@ -227,5 +295,20 @@ function QuickFact({ label, value, href }: { label: string; value: string; href?
         <p className="mt-1 break-words font-semibold capitalize">{value}</p>
       )}
     </div>
+  );
+}
+
+function ResearchStatusBadge({ status }: { status: ResearchStatus }) {
+  const style = {
+    development: "border-blue-500/30 bg-blue-500/10 text-blue-300",
+    verified: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    needs_review: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
+    unavailable: "border-border bg-background-secondary text-muted-foreground",
+  }[status];
+
+  return (
+    <span className={`rounded-lg border px-3 py-1 text-sm font-medium ${style}`}>
+      {statusLabels[status]}
+    </span>
   );
 }

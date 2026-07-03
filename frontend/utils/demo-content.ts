@@ -1,4 +1,4 @@
-import type { Asset, Company, InvestorProfile } from "@/types";
+import type { Asset, Company, CompanyProfile, InvestorProfile } from "@/types";
 
 export interface DemoNewsItem {
   id: number;
@@ -135,6 +135,68 @@ export function resolveCompanyTicker(slug: string) {
   const normalized = slug.trim().toLowerCase();
   return COMPANY_SLUGS[normalized] ?? slug.trim().toUpperCase();
 }
+export const DEMO_COMPANY_PROFILES: Record<string, CompanyProfile> = {
+  DLTA: {
+    company_id: 1,
+    business_summary: "Development fixture: Delta Corporation is represented as a Zimbabwe-listed consumer staples group for local research page testing.",
+    primary_business: "Consumer beverages and related fast-moving consumer goods",
+    industry: "Consumer Staples",
+    sub_industry: "Beverages",
+    headquarters: "Harare, Zimbabwe",
+    founded_year: 1946,
+    website: "https://www.delta.co.zw/",
+    country: "Zimbabwe",
+    exchange: "ZSE",
+    currency: "ZWG",
+    employees: null,
+    status: "active",
+    research_status: "development",
+    last_verified: "2026-07-03T00:00:00Z",
+    source_name: "InvestGuide development fixture data",
+    source_url: "https://www.delta.co.zw/",
+    products_services: ["Beverages", "Consumer goods distribution"],
+  },
+  ECO: {
+    company_id: 2,
+    business_summary: "Development fixture: Econet Wireless Zimbabwe is represented as a telecommunications company for enrichment workflow testing.",
+    primary_business: "Mobile telecommunications and digital connectivity services",
+    products_services: ["Mobile network services", "Data services", "Digital connectivity"],
+    industry: "Telecommunications",
+    sub_industry: "Mobile Telecommunications",
+    headquarters: "Harare, Zimbabwe",
+    founded_year: null,
+    website: "https://www.econet.co.zw/",
+    country: "Zimbabwe",
+    exchange: "ZSE",
+    currency: "ZWG",
+    employees: null,
+    status: "active",
+    research_status: "development",
+    last_verified: "2026-07-03T00:00:00Z",
+    source_name: "InvestGuide development fixture data",
+    source_url: "https://www.econet.co.zw/",
+  },
+  INN: {
+    company_id: 3,
+    business_summary: "Development fixture: Innscor Africa is represented as a consumer-focused food and light manufacturing group for enrichment workflow testing.",
+    primary_business: "Food production and consumer staples operations",
+    products_services: ["Food manufacturing", "Consumer staples", "Distribution"],
+    industry: "Consumer Staples",
+    sub_industry: "Food Production",
+    headquarters: "Harare, Zimbabwe",
+    founded_year: null,
+    website: "https://www.innscorafrica.com/",
+    country: "Zimbabwe",
+    exchange: "ZSE",
+    currency: "ZWG",
+    employees: null,
+    status: "active",
+    research_status: "development",
+    last_verified: "2026-07-03T00:00:00Z",
+    source_name: "InvestGuide development fixture data",
+    source_url: "https://www.innscorafrica.com/",
+  },
+};
 export const DEMO_NEWS: DemoNewsItem[] = [
   {
     id: 1,

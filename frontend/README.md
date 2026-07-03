@@ -418,3 +418,36 @@ Validation:
 * `npm.cmd run lint`: passed.
 * `npm.cmd run type-check`: passed.
 * `npm.cmd run build`: passed.
+
+## Sprint 032 Company Intelligence Enrichment Frontend
+
+Sprint 032 extends `/company/[ticker]` with a Company Intelligence section backed by the new company profile endpoint.
+
+Frontend additions:
+
+* `companyService.getCompanyProfile(ticker)` calls `GET /api/v1/companies/{ticker}/profile`.
+* Company profile types were added to `types/index.ts`.
+* Company profile mappers normalize backend profile and verification payloads.
+* Development demo profile data is clearly labeled as fixture data.
+
+The Company Intelligence section displays:
+
+* Business Summary
+* Primary Business
+* Products & Services
+* Industry
+* Headquarters
+* Founded
+* Website
+* Research Status badge
+* Last Verified
+* Source name and source URL
+
+Research status badge values:
+
+* Development
+* Verified
+* Needs Review
+* Unavailable
+
+Source transparency is always shown where data exists. If the backend is unavailable, fixture-backed profile data may be displayed for preview only. No AI, predictions, recommendations, portfolio, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, ratings, or auth changes were added.
