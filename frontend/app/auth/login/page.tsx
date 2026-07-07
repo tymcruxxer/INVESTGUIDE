@@ -59,7 +59,7 @@ export default function LoginPage() {
             <div className="mt-4 grid gap-3 text-sm text-muted-foreground">
               <div className="flex justify-between"><span>Market clarity</span><span className="text-emerald-300">Online</span></div>
               <div className="flex justify-between"><span>Company profiles</span><span className="text-blue-300">Ready</span></div>
-              <div className="flex justify-between"><span>Education mode</span><span className="text-teal-300">Adaptive</span></div>
+              <div className="flex justify-between"><span>Education mode</span><span className="text-emerald-300">Adaptive</span></div>
             </div>
           </div>
         </section>

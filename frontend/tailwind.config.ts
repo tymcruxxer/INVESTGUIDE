@@ -59,9 +59,9 @@ const config = {
           5: "hsl(var(--chart-5))",
         },
         sentiment: {
-          positive: "#10b981",
-          neutral: "#6b7280",
-          negative: "#ef4444",
+          positive: "#22C55E",
+          neutral: "#94A3B8",
+          negative: "#EF4444",
         },
       },
       keyframes: {
@@ -97,9 +97,9 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        glow: "0 0 20px rgba(59, 130, 246, 0.2)",
-        "glow-lg": "0 0 40px rgba(59, 130, 246, 0.3)",
-        glass: "0 8px 32px rgba(31, 38, 135, 0.37)",
+        glow: "0 16px 48px rgba(37, 99, 235, 0.18)",
+        "glow-lg": "0 24px 70px rgba(37, 99, 235, 0.24)",
+        glass: "0 20px 60px rgba(0, 0, 0, 0.32)",
       },
     },
   },

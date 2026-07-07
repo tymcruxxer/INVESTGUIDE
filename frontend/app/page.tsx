@@ -71,10 +71,10 @@ export default function Home() {
                 </div>
                 <span className="rounded-lg bg-emerald-500/10 p-3 text-emerald-300"><TrendingUp size={24} /></span>
               </div>
-              <div className="mt-6 h-40 rounded-lg border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(20,184,166,0.16),rgba(15,23,42,0.1))] p-4">
+              <div className="mt-6 h-40 rounded-lg border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(34,197,94,0.14),rgba(15,23,42,0.1))] p-4">
                 <svg viewBox="0 0 360 120" className="h-full w-full" aria-hidden="true">
-                  <path d="M0 92 C40 86 48 70 78 76 C106 82 113 48 145 55 C174 61 182 34 214 44 C250 55 256 26 288 30 C321 34 330 18 360 20" fill="none" stroke="#14B8A6" strokeWidth="4" strokeLinecap="round" />
-                  <path d="M0 112 C40 106 48 90 78 96 C106 102 113 68 145 75 C174 81 182 54 214 64 C250 75 256 46 288 50 C321 54 330 38 360 40 L360 120 L0 120 Z" fill="rgba(20,184,166,0.12)" />
+                  <path d="M0 92 C40 86 48 70 78 76 C106 82 113 48 145 55 C174 61 182 34 214 44 C250 55 256 26 288 30 C321 34 330 18 360 20" fill="none" stroke="#22C55E" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M0 112 C40 106 48 90 78 96 C106 102 113 68 145 75 C174 81 182 54 214 64 C250 75 256 46 288 50 C321 54 330 38 360 40 L360 120 L0 120 Z" fill="rgba(34,197,94,0.10)" />
                 </svg>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -125,7 +125,7 @@ export default function Home() {
 
       <section className="px-5 pb-20 sm:px-6">
         <div className="premium-card mx-auto max-w-4xl p-8 text-center sm:p-10">
-          <Sparkles className="mx-auto text-teal-300" size={32} />
+          <Sparkles className="mx-auto text-emerald-300" size={32} />
           <h2 className="mt-5 text-3xl font-bold">Ready to make investing feel less intimidating?</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Start with secure signup, complete onboarding, and enter a dashboard shaped around your investor profile.</p>
           <Link href="/auth/signup" className="premium-button-primary mt-7 px-7">Get Started Free <ArrowRight size={18} /></Link>

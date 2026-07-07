@@ -172,7 +172,7 @@ export default function CompanyDetailPage() {
                     </div>
                   ) : null}
                   {profileLoadError ? (
-                    <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+                    <div className="mt-4 rounded-lg border border-amber-400/25 bg-amber-500/10 p-3 text-sm text-amber-100">
                       Company profile data could not be reached. Preview data is shown only when available.
                     </div>
                   ) : null}
@@ -318,7 +318,7 @@ function ResearchStatusBadge({ status }: { status: ResearchStatus }) {
   const style = {
     development: "border-blue-500/30 bg-blue-500/10 text-blue-300",
     verified: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    needs_review: "border-yellow-500/30 bg-yellow-500/10 text-yellow-300",
+    needs_review: "border-amber-400/25 bg-amber-500/10 text-amber-200",
     unavailable: "border-border bg-background-secondary text-muted-foreground",
   }[status];
 

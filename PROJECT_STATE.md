@@ -306,3 +306,24 @@ Validation:
 * `npm.cmd run build`: passed, 14 routes generated.
 * `python -m pytest -q`: passed, 177 tests passed, 1 non-blocking pytest cache warning.
 * Runtime auth smoke: blocked by PostgreSQL timeout on `localhost:5433`; backend CORS works, but database-backed signup/login cannot complete until local PostgreSQL is reachable.
+---
+
+## Sprint 035 Update - Premium Fintech Visual Redesign
+
+Date: 2026-07-07
+
+Completed:
+
+* Refined the InvestGuide visual identity away from muddy/neon accents toward a premium financial palette.
+* Normalized global tokens around deep navy background, slate elevated surfaces, professional blue primary actions, emerald success states, amber warnings, red danger, and high-contrast slate text.
+* Removed remaining bright cyan/teal, pink/magenta, and yellow visual references from core frontend styling.
+* Upgraded primary button styling with subtle blue gradient and stronger premium shadow treatment.
+* Refined chart and sentiment color tokens for institutional blue/green/amber/red/slate usage.
+* Preserved all routes, backend APIs, authentication logic, data services, and product functionality.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `python -m pytest -q`: passed, 177 tests passed, 1 non-blocking pytest cache warning.
