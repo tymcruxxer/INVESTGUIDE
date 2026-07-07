@@ -46,7 +46,7 @@ export function Sidebar() {
     <>
       <button
         onClick={toggleSidebar}
-        className="fixed left-4 top-4 z-40 rounded-lg bg-primary p-2 text-primary-foreground lg:hidden"
+        className="fixed left-4 top-4 z-40 rounded-lg border border-white/10 bg-primary p-2 text-primary-foreground shadow-lg shadow-blue-950/30 lg:hidden"
         aria-label="Toggle navigation"
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -54,17 +54,17 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-background-secondary smooth-transition",
+          "fixed left-0 top-0 z-40 h-screen w-64 border-r border-white/10 bg-background-secondary/95 shadow-2xl shadow-black/30 backdrop-blur-xl smooth-transition",
           "lg:relative lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="border-b border-border p-6">
+        <div className="border-b border-white/10 p-6">
           <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1>
           <p className="mt-1 text-sm text-muted-foreground">Investment Intelligence</p>
         </div>
 
-        <nav className="space-y-2 p-4">
+        <nav className="space-y-1.5 p-4">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
@@ -74,9 +74,9 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 smooth-transition",
+                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm smooth-transition",
                   isActive
-                    ? "bg-primary font-medium text-primary-foreground"
+                    ? "bg-primary font-semibold text-primary-foreground shadow-lg shadow-blue-950/20"
                     : "text-muted-foreground hover:bg-background-tertiary hover:text-foreground"
                 )}
               >
@@ -87,13 +87,13 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 space-y-2 border-t border-border p-4">
+        <div className="absolute bottom-0 left-0 right-0 space-y-2 border-t border-white/10 p-4">
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-3 smooth-transition",
+              "flex items-center gap-3 rounded-lg px-4 py-3 text-sm smooth-transition",
               pathname === "/settings"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-lg shadow-blue-950/20"
                 : "text-muted-foreground hover:bg-background-tertiary"
             )}
           >
@@ -112,7 +112,7 @@ export function Sidebar() {
 
       {sidebarOpen && (
         <button
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={toggleSidebar}
           aria-label="Close navigation"
         />

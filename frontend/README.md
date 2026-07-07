@@ -30,27 +30,27 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 frontend/
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx         # Root layout with providers
-│   ├── page.tsx           # Landing page
-│   ├── dashboard/         # Dashboard page
-│   ├── markets/           # Markets explorer
-│   ├── assets/[ticker]/   # Asset detail page
-│   ├── ai-assistant/      # AI chat interface
-│   ├── education/         # Education hub
-│   └── settings/          # User settings
-├── components/            # Reusable components
-│   ├── layout/           # AppShell, Sidebar, Navbar
-│   ├── error-boundary.tsx # Error handling
-│   └── skeleton.tsx       # Loading skeletons
-├── features/             # Feature-specific modules
-├── hooks/                # Custom React hooks
-├── services/             # API client layer
-├── store/                # Zustand state stores
-├── types/                # TypeScript definitions
-├── utils/                # Helper functions
-├── styles/               # Global CSS and theme
-└── providers/            # React providers
+â”œâ”€â”€ app/                    # Next.js App Router pages
+â”‚   â”œâ”€â”€ layout.tsx         # Root layout with providers
+â”‚   â”œâ”€â”€ page.tsx           # Landing page
+â”‚   â”œâ”€â”€ dashboard/         # Dashboard page
+â”‚   â”œâ”€â”€ markets/           # Markets explorer
+â”‚   â”œâ”€â”€ assets/[ticker]/   # Asset detail page
+â”‚   â”œâ”€â”€ ai-assistant/      # AI chat interface
+â”‚   â”œâ”€â”€ education/         # Education hub
+â”‚   â””â”€â”€ settings/          # User settings
+â”œâ”€â”€ components/            # Reusable components
+â”‚   â”œâ”€â”€ layout/           # AppShell, Sidebar, Navbar
+â”‚   â”œâ”€â”€ error-boundary.tsx # Error handling
+â”‚   â””â”€â”€ skeleton.tsx       # Loading skeletons
+â”œâ”€â”€ features/             # Feature-specific modules
+â”œâ”€â”€ hooks/                # Custom React hooks
+â”œâ”€â”€ services/             # API client layer
+â”œâ”€â”€ store/                # Zustand state stores
+â”œâ”€â”€ types/                # TypeScript definitions
+â”œâ”€â”€ utils/                # Helper functions
+â”œâ”€â”€ styles/               # Global CSS and theme
+â””â”€â”€ providers/            # React providers
 ```
 
 ## Technology Stack
@@ -71,31 +71,31 @@ frontend/
 
 ## Key Features
 
-### ✨ Architecture
+### âœ¨ Architecture
 - **Modular Design**: Clean separation of concerns
 - **Type Safe**: Strict TypeScript throughout
 - **Scalable**: Feature-based folder structure
 - **Maintainable**: Clear naming conventions and patterns
 
-### 🎨 Dark Mode First
+### ðŸŽ¨ Dark Mode First
 - Premium fintech UI design
 - Smooth theme transitions
 - System preference detection
 - Persistent theme selection
 
-### 📱 Responsive Design
+### ðŸ“± Responsive Design
 - Mobile-first approach
 - Breakpoints: 640px, 768px, 1024px, 1600px
 - Touch-friendly navigation
 - Adaptive layouts
 
-### ⚡ Performance
+### âš¡ Performance
 - Code splitting with App Router
 - Turbopack in development
 - Image optimization
 - Query caching strategies
 
-### 🛡️ Robustness
+### ðŸ›¡ï¸ Robustness
 - Error boundaries
 - Loading states with skeletons
 - Comprehensive error handling
@@ -246,14 +246,14 @@ NEXT_PUBLIC_APP_URL=https://investguide.co.zw
 
 ## Next Steps
 
-1. ✅ Frontend foundation setup
-2. ⏳ Connect to backend API
-3. ⏳ Implement authentication flows
-4. ⏳ Add shadcn/ui components
-5. ⏳ Build feature-specific pages
-6. ⏳ Implement error handling
-7. ⏳ Add unit tests
-8. ⏳ Optimize performance
+1. âœ… Frontend foundation setup
+2. â³ Connect to backend API
+3. â³ Implement authentication flows
+4. â³ Add shadcn/ui components
+5. â³ Build feature-specific pages
+6. â³ Implement error handling
+7. â³ Add unit tests
+8. â³ Optimize performance
 
 ## Browser Support
 
@@ -274,11 +274,11 @@ Follow the coding patterns established in existing components:
 
 ## License
 
-© 2024 InvestGuide. All rights reserved.
+Â© 2024 InvestGuide. All rights reserved.
 
 ---
 
-**InvestGuide** - AI-powered investment intelligence for Zimbabwe 🇿🇼
+**InvestGuide** - AI-powered investment intelligence for Zimbabwe ðŸ‡¿ðŸ‡¼
 
 ## Sprint 022 Auth and Onboarding Flow
 
@@ -451,3 +451,76 @@ Research status badge values:
 * Unavailable
 
 Source transparency is always shown where data exists. If the backend is unavailable, fixture-backed profile data may be displayed for preview only. No AI, predictions, recommendations, portfolio, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, ratings, or auth changes were added.
+
+## Sprint 033 Backend-First Company Profile Loading
+
+Sprint 033 updates `/company/[ticker]` to prefer persisted backend company profile data whenever it exists.
+
+Company profile loading order:
+
+1. Use `GET /api/v1/companies/{ticker}/profile`.
+2. If the returned profile has a persisted backend id, render it as `Persisted Backend`.
+3. If no persisted profile is available, use clearly labeled development preview fixture data when available.
+4. If backend/profile data is unavailable and no preview exists, show a clean unavailable message.
+
+The Company Intelligence section now displays:
+
+* Research Status
+* Source
+* Last Verified
+* Data Origin
+
+Data Origin values:
+
+* `Persisted Backend` - profile row exists in the backend database.
+* `Development Preview` - fixture-backed preview data is being shown and should not be treated as live research.
+* `Unavailable` - neither backend nor preview profile data is available.
+
+The page also handles missing profiles, backend unavailability, and database unavailability with user-facing messages rather than stack traces. No AI, recommendations, portfolio, watchlist, live API, live scraping, financial statement, dividend, ESG, rating, or authentication changes were added.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 routes including `/company/[ticker]`.
+
+## Sprint 033.1 Local Runtime Validation
+
+Sprint 033.1 validated the frontend against the fixed local backend runtime.
+
+Use this local API URL when running the frontend against the Docker PostgreSQL-backed backend on port `8001`:
+
+```powershell
+$env:NEXT_PUBLIC_API_URL='http://127.0.0.1:8001/api/v1'
+npm.cmd run dev
+```
+
+Validated frontend routes returned HTTP 200 from the Next.js dev server:
+
+* `/auth/signup`
+* `/auth/login`
+* `/onboarding`
+* `/dashboard`
+* `/assets`
+* `/company/delta`
+* `/compare`
+
+Frontend validation also passed:
+
+* `npm.cmd run lint`
+* `npm.cmd run type-check`
+* `npm.cmd run build`
+---
+
+## Authentication Runtime Stabilization
+
+Local frontend authentication now defaults to `http://127.0.0.1:8001/api/v1` when `NEXT_PUBLIC_API_URL` is not provided. Signup calls `POST /auth/signup`, login calls `POST /auth/login`, and transport failures display a clear backend-unreachable message pointing operators to `http://127.0.0.1:8001`.
+
+For manual testing on Windows PowerShell:
+
+```powershell
+$env:NEXT_PUBLIC_API_URL="http://127.0.0.1:8001/api/v1"
+npm.cmd run dev
+```
+
+The public landing page routes Get Started actions to `/auth/signup` and Login actions to `/auth/login`.

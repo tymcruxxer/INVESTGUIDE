@@ -21,8 +21,11 @@ import {
 } from "@/types";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001/api/v1";
 const ACCESS_TOKEN_KEY = "investguide_access_token";
+const LOCAL_BACKEND_URL = "http://127.0.0.1:8001";
+const BACKEND_UNREACHABLE_MESSAGE =
+  "Backend is not reachable. Please make sure the backend is running on http://127.0.0.1:8001.";
 
 export function getStoredAccessToken(): string | null {
   if (typeof window === "undefined") {
@@ -78,6 +81,18 @@ const createApiClient = (): AxiosInstance => {
 };
 
 export const apiClient = createApiClient();
+
+export function getApiBaseUrl(): string {
+  return API_BASE_URL;
+}
+
+export function getBackendHealthUrl(): string {
+  try {
+    return new URL(API_BASE_URL).origin;
+  } catch {
+    return LOCAL_BACKEND_URL;
+  }
+}
 
 export async function get<T>(
   url: string,
@@ -256,7 +271,10 @@ export const aiService = {
 };
 
 export function handleApiError(error: unknown): string {
-  if (error instanceof AxiosError) {
+  if (axios.isAxiosError<ApiError>(error)) {
+    if (!error.response) {
+      return BACKEND_UNREACHABLE_MESSAGE;
+    }
     if (error.response?.data) {
       const apiError = error.response.data as ApiError;
       return apiError.message || "An error occurred";
@@ -268,3 +286,5 @@ export function handleApiError(error: unknown): string {
   }
   return "An unknown error occurred";
 }
+
+

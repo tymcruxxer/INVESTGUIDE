@@ -1,4 +1,4 @@
-﻿/**
+/**
  * App Shell / Layout Wrapper
  * Main layout structure with sidebar and navbar
  */
@@ -45,11 +45,11 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex h-screen bg-background-primary">
+    <div className="flex h-screen bg-background-primary text-foreground">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-background-primary">
           <div className="mx-auto max-w-[1920px] p-4 lg:p-6">{children}</div>
         </main>
       </div>
@@ -63,11 +63,12 @@ interface PublicLayoutProps {
 
 export function PublicLayout({ children }: PublicLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-background-primary">
-      <header className="flex h-16 items-center border-b border-border bg-background-secondary px-6">
-        <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1>
+    <div className="flex min-h-screen flex-col bg-background-primary text-foreground">
+      <header className="flex h-16 items-center justify-between border-b border-white/10 bg-background-secondary/95 px-6 backdrop-blur-xl">
+        <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1><span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground sm:block">Financial Intelligence</span>
       </header>
-      <main className="flex flex-1 items-center justify-center p-4">{children}</main>
+      <main className="flex flex-1 items-center justify-center p-4 sm:p-8">{children}</main>
     </div>
   );
 }
+

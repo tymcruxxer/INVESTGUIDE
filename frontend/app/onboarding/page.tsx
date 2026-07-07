@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
   if (!hydrated || !isAuthenticated || onboardingComplete) {
     return (
       <PublicLayout>
-        <div className="rounded-lg border border-border bg-background-secondary p-6 text-sm text-muted-foreground">
+        <div className="premium-card p-6 text-sm text-muted-foreground">
           Preparing onboarding
         </div>
       </PublicLayout>
@@ -210,13 +210,13 @@ export default function OnboardingPage() {
 
   return (
     <PublicLayout>
-      <div className="w-full max-w-3xl rounded-lg border border-border bg-background-secondary p-5 shadow-xl sm:p-6">
+      <div className="premium-card w-full max-w-3xl p-5 sm:p-7">
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>Step {stepIndex + 1} of {steps.length}</span>
             <span>{progress}%</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-background-tertiary">
+          <div className="h-2 overflow-hidden rounded-full bg-background-tertiary/80">
             <div className="h-full bg-primary smooth-transition" style={{ width: `${progress}%` }} />
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
         </div>
 
         {(formError || error) && (
-          <div className="mb-5 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="error-panel mb-5">
             {formError || error}
           </div>
         )}
@@ -259,7 +259,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={back}
             disabled={stepIndex === 0 || loading}
-            className="flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-3 text-sm font-medium smooth-transition hover:bg-background-tertiary disabled:cursor-not-allowed disabled:opacity-50"
+            className="premium-button-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ArrowLeft size={18} />
             Back
@@ -269,7 +269,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={submit}
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground smooth-transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="premium-button-primary px-5 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
               Finish onboarding
@@ -279,7 +279,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={next}
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground smooth-transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="premium-button-primary px-5 text-sm disabled:cursor-not-allowed disabled:opacity-70"
             >
               Continue
               <ArrowRight size={18} />
@@ -309,10 +309,10 @@ function SingleChoice<T extends string>({
             key={`${option.label}-${option.value}`}
             type="button"
             onClick={() => onChange(option.value)}
-            className={`min-h-24 rounded-lg border p-4 text-left smooth-transition ${
+            className={`min-h-24 rounded-lg border p-4 text-left smooth-transition hover:-translate-y-0.5 ${
               selected
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-background-primary text-muted-foreground hover:border-primary/60"
+                ? "border-primary/60 bg-primary/10 text-foreground shadow-lg shadow-blue-950/20"
+                : "border-white/10 bg-background-primary/70 text-muted-foreground hover:border-primary/60 hover:bg-background-tertiary/60"
             }`}
           >
             <span className="block font-semibold text-foreground">{option.label}</span>
@@ -342,10 +342,10 @@ function MultiChoice({
             key={`${option.label}-${option.value}`}
             type="button"
             onClick={() => onToggle(option.value)}
-            className={`flex min-h-16 items-center justify-between gap-3 rounded-lg border p-4 text-left smooth-transition ${
+            className={`flex min-h-16 items-center justify-between gap-3 rounded-lg border p-4 text-left smooth-transition hover:-translate-y-0.5 ${
               selected
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-background-primary text-muted-foreground hover:border-primary/60"
+                ? "border-primary/60 bg-primary/10 text-foreground shadow-lg shadow-blue-950/20"
+                : "border-white/10 bg-background-primary/70 text-muted-foreground hover:border-primary/60 hover:bg-background-tertiary/60"
             }`}
           >
             <span className="font-semibold text-foreground">{option.label}</span>

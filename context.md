@@ -2583,3 +2583,606 @@ Decision:
 Reason:
 
 * Separating execution mechanics from `AnalyticsEngine` will keep the engine focused on orchestration while allowing the analytics execution model to evolve safely as InvestGuide adds more metrics and data sources.
+
+---
+
+## Session 033
+
+Date: 2026-07-02
+
+Objective: Complete Sprint 028 by connecting the frontend dashboard, asset explorer, asset detail, news sections, and comparison experience to existing backend asset, news, and investor profile APIs with explicit demo fallback.
+
+Completed:
+
+* Read required startup documentation and the attached Sprint 028 request.
+* Updated frontend API service typings for asset, news, and investor profile usage.
+* Updated frontend asset/news data mappers to normalize backend response shapes into UI-friendly objects.
+* Updated dashboard to query backend investor profile, assets, and news.
+* Added shared `AssetExplorer` and connected `/assets` plus `/markets` to backend asset data with search, exchange, asset type, and sector filters.
+* Updated `/assets/[ticker]` to fetch backend asset details and related news through the news API.
+* Updated `/compare` to select two assets from the backend asset catalog.
+* Added explicit backend-unavailable fallback messaging wherever demo content is used.
+* Updated navigation to include the comparison page.
+* Updated `frontend/README.md` and `PROJECT_STATE.md`.
+* Ran backend tests and frontend lint, type-check, and production build.
+
+Files Created:
+
+* `frontend/app/assets/page.tsx`
+* `frontend/features/assets/asset-explorer.tsx`
+
+Files Modified:
+
+* `frontend/app/dashboard/page.tsx`
+* `frontend/app/markets/page.tsx`
+* `frontend/app/assets/[ticker]/page.tsx`
+* `frontend/app/compare/page.tsx`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/lib/mappers/data-mappers.ts`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/utils/demo-content.ts`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+APIs Connected:
+
+* `GET /api/v1/assets`
+* `GET /api/v1/assets/{ticker}`
+* `GET /api/v1/news`
+* `GET /api/v1/news/{id}` through the service layer
+* `GET /api/v1/investor-profile`
+
+Fallback Strategy:
+
+* Demo data is used only when backend data is unavailable or empty.
+* Fallback is visible through: `Backend unavailable. Showing demo data for preview only.`
+* No live market data, AI summaries, scraping, portfolio tracking, watchlists, payments, alerts, backend models, database redesign, or auth redesign were added.
+
+Validation Results:
+
+* `python -m pytest`: passed from repository root, 194 tests passed, 1 non-blocking pytest cache warning.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 app routes.
+
+Known Limitations:
+
+* Full runtime validation against a persisted backend remains blocked until Docker is available or local PostgreSQL credentials/database are corrected.
+* Demo fallback content is intentionally preview-only and should not be treated as live market data.
+* Real analytics calculations, AI summaries, live prices, live scraping, portfolio tracking, watchlists, payments, alerts, and recommendation engine remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 028 made the product showcase backend-connected while staying safe in local database-blocked environments. Dashboard, asset explorer, asset detail, news display, and comparison now consume the existing backend API contracts where available and disclose demo fallback when not.
+
+Next Recommended Task:
+
+* Sprint 029: run a persisted runtime validation with Docker/PostgreSQL available, then fix any remaining backend/frontend integration gaps found against real seeded asset/news/profile data. Do not add AI, live market data, portfolios, or watchlists until the database-backed product flow is stable.
+
+---
+
+## Session 034
+
+Date: 2026-07-03
+
+Objective: Complete Sprint 031 Company Intelligence Foundation documentation from the implemented Company domain, APIs, frontend page, and validation results.
+
+Completed:
+
+* Documented the Company Intelligence layer in `backend/README.md` and `frontend/README.md`.
+* Updated `PROJECT_STATE.md` to Sprint 031 current state.
+* Recorded the Company model, migration, service, APIs, frontend page, search routing, relationships, validation, limitations, and next recommended sprint.
+* Confirmed no application code changes were made during this documentation completion task.
+
+Files Created:
+
+* None during this documentation completion task.
+
+Files Modified:
+
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Company Intelligence Layer:
+
+* Company sits above Assets as the issuer-level knowledge entity.
+* Company connects to related assets through `assets.company_id`.
+* Company connects to news through the `company_news` table.
+* Company pages and APIs reuse the deterministic assessment summary rather than duplicating logic.
+
+Backend APIs Documented:
+
+* `GET /api/v1/companies`
+* `GET /api/v1/companies/{ticker}`
+* `GET /api/v1/companies/{ticker}/assessment`
+
+Frontend Page Documented:
+
+* `/company/[ticker]`
+
+Database Changes Documented:
+
+* `companies` table.
+* `company_news` table.
+* `assets.company_id` nullable foreign key.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 158 tests passed.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.
+
+Known Limitations:
+
+* Full persisted runtime validation remains blocked until Docker is available or local PostgreSQL credentials/database are corrected.
+* Company seed data is derived from existing asset records for now.
+* Financial statements, dividends, filings, directors, competitors, historical metrics, portfolio holdings, live prices, scrapers, AI, predictions, recommendations, watchlists, and auth changes remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 031 documentation is now aligned with the implemented Company Intelligence foundation. The project memory records the new Company domain, APIs, frontend route, database relationships, validation status, limitations, and next recommended task.
+
+Next Recommended Task:
+
+* Sprint 032: validate the Company Intelligence migration, APIs, and `/company/[ticker]` route against a reachable PostgreSQL-backed backend, then enrich company metadata only with sourced or clearly marked development data. Do not add AI, predictions, recommendations, portfolio features, watchlists, live prices, financial statements, dividends, scrapers, or auth changes.
+
+---
+
+## Session 035
+
+Date: 2026-07-03
+
+Objective: Complete Sprint 032 Company Intelligence Enrichment Foundation from the partial implementation, run frontend validation, fix only validation regressions, and update project documentation.
+
+Completed:
+
+* Added and validated the CompanyProfile enrichment foundation.
+* Added `CompanyProfile` model, schemas, Alembic migration, and model/schema registry entries.
+* Added `company_profile_service.py` and `company_enrichment.py`.
+* Added development fixture data in `backend/app/database/company_profile_seed.py` for Delta, Econet, CBZ, and Innscor.
+* Added `GET /api/v1/companies/{ticker}/profile`.
+* Added backend tests for CompanyProfile metadata, schema normalization, enrichment behavior, and route response shape.
+* Added frontend CompanyProfile types, API service method, mappers, fixture fallback data, and a Company Intelligence section on `/company/[ticker]`.
+* Added research status badge and source transparency fields on the company page.
+* Fixed only validation regressions: duplicate frontend mapper functions and a duplicate demo fixture property.
+* Updated `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md`.
+
+Files Created:
+
+* `backend/app/models/company_profile.py`
+* `backend/app/schemas/company_profile.py`
+* `backend/app/services/company_profile_service.py`
+* `backend/app/services/company_enrichment.py`
+* `backend/app/database/company_profile_seed.py`
+* `backend/alembic/versions/20260703_0001_create_company_profiles_table.py`
+* `backend/tests/test_company_profile_model.py`
+* `backend/tests/test_company_profile_schema.py`
+* `backend/tests/test_company_enrichment.py`
+
+Files Modified:
+
+* `backend/app/models/company.py`
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/__init__.py`
+* `backend/app/api/v1/companies.py`
+* `backend/tests/test_company_routes.py`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/types/index.ts`
+* `frontend/services/api.ts`
+* `frontend/lib/mappers/data-mappers.ts`
+* `frontend/utils/demo-content.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Database Changes:
+
+* Added `company_profiles` table.
+* Added one-to-one `companies.id -> company_profiles.company_id` relationship.
+* Added research status, source metadata, and verification timestamp fields.
+
+API Added:
+
+* `GET /api/v1/companies/{ticker}/profile`
+
+Services Added:
+
+* `company_profile_service.py` for profile lookup and unavailable profile shape.
+* `company_enrichment.py` for fixture-backed enrichment, missing-field fill, verified-field preservation, and verification payload creation.
+
+Frontend Updates:
+
+* `/company/[ticker]` now displays a Company Intelligence card.
+* Research status badge supports Development, Verified, Needs Review, and Unavailable.
+* Source name, source URL, and last verified date are displayed when available.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 167 tests passed, 1 non-blocking pytest cache warning.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 app routes including `/company/[ticker]`.
+
+Known Limitations:
+
+* Full persisted runtime validation remains blocked until Docker is available or local PostgreSQL credentials/database are corrected.
+* Company profile data is development fixture data only unless persisted later through an explicit seed path.
+* No AI, predictions, recommendations, portfolio, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, ratings, or auth changes were implemented.
+
+Session Summary:
+
+* Sprint 032 established a source-transparent Company Intelligence Enrichment layer. The platform can now represent structured company profile facts, research status, verification metadata, and source attribution without relying on generated AI text as the source of truth.
+
+Next Recommended Task:
+
+* Sprint 033: validate CompanyProfile migration and `/api/v1/companies/{ticker}/profile` against a reachable PostgreSQL-backed backend, then add a controlled development seed execution path for persisted company profiles if needed. Avoid AI, predictions, recommendations, portfolios, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, ratings, or auth changes.
+
+---
+
+## Session 036
+
+Date: 2026-07-06
+
+Objective: Complete Sprint 033 by moving Company Intelligence enrichment toward persisted runtime data, adding explicit company profile seeding, validating automated checks, and documenting the local PostgreSQL runtime blocker.
+
+Completed:
+
+* Read required startup documentation before implementation.
+* Created `backend/app/database/seed_company_profiles.py` as a manual CompanyProfile seed runner.
+* Extended `python -m app.database.seed` so the development seed workflow now runs assets, companies, company profiles, and the development investor profile in order.
+* Added company seeding from assets and asset-to-company linking without duplicate company creation.
+* Added CompanyProfile seed behavior for inserts, duplicate prevention, missing-field updates, verified-field preservation, missing-company reporting, logging, and SQLAlchemy rollback handling.
+* Added backend tests for company seed creation, duplicate prevention, company profile insert, duplicate prevention, update behavior, verified-field preservation, and missing-company reporting.
+* Updated `/company/[ticker]` to prefer persisted backend profile data whenever the backend returns a profile with an id.
+* Added visible Company Intelligence transparency for Research Status, Source, Last Verified, and Data Origin.
+* Clearly labeled fixture-backed profile display as `Development Preview`.
+* Improved company profile unavailable/backend unavailable messages without exposing stack traces.
+* Ran backend tests and frontend lint, type-check, and build validation.
+* Checked Docker/PostgreSQL runtime availability and documented the exact blocker.
+* Updated `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md`.
+
+Files Created:
+
+* `backend/app/database/seed_company_profiles.py`
+* `backend/tests/test_seed_company_profiles.py`
+
+Files Modified:
+
+* `backend/app/database/seed.py`
+* `frontend/app/company/[ticker]/page.tsx`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Seed Workflow Changes:
+
+* `python -m app.database.seed` now seeds assets first, creates or updates companies from those assets, links `assets.company_id`, persists CompanyProfile rows from development fixtures, and then seeds the development investor profile fallback.
+* `python -m app.database.seed_company_profiles` can be run manually when only CompanyProfile fixture persistence is needed.
+* No seed command runs automatically during FastAPI startup.
+
+Frontend Persistence Behavior:
+
+* `/company/[ticker]` now renders persisted backend company profile data first.
+* If the backend profile has a persisted id, the page displays `Data Origin: Persisted Backend`.
+* If persisted data is unavailable but fixture data exists, the page displays `Development Preview` and explicitly warns that the profile is fixture-backed.
+* Missing profile, backend unavailable, and database unavailable states use clean user-facing messages.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 225 tests passed, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed with no ESLint warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 app routes including `/company/[ticker]`.
+* `docker --version`: passed, Docker version 29.6.1.
+* `docker compose version`: passed, Docker Compose version v5.3.0.
+* `docker info`: failed because Docker Desktop is unable to start.
+* `python backend/scripts/check_database.py`: failed because PostgreSQL is unavailable with connection timeouts on `localhost:5432`.
+* `python -m alembic current`: Alembic configuration loaded, but revision lookup was deferred because PostgreSQL is unavailable or rejects `investguide_user` credentials.
+
+Known Issues Update:
+
+* Unresolved: persisted runtime endpoint validation for companies, company profiles, assets, and assessments remains blocked until Docker Desktop starts or local PostgreSQL credentials/database are corrected.
+* Unresolved: real CompanyProfile data is still development fixture data until verified research workflows or admin ingestion are implemented.
+* Unresolved: AI, predictions, recommendations, portfolio, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, and ratings remain intentionally unimplemented.
+
+Session Summary:
+
+* Sprint 033 completed the Company Intelligence persistence groundwork. Company profiles can now be seeded explicitly and safely, the unified seed command can prepare assets/companies/company profiles without duplicates, and the frontend distinguishes persisted backend data from development previews. Automated backend and frontend validation passed. Persisted runtime validation is honestly blocked by the local Docker Desktop/PostgreSQL environment.
+
+Next Recommended Task:
+
+* Sprint 034: resolve the local Docker Desktop/PostgreSQL blocker, run migrations and unified seed against real PostgreSQL, then smoke-test `/api/v1/companies`, `/api/v1/companies/DELTA`, `/api/v1/companies/DELTA/profile`, `/api/v1/assets`, `/api/v1/assets/DELTA`, `/api/v1/assets/DELTA/assessment`, and `/company/delta` with persisted data before adding new product features.
+
+---
+
+## Session 037
+
+Date: 2026-07-06
+
+Objective: Complete Sprint 033.1 by fixing the local Docker/PostgreSQL/backend runtime environment so InvestGuide can be manually tested end to end against real PostgreSQL.
+
+Completed:
+
+* Read `README.md`, `AGENT.md`, `PROJECT_STATE.md`, `context.md`, and `backend/README.md` before implementation.
+* Inspected `backend/.env` and confirmed it contained a UTF-8 BOM (`EF BB BF`) before `APP_NAME`.
+* Rewrote `backend/.env` as UTF-8 without BOM.
+* Confirmed `docker-compose.yml` credentials match the backend database credentials.
+* Identified a host port conflict on `5432`: Docker internals and a separate local `postgres.exe` process were both listening around the same PostgreSQL port path.
+* Remapped Docker PostgreSQL from host `5432` to host `5433` while preserving container port `5432`.
+* Updated `docker-compose.yml`, `backend/.env`, and `backend/.env.example` to use `localhost:5433`.
+* Restarted Docker PostgreSQL with `docker compose down -v` and `docker compose up -d`.
+* Verified container health and `psql` access inside the `investguide-postgres` container.
+* Applied all Alembic migrations to PostgreSQL.
+* Ran the unified development seed command.
+* Verified database diagnostics, seed counts, backend API smoke endpoints, Python tests, frontend lint/type-check/build, and frontend route availability.
+* Updated `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md`.
+
+Files Created:
+
+* None.
+
+Files Modified:
+
+* `docker-compose.yml`
+* `backend/.env` local development file
+* `backend/.env.example`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Root Cause:
+
+* `backend/.env` had a UTF-8 BOM that could corrupt the first environment key in some tooling.
+* Host port `5432` was conflicted by a non-Docker PostgreSQL process, so backend host connections could hit the wrong PostgreSQL service and fail with `password authentication failed for user "investguide_user"` even though Docker container credentials were correct.
+
+Fix Applied:
+
+* Removed the BOM from `backend/.env`.
+* Moved Docker PostgreSQL host mapping to `5433:5432`.
+* Set final backend `DATABASE_URL` to `postgresql+psycopg://investguide_user:investguide_password@localhost:5433/investguide`.
+
+Validation Results:
+
+* `docker --version`: passed, Docker version 29.6.1.
+* `docker compose version`: passed, Docker Compose version v5.3.0.
+* `docker compose down -v`: passed and reset the development PostgreSQL volume.
+* `docker compose up -d`: passed.
+* `docker ps`: `investguide-postgres` running and healthy on `0.0.0.0:5433->5432/tcp`.
+* `docker exec investguide-postgres psql -U investguide_user -d investguide`: passed.
+* `python -m alembic upgrade head`: passed through revision `20260703_0001`.
+* `python -m app.database.seed`: passed.
+* `python backend/scripts/check_database.py`: passed, database connected, migrations current, seed data present, asset count 9.
+* Seed counts: 9 assets, 9 companies, 4 company profiles, 1 investor profile.
+* Backend smoke passed for `GET /api/v1/health`, `GET /api/v1/assets`, `GET /api/v1/companies`, `GET /api/v1/companies/DLTA/profile`, and `GET /api/v1/assets/DLTA/assessment`.
+* `GET /api/v1/companies/DELTA/profile` and `GET /api/v1/assets/DELTA/assessment` returned 404 because the canonical ticker is `DLTA`; no alias layer was added in this runtime fix.
+* `python -m pytest -q`: passed, 225 tests passed, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed with 14 routes generated.
+* Frontend route smoke with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8001/api/v1`: `/auth/signup`, `/auth/login`, `/onboarding`, `/dashboard`, `/assets`, `/company/delta`, and `/compare` all returned HTTP 200.
+
+Known Issues Update:
+
+* Resolved: Docker/PostgreSQL backend runtime credentials now work through host port `5433`.
+* Resolved: `backend/.env` BOM removed.
+* Remaining: local non-Docker PostgreSQL still listens on host port `5432`; keep InvestGuide Docker PostgreSQL on `5433` unless that service is intentionally stopped.
+* Remaining: backend ticker endpoints use canonical ticker `DLTA`, not the company slug/name `DELTA`.
+* Remaining: no AI, predictions, recommendations, portfolio, watchlists, live APIs, live scraping, financial statements, dividends, competitors, ESG, or ratings were implemented.
+
+Session Summary:
+
+* Sprint 033.1 fixed the local persisted runtime environment. InvestGuide can now run against Docker PostgreSQL, apply migrations, seed assets/companies/company profiles, serve backend API data, and load frontend routes against the local API. The project is ready for manual end-to-end testing.
+
+Next Recommended Task:
+
+* Manually test signup, login, onboarding, dashboard data loading, `/assets`, `/company/delta`, and `/compare` in the browser against the running Docker PostgreSQL-backed backend. A future sprint can decide whether to add a ticker alias/slug strategy so `DELTA` routes map to canonical ticker `DLTA`.
+---
+
+## Session 038
+
+Date: 2026-07-06
+
+Objective: Stabilize authentication compatibility, route registration tests, and frontend auth runtime behavior without adding new features.
+
+Completed:
+
+* Investigated the password hashing stack and confirmed the installed combination was `passlib 1.7.4` with `bcrypt 4.3.0`.
+* Identified the bcrypt root cause: newer bcrypt releases removed the `__about__` metadata that passlib 1.7.4 probes, producing `AttributeError: module bcrypt has no attribute "__about__"` during bcrypt backend loading.
+* Pinned bcrypt to `>=4.0.1,<4.1.0` and installed `bcrypt 4.0.1`.
+* Verified the fixed dependency versions: `bcrypt 4.0.1`, `passlib 1.7.4`, and `bcrypt.__about__` present.
+* Verified password hashing and verification with `hash_password` and `verify_password`.
+* Updated route registration tests to inspect only route objects that expose `.path`, avoiding FastAPI internals such as included routers.
+* Updated frontend auth API default from `http://localhost:8000/api/v1` to `http://127.0.0.1:8001/api/v1`.
+* Updated frontend network error handling to show a clear backend-unreachable message for signup/login transport failures.
+* Fixed public Get Started routes from `/auth/register` to `/auth/signup` while preserving `/auth/login` links.
+* Updated local CORS defaults to include `http://127.0.0.1:3000` in addition to `http://localhost:3000`.
+* Polished public frontend colors toward a dark fintech palette with navy backgrounds, slate cards, blue primary actions, teal accent, and high-contrast text.
+* Rewrote edited files as UTF-8 without BOM after detecting PowerShell had introduced BOMs.
+* Updated `backend/README.md`, `frontend/README.md`, `PROJECT_STATE.md`, and `context.md`.
+
+Files Modified:
+
+* `backend/requirements.txt`
+* `backend/app/core/config.py`
+* `backend/.env.example`
+* `backend/tests/test_asset_routes.py`
+* `backend/tests/test_auth_routes.py`
+* `backend/tests/test_company_routes.py`
+* `backend/tests/test_news_routes.py`
+* `backend/tests/test_ingestion_adapter.py`
+* `backend/tests/test_investor_profile_routes.py`
+* `frontend/services/api.ts`
+* `frontend/app/page.tsx`
+* `frontend/styles/globals.css`
+* `frontend/components/layout/app-shell.tsx`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Validation Results:
+
+* `python -m pytest -q`: passed before final no-BOM rewrite with 174 tests passed and 1 non-blocking pytest cache permission warning. Final rerun attempts were blocked by the execution sandbox approval layer.
+* Version check: `bcrypt 4.0.1`, `passlib 1.7.4`, `bcrypt.__about__` present.
+* Password hash smoke: passed.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 routes.
+* Backend health: reachable on `http://127.0.0.1:8001/api/v1/health`, but database reported unavailable.
+* Database diagnostics: failed with PostgreSQL connection timeout on `localhost:5433`.
+* Docker Compose status: failed because Docker Desktop returned an engine API error.
+
+Known Issues:
+
+* Manual signup/login/JWT/onboarding cannot be confirmed until Docker PostgreSQL is reachable. The backend process responds to health, but database-backed authentication is blocked by PostgreSQL timeouts.
+* Docker Desktop needs to be restored before persisted runtime auth validation can complete.
+
+Session Summary:
+
+* Stabilization fixed the bcrypt/passlib compatibility risk, hardened route registration tests for current FastAPI route objects, corrected frontend auth base URL/routing/error messaging, and improved the public visual palette. Automated backend tests passed before the final no-BOM rewrite, and frontend lint/type-check/build passed. Runtime auth remains blocked by Docker/PostgreSQL availability, not by frontend routing or password hashing.
+
+Next Recommended Task:
+
+* Restore Docker Desktop/PostgreSQL connectivity on `localhost:5433`, rerun `python -m pytest -q`, then smoke-test signup, login, logout, JWT `/auth/me`, onboarding, dashboard, company page, and asset page against the persisted backend.
+---
+
+## Session 039
+
+Date: 2026-07-06
+
+Objective: Fix local authentication CORS failure when Next.js runs on fallback port `3001`.
+
+Completed:
+
+* Read the attached browser console log and identified the active blocker as CORS for origin `http://localhost:3001`.
+* Updated local `backend/.env` CORS origins to include `http://localhost:3001` and `http://127.0.0.1:3001`.
+* Updated `backend/.env.example` and `backend/app/core/config.py` defaults with the same local origins.
+* Verified the CORS preflight for `OPTIONS /api/v1/auth/signup` from `Origin: http://localhost:3001` now returns `Access-Control-Allow-Origin: http://localhost:3001`.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 174 tests passed, 1 non-blocking pytest cache permission warning.
+* CORS preflight: passed with HTTP 200.
+
+Known Notes:
+
+* Browser warnings from Grammarly attributes and extension TRPC 403 logs are external to InvestGuide.
+* Backend may need a restart/reload after `.env` CORS changes if it was started before this update.
+---
+
+## Session 040
+
+Date: 2026-07-07
+
+Objective: Diagnose and permanently fix CORS/auth connectivity for frontend `http://localhost:3001` to backend `http://127.0.0.1:8001`.
+
+Completed:
+
+* Inspected `backend/app/main.py`, `backend/app/core/config.py`, `backend/app/core/middleware.py`, and `backend/.env`.
+* Identified the permanent root cause: backend settings used `env_file=".env"`, which is working-directory dependent and can silently load the wrong file or defaults when the backend is started outside `backend/`. This made CORS behavior fragile and could leave the running app without the configured frontend origins.
+* Changed settings to load `backend/.env` through an absolute path derived from `app/core/config.py`.
+* Kept comma-separated `CORS_ORIGINS` parsing and verified it becomes a real Python list.
+* Added masked database URL diagnostics and startup CORS diagnostics.
+* Verified CORSMiddleware is installed and outermost in middleware order.
+* Verified auth signup/login routes exist.
+* Added regression tests for CORS origin parsing and auth preflight behavior.
+* Validated signup and login with `Origin: http://localhost:3001`.
+
+Files Modified:
+
+* `backend/app/core/config.py`
+* `backend/app/main.py`
+* `backend/tests/test_cors_configuration.py`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Startup Diagnostics Captured:
+
+* `APP_ENV=development`
+* `DATABASE_URL=postgresql+psycopg://***:***@localhost:5433/investguide`
+* `CORS_ORIGINS=['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://127.0.0.1:3001']`
+* `CORSMiddleware installed=True`
+* `middleware order=['CORSMiddleware', 'RequestLoggingMiddleware']`
+
+Runtime Validation:
+
+* `OPTIONS /api/v1/auth/signup`: HTTP 200, `Access-Control-Allow-Origin: http://localhost:3001`, methods include POST, headers include content-type.
+* `OPTIONS /api/v1/auth/login`: HTTP 200 with matching CORS headers.
+* Signup with `Origin: http://localhost:3001`: passed.
+* Login with `Origin: http://localhost:3001`: passed and returned bearer token.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 177 tests passed, 1 non-blocking pytest cache warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 routes.
+
+Known Notes:
+
+* The browser Grammarly hydration warning and extension TRPC 403 messages are external to InvestGuide.
+* No auth redesign, new features, AI, portfolio, watchlist, scraping, or dashboard changes were added.
+---
+
+## Session 041
+
+Date: 2026-07-07
+
+Objective: Implement Sprint 034 world-class UI/UX redesign and authentication UX polish without adding product features or changing backend architecture.
+
+Completed:
+
+* Read attached Sprint 034 UI/UX brief and visual reference.
+* Added premium frontend design-system utility classes in `frontend/styles/globals.css`.
+* Rebuilt the landing page around a premium fintech visual direction with hero, metrics, company tags, benefits, how-it-works cards, and CTA.
+* Rebuilt signup UX with client validation, password strength, show/hide password controls, friendly existing-account state, Go to Login action, and a success screen with Continue to onboarding/login actions.
+* Rebuilt login UX with show/hide password controls and friendly user-facing error messages.
+* Polished public layout, app shell, sidebar, navbar/search dropdown, onboarding cards, dashboard hero/cards/roadmap, and common warning/card styling across existing app pages.
+* Preserved existing routes, services, state store, backend APIs, and data loading behavior.
+
+Files Modified:
+
+* `frontend/styles/globals.css`
+* `frontend/app/page.tsx`
+* `frontend/app/auth/signup/page.tsx`
+* `frontend/app/auth/login/page.tsx`
+* `frontend/app/dashboard/page.tsx`
+* `frontend/app/onboarding/page.tsx`
+* `frontend/app/assets/page.tsx`
+* `frontend/app/assets/[ticker]/page.tsx`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/app/compare/page.tsx`
+* `frontend/app/markets/page.tsx`
+* `frontend/app/education/page.tsx`
+* `frontend/app/settings/page.tsx`
+* `frontend/app/ai-assistant/page.tsx`
+* `frontend/components/layout/app-shell.tsx`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/components/layout/navbar.tsx`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Validation Results:
+
+* `npm.cmd run lint`: passed with no warnings or errors.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `python -m pytest -q`: passed, 177 tests passed, 1 non-blocking pytest cache warning.
+* Runtime signup/login smoke was attempted but blocked by PostgreSQL timeout on `localhost:5433`.
+
+Known Issues:
+
+* Runtime account creation/login cannot be confirmed until local Docker PostgreSQL is reachable again. The failure is a backend database timeout, not a frontend Network Error or CORS issue.
+* Forgot/reset password remain intentionally unimplemented; login copy marks this as coming later.
+
+Session Summary:
+
+* InvestGuide now presents a much more premium, cohesive fintech interface while preserving existing functionality. Authentication UX now has clear validation, friendly duplicate-account handling, password usability improvements, and a true signup success state. Automated frontend and backend validation passed.

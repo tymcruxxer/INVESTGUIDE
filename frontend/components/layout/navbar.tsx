@@ -79,7 +79,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-20 h-16 border-b border-border bg-background-secondary">
+    <nav className="sticky top-0 z-20 h-16 border-b border-white/10 bg-background-secondary/90 backdrop-blur-xl">
       <div className="flex h-full items-center justify-between gap-3 px-4 lg:px-6">
         <div className="relative w-full max-w-md">
           <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -89,19 +89,19 @@ export function Navbar() {
             onKeyDown={(event) => {
               if (event.key === "Enter" && results[0]) openResult(results[0].href);
             }}
-            className="h-10 w-full rounded-lg border border-border bg-background px-10 text-sm outline-none transition focus:border-primary"
+            className="h-10 w-full rounded-lg border border-white/10 bg-background-primary/80 px-10 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/20"
             placeholder="Search companies, assets, news"
             aria-label="Search companies, assets, and news"
           />
           {results.length > 0 ? (
-            <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+            <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-lg border border-white/10 bg-card shadow-2xl shadow-black/30">
               {results.map((result) => {
                 const Icon = typeIcon[result.type];
                 return (
                   <button
                     key={`${result.type}-${result.href}-${result.label}`}
                     onClick={() => openResult(result.href)}
-                    className="flex w-full items-center gap-3 border-b border-border px-3 py-3 text-left text-sm last:border-b-0 hover:bg-background-secondary"
+                    className="flex w-full items-center gap-3 border-b border-white/10 px-3 py-3 text-left text-sm last:border-b-0 hover:bg-background-secondary"
                   >
                     <span className="rounded-lg bg-primary/10 p-2 text-primary"><Icon size={16} /></span>
                     <span className="min-w-0 flex-1">
@@ -116,7 +116,7 @@ export function Navbar() {
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <button
-            className="relative rounded-lg p-2 smooth-transition hover:bg-background-tertiary"
+            className="relative rounded-lg border border-white/10 bg-background-primary/50 p-2 smooth-transition hover:bg-background-tertiary"
             aria-label="Notifications"
           >
             <Bell size={20} className="text-muted-foreground" />
@@ -124,7 +124,7 @@ export function Navbar() {
           </button>
           <button
             onClick={toggleTheme}
-            className="rounded-lg p-2 smooth-transition hover:bg-background-tertiary"
+            className="rounded-lg border border-white/10 bg-background-primary/50 p-2 smooth-transition hover:bg-background-tertiary"
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             aria-label="Toggle theme"
           >
@@ -134,7 +134,7 @@ export function Navbar() {
               <Moon size={20} className="text-muted-foreground" />
             )}
           </button>
-          <div className="ml-1 hidden items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary sm:flex">
+          <div className="ml-1 hidden items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm font-medium text-primary sm:flex">
             <UserCircle size={18} />
             <span className="max-w-[180px] truncate">{user?.email ?? "Investor"}</span>
           </div>

@@ -82,8 +82,13 @@ export default function CompanyDetailPage() {
   }, [backendDetail, ticker]);
 
   const profileData = profileQuery.data?.data;
-  const profile = mapCompanyProfile(profileData?.profile) ?? DEMO_COMPANY_PROFILES[ticker] ?? null;
-  const verification = profileData?.verification
+  const backendProfile = mapCompanyProfile(profileData?.profile);
+  const fallbackProfile = DEMO_COMPANY_PROFILES[ticker] ?? null;
+  const profile = backendProfile ?? fallbackProfile;
+  const profileDataOrigin = backendProfile?.id ? "Persisted Backend" : profile ? "Development Preview" : "Unavailable";
+  const usingProfilePreview = profileDataOrigin === "Development Preview";
+  const profileLoadError = profileQuery.isError && !backendProfile;
+  const verification = profileData?.verification && backendProfile
     ? mapCompanyProfileVerification(profileData.verification)
     : mapCompanyProfileVerification(profile);
 
@@ -102,13 +107,13 @@ export default function CompanyDetailPage() {
     <AppShell>
       <div className="space-y-6">
         {usingFallback ? (
-          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
+          <div className="warning-panel">
             Backend company data unavailable. Showing demo company intelligence for preview only.
           </div>
         ) : null}
 
         {companyQuery.isLoading ? (
-          <div className="h-72 animate-pulse rounded-lg border border-border bg-card" />
+          <div className="h-72 animate-pulse premium-card" />
         ) : isNotFound || !company ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <h1 className="text-2xl font-semibold">Company not found</h1>
@@ -120,7 +125,7 @@ export default function CompanyDetailPage() {
           </div>
         ) : (
           <>
-            <section className="rounded-lg border border-border bg-card p-6">
+            <section className="premium-card p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Company / {company.exchange}</p>
@@ -142,7 +147,7 @@ export default function CompanyDetailPage() {
 
             <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="space-y-6">
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Company Profile</h2>
                   <p className="mt-3 text-sm text-muted-foreground">{company.description}</p>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -153,7 +158,7 @@ export default function CompanyDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h2 className="text-xl font-semibold">Company Intelligence</h2>
@@ -161,8 +166,18 @@ export default function CompanyDetailPage() {
                     </div>
                     <ResearchStatusBadge status={verification.research_status} />
                   </div>
+                  {usingProfilePreview ? (
+                    <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-200">
+                      Development Preview: this company profile is fixture-backed until a persisted backend profile is seeded or verified.
+                    </div>
+                  ) : null}
+                  {profileLoadError ? (
+                    <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+                      Company profile data could not be reached. Preview data is shown only when available.
+                    </div>
+                  ) : null}
                   {profileQuery.isLoading ? (
-                    <div className="mt-4 h-40 animate-pulse rounded-lg border border-border bg-background-secondary" />
+                    <div className="mt-4 h-40 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />
                   ) : profile ? (
                     <div className="mt-4 space-y-4">
                       <p className="text-sm text-muted-foreground">{profile.business_summary ?? "No business summary is available yet."}</p>
@@ -174,7 +189,7 @@ export default function CompanyDetailPage() {
                         <QuickFact label="Website" value={profile.website ?? "Unavailable"} href={profile.website ?? undefined} />
                         <QuickFact label="Source" value={verification.source_name ?? "Unavailable"} href={verification.source_url ?? undefined} />
                       </div>
-                      <div className="rounded-lg border border-border bg-background-secondary p-4">
+                      <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                         <p className="text-sm text-muted-foreground">Products & Services</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {profile.products_services.length > 0 ? profile.products_services.map((item) => (
@@ -185,18 +200,19 @@ export default function CompanyDetailPage() {
                       <div className="grid gap-3 sm:grid-cols-2">
                         <QuickFact label="Research status" value={statusLabels[verification.research_status]} />
                         <QuickFact label="Last verified" value={formatDisplayDate(verification.last_verified)} />
+                        <QuickFact label="Data origin" value={profileDataOrigin} />
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-4 text-sm text-muted-foreground">Company intelligence profile is unavailable.</p>
+                    <p className="mt-4 text-sm text-muted-foreground">Company intelligence profile is unavailable right now. Please try again once backend profile data is reachable.</p>
                   )}
                 </div>
 
-                <div id="related-assets" className="rounded-lg border border-border bg-card p-6">
+                <div id="related-assets" className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Related Investments</h2>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {relatedAssets.length > 0 ? relatedAssets.map((asset) => (
-                      <Link key={asset.ticker} href={`/assets/${asset.ticker.toLowerCase()}`} className="rounded-lg border border-border bg-background-secondary p-4 transition hover:border-primary/60">
+                      <Link key={asset.ticker} href={`/assets/${asset.ticker.toLowerCase()}`} className="rounded-lg border border-white/10 bg-background-primary/70 p-4 transition hover:border-primary/60">
                         <p className="text-lg font-semibold">{asset.ticker}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{asset.company_name}</p>
                         <p className="mt-3 text-xs uppercase text-muted-foreground">{asset.asset_type} / {asset.exchange}</p>
@@ -209,13 +225,13 @@ export default function CompanyDetailPage() {
                   {assessmentQuery.isLoading ? (
                     <CardSkeleton />
                   ) : assessmentQuery.isError ? (
-                    <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
                       Company assessment is not available yet.
                     </div>
                   ) : assessmentQuery.data?.data ? (
                     <AssetAssessmentPanel assessment={assessmentQuery.data.data} />
                   ) : (
-                    <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
                       Company assessment is not available yet.
                     </div>
                   )}
@@ -223,7 +239,7 @@ export default function CompanyDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Quick Facts</h2>
                   <div className="mt-4 space-y-3">
                     <QuickFact label="Exchange" value={company.exchange} />
@@ -233,19 +249,19 @@ export default function CompanyDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Quick Actions</h2>
                   <div className="mt-4 grid gap-2">
                     {quickActions.map((action) => {
                       const Icon = action.icon;
                       const href = action.label === "Compare" && primaryAsset ? `/compare?left=${primaryAsset.ticker}` : action.href;
                       return action.disabled ? (
-                        <div key={action.label} className="flex items-center justify-between rounded-lg border border-border bg-background-secondary p-3 text-sm text-muted-foreground">
+                        <div key={action.label} className="flex items-center justify-between rounded-lg border border-white/10 bg-background-primary/70 p-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-2"><Icon size={16} />{action.label}</span>
                           <span>Coming Soon</span>
                         </div>
                       ) : (
-                        <Link key={action.label} href={href} className="flex items-center gap-2 rounded-lg border border-border bg-background-secondary p-3 text-sm font-medium transition hover:border-primary/60">
+                        <Link key={action.label} href={href} className="flex items-center gap-2 rounded-lg border border-white/10 bg-background-primary/70 p-3 text-sm font-medium transition hover:border-primary/60">
                           <Icon size={16} />{action.label}
                         </Link>
                       );
@@ -256,18 +272,18 @@ export default function CompanyDetailPage() {
             </section>
 
             <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="rounded-lg border border-border bg-card p-6">
+              <div className="premium-card p-6">
                 <h2 className="text-xl font-semibold">Explain Like I am 18</h2>
                 <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                   {education.length > 0 ? education.map((line) => <li key={line}>{line}</li>) : <li>Company education content will appear once a related investment is connected.</li>}
                 </ul>
               </div>
 
-              <div id="latest-news" className="rounded-lg border border-border bg-card p-6">
+              <div id="latest-news" className="premium-card p-6">
                 <h2 className="text-xl font-semibold">Latest News</h2>
                 <div className="mt-4 space-y-3">
                   {news.length > 0 ? news.map((article) => (
-                    <article key={article.id} className="rounded-lg border border-border bg-background-secondary p-4">
+                    <article key={article.id} className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                       <p className="text-xs text-muted-foreground">{article.source} / {formatDisplayDate(article.published_at)}</p>
                       <h3 className="mt-2 text-base font-semibold">{article.title}</h3>
                       <p className="mt-2 text-sm text-muted-foreground">{article.summary}</p>
@@ -285,7 +301,7 @@ export default function CompanyDetailPage() {
 
 function QuickFact({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-background-secondary p-4">
+    <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
       <p className="text-sm text-muted-foreground">{label}</p>
       {href ? (
         <a href={href} target="_blank" rel="noreferrer" className="mt-1 block truncate font-semibold text-primary">

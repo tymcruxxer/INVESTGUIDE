@@ -67,13 +67,13 @@ export default function AssetDetailPage() {
     <AppShell>
       <div className="space-y-6">
         {usingFallback || newsQuery.isError ? (
-          <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
+          <div className="warning-panel">
             Backend unavailable. Showing demo data for preview only.
           </div>
         ) : null}
 
         {assetQuery.isLoading ? (
-          <div className="h-72 animate-pulse rounded-lg border border-border bg-card" />
+          <div className="h-72 animate-pulse premium-card" />
         ) : isNotFound || !asset ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <h1 className="text-2xl font-semibold">Asset not found</h1>
@@ -85,7 +85,7 @@ export default function AssetDetailPage() {
           </div>
         ) : (
           <>
-            <section className="rounded-lg border border-border bg-card p-6">
+            <section className="premium-card p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">{asset.exchange} / {asset.asset_type}</p>
@@ -98,23 +98,23 @@ export default function AssetDetailPage() {
                 </div>
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <div className="rounded-lg border border-border bg-background-secondary p-4">
+                <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                   <p className="text-sm text-muted-foreground">Sector</p>
                   <p className="mt-1 font-semibold">{asset.sector}</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background-secondary p-4">
+                <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                   <p className="text-sm text-muted-foreground">Industry</p>
                   <p className="mt-1 font-semibold">{asset.industry}</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background-secondary p-4">
+                <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                   <p className="text-sm text-muted-foreground">Exchange</p>
                   <p className="mt-1 font-semibold">{asset.exchange}</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background-secondary p-4">
+                <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                   <p className="text-sm text-muted-foreground">Market cap</p>
                   <p className="mt-1 font-semibold">{formatMoney(asset.market_cap, asset.currency)}</p>
                 </div>
-                <div className="rounded-lg border border-border bg-background-secondary p-4">
+                <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                   <p className="text-sm text-muted-foreground">Listing date</p>
                   <p className="mt-1 font-semibold">{asset.listing_date ?? "Unavailable"}</p>
                 </div>
@@ -126,13 +126,13 @@ export default function AssetDetailPage() {
                 {assessmentQuery.isLoading ? (
                   <CardSkeleton />
                 ) : assessmentQuery.isError ? (
-                  <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                  <div className="premium-card p-6 text-sm text-muted-foreground">
                     Assessment currently unavailable.
                   </div>
                 ) : assessmentQuery.data?.data ? (
                   <AssetAssessmentPanel assessment={assessmentQuery.data.data} />
                 ) : (
-                  <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                  <div className="premium-card p-6 text-sm text-muted-foreground">
                     Assessment currently unavailable.
                   </div>
                 )}
@@ -140,12 +140,12 @@ export default function AssetDetailPage() {
 
               <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
                 <div className="space-y-6">
-                  <div className="rounded-lg border border-border bg-card p-6">
+                  <div className="premium-card p-6">
                     <h2 className="text-xl font-semibold">Analytics section</h2>
                     <p className="mt-1 text-sm text-muted-foreground">Connected to the Analytics Engine foundation. Real calculations are intentionally not implemented yet.</p>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       {ANALYTICS_PLACEHOLDERS.map((metric) => (
-                        <div key={metric.key} className="rounded-lg border border-border bg-background-secondary p-4">
+                        <div key={metric.key} className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                           <p className="font-medium">{metric.label}</p>
                           <p className="mt-2 text-sm text-muted-foreground">Calculation coming soon</p>
                         </div>
@@ -154,11 +154,11 @@ export default function AssetDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Related news</h2>
                   <div className="mt-4 space-y-3">
-                    {newsQuery.isLoading ? [1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-lg border border-border bg-background-secondary" />) : news.length > 0 ? news.map((article) => (
-                      <article key={article.id} className="rounded-lg border border-border bg-background-secondary p-4">
+                    {newsQuery.isLoading ? [1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />) : news.length > 0 ? news.map((article) => (
+                      <article key={article.id} className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                         <p className="text-xs text-muted-foreground">{article.source} / {formatDisplayDate(article.published_at)}</p>
                         <h3 className="mt-2 text-base font-semibold">{article.title}</h3>
                         <p className="mt-2 text-sm text-muted-foreground">{article.summary}</p>
@@ -169,10 +169,10 @@ export default function AssetDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Educational section</h2>
                   <p className="mt-3 text-sm text-muted-foreground">{getEducationSummary(asset)}</p>
-                  <div className="mt-4 rounded-lg border border-border bg-background-secondary p-4">
+                  <div className="mt-4 rounded-lg border border-white/10 bg-background-primary/70 p-4">
                     <h3 className="font-semibold">Explain Like I am 18</h3>
                     <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                       {education.map((line) => <li key={line}>{line}</li>)}
@@ -180,7 +180,7 @@ export default function AssetDetailPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-card p-6">
+                <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Compare</h2>
                   <p className="mt-2 text-sm text-muted-foreground">Compare this asset with another backend catalog asset.</p>
                   <Link href={`/compare?left=${asset.ticker}`} className="mt-4 inline-flex rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground">Open comparison</Link>
