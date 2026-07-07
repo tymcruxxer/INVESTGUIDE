@@ -14,6 +14,7 @@ from app.database.seed_assets import SEED_ASSETS
 from app.database.seed_investor_profile import DEMO_INVESTOR_PROFILE
 from app.database.session import SessionLocal
 from app.models.asset import Asset
+from app.models.company import Company
 from app.models.investor_profile import InvestorProfile
 
 logger = get_logger(__name__)
@@ -36,6 +37,16 @@ class InvestorProfileSeedResult:
     inserted: int
     skipped: int
     profile_id: int | None
+
+
+@dataclass(frozen=True)
+class CompanySeedResult:
+    """Summary of a development company seed execution."""
+
+    inserted: int
+    updated: int
+    skipped: int
+    linked_assets: int
 
 
 def normalize_seed_asset(seed_asset: dict[str, object]) -> dict[str, object]:
@@ -91,6 +102,85 @@ def seed_development_assets(
     )
 
 
+def _company_data_from_asset(asset: Asset) -> dict[str, object]:
+    """Build issuer-level company seed data from a listed asset."""
+    return {
+        "name": asset.company_name,
+        "legal_name": asset.company_name,
+        "ticker": asset.ticker.strip().upper(),
+        "exchange": asset.exchange,
+        "sector": asset.sector,
+        "industry": asset.industry,
+        "country": "Zimbabwe",
+        "website": asset.official_website,
+        "description": asset.description,
+        "market": asset.exchange,
+        "currency": asset.currency,
+        "status": asset.status,
+        "logo_url": asset.logo_url,
+    }
+
+
+def seed_development_companies(db: Session) -> CompanySeedResult:
+    """Create or update issuer records from seeded assets and link assets to them."""
+    assets = list(db.scalars(select(Asset).order_by(Asset.ticker.asc())).all())
+    inserted = 0
+    updated = 0
+    skipped = 0
+    linked_assets = 0
+
+    for asset in assets:
+        seed_data = _company_data_from_asset(asset)
+        ticker = str(seed_data["ticker"])
+        company = db.scalar(select(Company).where(func.upper(Company.ticker) == ticker))
+
+        if company is None:
+            company = Company(**seed_data)
+            db.add(company)
+            db.flush()
+            inserted += 1
+            logger.info("Queued company seed insert: %s", ticker)
+        else:
+            changed = False
+            for field, value in seed_data.items():
+                current_value = getattr(company, field)
+                if current_value in (None, "", []) and value not in (None, "", []):
+                    setattr(company, field, value)
+                    changed = True
+            if changed:
+                updated += 1
+                logger.info("Queued company seed update: %s", ticker)
+            else:
+                skipped += 1
+                logger.info("Skipping existing company seed: %s", ticker)
+
+        if asset.company_id != company.id:
+            asset.company_id = company.id
+            linked_assets += 1
+            logger.info("Linked asset %s to company %s", asset.ticker, ticker)
+
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception("Company seed failed; transaction rolled back")
+        raise
+
+    logger.info(
+        "Company seed completed: %s inserted, %s updated, %s skipped, %s assets linked",
+        inserted,
+        updated,
+        skipped,
+        linked_assets,
+    )
+    return CompanySeedResult(
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        linked_assets=linked_assets,
+    )
+
+
 def seed_development_investor_profile(
     db: Session,
     profile_data: dict[str, object] = DEMO_INVESTOR_PROFILE,
@@ -126,12 +216,24 @@ def main() -> None:
     logger.info("Starting manual development seed")
     with SessionLocal() as db:
         asset_result = seed_development_assets(db)
+        company_result = seed_development_companies(db)
+        from app.database.seed_company_profiles import seed_company_profiles
+
+        company_profile_result = seed_company_profiles(db)
         profile_result = seed_development_investor_profile(db)
     logger.info(
         "Manual development seed finished: %s assets inserted, %s assets skipped, "
-        "%s profiles inserted, %s profiles skipped",
+        "%s companies inserted, %s companies updated, %s companies skipped, "
+        "%s company profiles inserted, %s company profiles updated, %s company profiles skipped, "
+        "%s investor profiles inserted, %s investor profiles skipped",
         asset_result.inserted,
         asset_result.skipped,
+        company_result.inserted,
+        company_result.updated,
+        company_result.skipped,
+        company_profile_result.inserted,
+        company_profile_result.updated,
+        company_profile_result.skipped,
         profile_result.inserted,
         profile_result.skipped,
     )

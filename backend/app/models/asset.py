@@ -7,7 +7,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum, Index, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Date, Enum, ForeignKey, Index, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -15,6 +15,7 @@ from app.models.associations import asset_news
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.company import Company
     from app.models.news import News
 
 
@@ -127,11 +128,18 @@ class Asset(TimestampMixin, Base):
         default=AssetStatus.ACTIVE,
         server_default=AssetStatus.ACTIVE.value,
     )
+    company_id: Mapped[int | None] = mapped_column(
+        ForeignKey("companies.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    company: Mapped[Company | None] = relationship("Company", back_populates="assets")
     news_articles: Mapped[list[News]] = relationship(
         "News",
         secondary=asset_news,
         back_populates="assets",
     )
+
 # Import after class declaration so SQLAlchemy can resolve the relationship target.
 from app.models.news import News  # noqa: E402
 

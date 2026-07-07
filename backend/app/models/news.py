@@ -10,12 +10,13 @@ from sqlalchemy import DateTime, Index, Numeric, String, Text, UniqueConstraint,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
-from app.models.associations import asset_news
+from app.models.associations import asset_news, company_news
 from app.models.mixins import TimestampMixin
 from app.utils.hashing import generate_content_hash
 
 if TYPE_CHECKING:
     from app.models.asset import Asset
+    from app.models.company import Company
 
 
 class News(TimestampMixin, Base):
@@ -51,6 +52,13 @@ class News(TimestampMixin, Base):
         back_populates="news_articles",
     )
 
+
+
+    companies: Mapped[list[Company]] = relationship(
+        "Company",
+        secondary=company_news,
+        back_populates="news_articles",
+    )
 
 @event.listens_for(News, "before_insert")
 def populate_news_content_hash(_mapper: object, _connection: object, target: News) -> None:

@@ -38,7 +38,7 @@ def make_news(**overrides: object) -> SimpleNamespace:
 
 def test_news_routes_are_registered_under_api_v1() -> None:
     """Read-only news routes are mounted under the versioned router."""
-    routes = {route.path for route in app.routes}
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
 
     assert "/api/v1/news" in routes
     assert "/api/v1/news/{news_id}" in routes

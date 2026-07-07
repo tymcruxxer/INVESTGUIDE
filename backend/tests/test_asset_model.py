@@ -11,6 +11,7 @@ def test_asset_model_columns_match_domain_contract() -> None:
 
     expected_columns = {
         "id",
+        "company_id",
         "ticker",
         "company_name",
         "exchange",
@@ -29,6 +30,7 @@ def test_asset_model_columns_match_domain_contract() -> None:
     }
 
     assert set(columns.keys()) == expected_columns
+    assert columns.company_id.nullable is True
     assert columns.ticker.nullable is False
     assert columns.company_name.nullable is False
     assert columns.status.default is not None

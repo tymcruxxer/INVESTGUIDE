@@ -1,4 +1,4 @@
-﻿"""Investor profile API route tests."""
+"""Investor profile API route tests."""
 
 from collections.abc import Iterator
 
@@ -47,7 +47,7 @@ def client(db_session: Session) -> Iterator[TestClient]:
 
 def test_investor_profile_route_is_registered() -> None:
     """Investor profile routes are mounted under the versioned API."""
-    routes = {route.path for route in app.routes}
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
 
     assert "/api/v1/investor-profile" in routes
 
@@ -247,3 +247,4 @@ def test_profile_requires_authentication_outside_development(
 
     assert response.status_code == 401
     assert body["error_code"] == "AUTHENTICATION_REQUIRED"
+

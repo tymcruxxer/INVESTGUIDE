@@ -1,12 +1,16 @@
-﻿"""Application configuration."""
+"""Application configuration."""
 
 import json
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+ENV_FILE = BACKEND_DIR / ".env"
 
 class Settings(BaseSettings):
     """Environment-driven backend settings."""
@@ -23,7 +27,7 @@ class Settings(BaseSettings):
     )
 
     cors_origins: Annotated[list[str], NoDecode] = Field(
-        default=["http://localhost:3000"],
+        default=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
         validation_alias="CORS_ORIGINS",
     )
 
@@ -43,7 +47,7 @@ class Settings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_FILE,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -71,7 +75,16 @@ class Settings(BaseSettings):
         return value
 
 
+
+def get_masked_database_url(database_url: str) -> str:
+    """Return a database URL with credentials masked for diagnostics."""
+    if "://" not in database_url or "@" not in database_url:
+        return database_url
+    scheme, rest = database_url.split("://", 1)
+    _, host_part = rest.rsplit("@", 1)
+    return f"{scheme}://***:***@{host_part}"
 @lru_cache
 def get_settings() -> Settings:
     """Return cached application settings."""
     return Settings()
+

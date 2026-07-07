@@ -1,11 +1,13 @@
-﻿"""SQLAlchemy model registry.
+"""SQLAlchemy model registry.
 
 Import model modules here so Alembic can discover them through
 ``Base.metadata`` during autogeneration.
 """
 
 from app.models.asset import Asset, AssetStatus, AssetType, Currency, Exchange
-from app.models.associations import asset_news
+from app.models.associations import asset_news, company_news
+from app.models.company import Company
+from app.models.company_profile import CompanyProfile, ResearchStatus
 from app.models.investor_profile import (
     ExperienceLevel,
     InvestorProfile,
@@ -22,6 +24,9 @@ __all__ = [
     "AssetType",
     "Currency",
     "Exchange",
+    "Company",
+    "CompanyProfile",
+    "ResearchStatus",
     "ExperienceLevel",
     "InvestorProfile",
     "PreferredLanguageLevel",
@@ -30,4 +35,5 @@ __all__ = [
     "TimestampMixin",
     "User",
     "asset_news",
+    "company_news",
 ]

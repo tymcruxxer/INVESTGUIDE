@@ -1,4 +1,4 @@
-﻿"""Authentication route tests."""
+"""Authentication route tests."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ def _signup(client: TestClient, email: str = "user@example.com", password: str =
 
 def test_auth_routes_are_registered() -> None:
     """Auth routes are mounted under the versioned API."""
-    routes = {route.path for route in app.routes}
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
 
     assert "/api/v1/auth/signup" in routes
     assert "/api/v1/auth/login" in routes
@@ -189,4 +189,5 @@ def test_inactive_user_cannot_access_me(client: TestClient, db_session: Session)
     assert response.status_code == 401
     assert body["success"] is False
     assert body["error_code"] == "HTTP_ERROR"
+
 

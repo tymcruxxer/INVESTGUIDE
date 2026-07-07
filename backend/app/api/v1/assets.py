@@ -13,6 +13,7 @@ from app.database.session import get_db
 from app.models.asset import AssetStatus, AssetType, Exchange
 from app.schemas.asset import AssetRead
 from app.services import asset_service
+from app.services.intelligence.assessment_service import build_asset_assessment
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 
@@ -77,4 +78,28 @@ async def get_asset(
     return success_response(
         message="Asset retrieved successfully",
         data=_serialize_asset(asset),
+    )
+
+
+@router.get("/{ticker}/assessment", response_model=None)
+async def get_asset_assessment(
+    ticker: str,
+    db: Session = Depends(get_db),
+):
+    """Return deterministic assessment details for a ticker symbol."""
+    asset = asset_service.get_asset_by_ticker(db, ticker)
+    if asset is None:
+        normalized_ticker = ticker.strip().upper()
+        return JSONResponse(
+            status_code=404,
+            content=error_response(
+                message=f"Asset '{normalized_ticker}' was not found",
+                error_code="ASSET_NOT_FOUND",
+            ),
+        )
+
+    assessment_payload = build_asset_assessment(asset)
+    return success_response(
+        message="Asset assessment retrieved successfully",
+        data=assessment_payload,
     )

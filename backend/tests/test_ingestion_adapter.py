@@ -93,7 +93,7 @@ def make_payload(**overrides: object) -> IngestionArticlePayload:
 
 def test_ingestion_route_is_registered() -> None:
     """Internal ingestion route is mounted under the versioned API."""
-    routes = {route.path for route in app.routes}
+    routes = {route.path for route in app.routes if hasattr(route, "path")}
 
     assert "/api/v1/ingestion/news" in routes
 

@@ -1,4 +1,4 @@
-﻿# InvestGuide Backend
+# InvestGuide Backend
 
 FastAPI backend foundation for InvestGuide.
 
@@ -80,7 +80,7 @@ Common errors:
 
 * `Docker is not installed or not available on PATH` - install Docker Desktop or another Docker Compose runtime
 * `Docker daemon is not running` - start Docker Desktop or your Docker service
-* `PostgreSQL did not become reachable` - check Docker health, port `5432`, and `backend/.env`
+* `PostgreSQL did not become reachable` - check Docker health, host port `5433`, and `backend/.env`
 ## Docker Compose Development Database
 
 Sprint 017 standardizes the local development database with Docker Compose.
@@ -96,7 +96,7 @@ This starts PostgreSQL 16 with:
 * database: `investguide`
 * user: `investguide_user`
 * password: `investguide_password`
-* host port: `5432`
+* host port: `5433`
 * named volume: `investguide_postgres_data`
 
 Copy the backend environment example:
@@ -108,7 +108,7 @@ Copy-Item backend\.env.example backend\.env
 The default development URL is:
 
 ```text
-DATABASE_URL=postgresql+psycopg://investguide_user:investguide_password@localhost:5432/investguide
+DATABASE_URL=postgresql+psycopg://investguide_user:investguide_password@localhost:5433/investguide
 ```
 
 Do not commit `.env` or real hosted credentials.
@@ -218,6 +218,29 @@ JWT tokens include:
 * `sub` - authenticated user id
 * `email` - authenticated user email
 * `exp` - token expiry
+
+## Asset Assessment Endpoint
+
+Sprint 029 adds a deterministic assessment API for persisted asset details. The new endpoint returns structured, non-advisory assessment metadata based on existing asset profile fields only.
+
+Endpoint:
+
+* `GET /api/v1/assets/{ticker}/assessment`
+
+Response shape includes:
+
+* `ticker`
+* `overall_assessment`
+* `evidence_strength`
+* `investment_horizon`
+* `key_strengths`
+* `things_to_watch`
+* `educational_summary`
+* `explain_like_im_18`
+* `generated_at`
+* `assessment_version`
+
+This endpoint is deterministic and intentionally avoids AI or predictive investment recommendations. It is designed to provide educational context derived from structured asset metadata.
 
 Authentication logic lives in `app/services/auth_service.py`. Future protected routes should use `Depends(get_current_user)`. The backend currently supports a single basic user identity model only; it does not implement roles, RBAC, email verification, OAuth, MFA, sessions, or social login.
 
@@ -651,3 +674,182 @@ Runtime results:
 * `GET /api/v1/news`: 200 using development sample/fallback data.
 
 No backend code changes or persistence bypasses were made. Full persisted auth/profile validation requires Docker PostgreSQL or corrected local PostgreSQL credentials.
+
+## Sprint 031 Company Intelligence Foundation
+
+Sprint 031 introduces the Company Intelligence layer above investment assets. Companies are now first-class issuer records that can connect to listed assets, related news, deterministic assessments, and future analytics surfaces.
+
+Backend additions:
+
+* `GET /api/v1/companies` - list companies with pagination and optional filters.
+* `GET /api/v1/companies/{ticker}` - return company overview, related assets, latest news, and `assessment_available`.
+* `GET /api/v1/companies/{ticker}/assessment` - reuse the existing deterministic asset assessment summary through the company's primary related asset when available.
+
+Database changes:
+
+* `companies` table for issuer-level company knowledge.
+* `company_news` table for Company to News relationships.
+* `assets.company_id` nullable foreign key for Company to Assets relationships.
+
+Relationships:
+
+* Company -> many Assets.
+* Company -> many News Articles.
+* Company news may also be derived from related asset-news links.
+
+Future extension points are prepared for financial statements, dividends, filings, directors, competitors, historical metrics, and portfolio holdings, but none of those product features are implemented yet. This sprint does not add AI, predictions, recommendations, portfolio features, watchlists, live prices, financial statements, dividend engines, scrapers, or authentication changes.
+
+Validation:
+
+* `python -m pytest -q`: passed, 158 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.
+
+## Sprint 032 Company Intelligence Enrichment Foundation
+
+Sprint 032 adds the Company Intelligence Enrichment layer. This layer stores structured, source-transparent company facts that future company research pages, financial statement analysis, AI explanations, portfolio intelligence, comparisons, industry analysis, and investment assessments can consume.
+
+Implemented backend pieces:
+
+* SQLAlchemy model: `app/models/company_profile.py`
+* Pydantic schemas: `app/schemas/company_profile.py`
+* Read service: `app/services/company_profile_service.py`
+* Enrichment service: `app/services/company_enrichment.py`
+* Development fixture data: `app/database/company_profile_seed.py`
+* Alembic migration: `alembic/versions/20260703_0001_create_company_profiles_table.py`
+
+Database changes:
+
+* `company_profiles` table.
+* One-to-one `companies.id -> company_profiles.company_id` relationship.
+* Research status, source name, source URL, and last verified timestamp fields.
+
+Endpoint:
+
+* `GET /api/v1/companies/{ticker}/profile`
+
+Response shape:
+
+```json
+{
+  "success": true,
+  "message": "Company profile retrieved successfully",
+  "data": {
+    "company": {},
+    "profile": {},
+    "verification": {
+      "last_verified": "2026-07-03T00:00:00Z",
+      "source_name": "InvestGuide development fixture data",
+      "source_url": "https://example.com",
+      "research_status": "development"
+    }
+  }
+}
+```
+
+Research status values:
+
+* `development`
+* `verified`
+* `needs_review`
+* `unavailable`
+
+The enrichment service fills missing structured fields from development fixtures while preserving existing verified data. It does not scrape, call external APIs, generate AI summaries, fabricate financial metrics, or run automatically at startup. Development fixtures are clearly labeled as fixture data and are intended for local development and tests only.
+
+## Sprint 033 Company Intelligence Persistence Workflow
+
+Sprint 033 moves Company Intelligence enrichment data toward persisted runtime use without adding new product features.
+
+Manual seed commands:
+
+```bash
+python -m alembic upgrade head
+python -m app.database.seed
+```
+
+The unified development seed command now runs in this order:
+
+1. Seed development assets from `app/database/seed_assets.py`.
+2. Create or update issuer-level `Company` records from seeded assets and link `assets.company_id`.
+3. Seed persisted `CompanyProfile` records from `app/database/company_profile_seed.py` through `app/database/seed_company_profiles.py`.
+4. Seed the development investor profile fallback.
+
+Company profile seed behavior:
+
+* inserts missing `company_profiles` rows
+* avoids duplicate profile records
+* fills missing fields where development fixture data is available
+* preserves verified profile fields and source metadata
+* logs inserted, skipped, updated, and missing-company counts
+* rolls back cleanly on SQLAlchemy errors
+* never runs automatically during FastAPI startup
+
+Standalone profile seed command:
+
+```bash
+python -m app.database.seed_company_profiles
+```
+
+Runtime validation status:
+
+* Docker CLI is installed: `Docker version 29.6.1`.
+* Docker Compose is installed: `Docker Compose version v5.3.0`.
+* Docker Desktop daemon is blocked locally: `Docker Desktop is unable to start`.
+* `python backend/scripts/check_database.py` reports PostgreSQL unavailable with connection timeouts on `localhost:5432`.
+* `python -m alembic current` loads configuration but defers revision lookup because PostgreSQL rejects or cannot complete the configured `investguide_user` connection.
+
+Because PostgreSQL is unavailable on this machine, persisted endpoint validation for `/api/v1/companies`, `/api/v1/companies/{ticker}`, `/api/v1/companies/{ticker}/profile`, `/api/v1/assets`, `/api/v1/assets/{ticker}`, and `/api/v1/assets/{ticker}/assessment` remains blocked until Docker Desktop starts or local PostgreSQL credentials are corrected.
+
+## Sprint 033.1 Local PostgreSQL Runtime Fix
+
+Sprint 033.1 fixed the local Docker/PostgreSQL backend runtime path.
+
+Root cause:
+
+* `backend/.env` contained a UTF-8 BOM, visible in some shells as `∩╗┐APP_NAME=InvestGuide Backend`.
+* Host port `5432` had multiple listeners: Docker internals and a separate local `postgres.exe` process.
+* Backend host connections to `localhost:5432` could hit the non-Docker PostgreSQL service, causing `password authentication failed for user "investguide_user"` even though credentials worked inside the Docker container.
+
+Fix applied:
+
+* Rewrote `backend/.env` as UTF-8 without BOM.
+* Remapped Docker PostgreSQL from host `5432` to host `5433` while keeping container port `5432`.
+* Updated `docker-compose.yml`, `backend/.env`, and `backend/.env.example` to use:
+
+```text
+DATABASE_URL=postgresql+psycopg://investguide_user:investguide_password@localhost:5433/investguide
+```
+
+Runtime validation:
+
+* `docker compose down -v`: completed and removed the old development volume.
+* `docker compose up -d`: completed and started `investguide-postgres`.
+* `docker ps`: showed `investguide-postgres` running with `0.0.0.0:5433->5432/tcp` and healthy status.
+* `docker exec investguide-postgres psql -U investguide_user -d investguide`: connected successfully.
+* `python -m alembic upgrade head`: applied all migrations through `20260703_0001`.
+* `python -m app.database.seed`: completed successfully.
+* `python backend/scripts/check_database.py`: reported database connected, migrations current, seed data present, and asset count 9.
+
+Backend smoke results on `http://127.0.0.1:8001/api/v1`:
+
+* `GET /health`: passed, database connected and migrations current.
+* `GET /assets`: passed, returned 9 seeded assets.
+* `GET /companies`: passed, returned 9 seeded companies.
+* `GET /companies/DLTA/profile`: passed, returned persisted CompanyProfile data.
+* `GET /assets/DLTA/assessment`: passed, returned deterministic assessment data.
+
+Note: `DELTA` is not the stored ticker. The canonical seeded ticker is `DLTA`, so `/companies/DELTA/profile` and `/assets/DELTA/assessment` correctly return 404 until an alias layer is intentionally designed.
+---
+
+## Authentication Dependency Stabilization
+
+Backend password hashing uses `passlib[bcrypt]` with bcrypt pinned to the compatible `4.0.x` line. The supported local combination is:
+
+* `passlib==1.7.4`
+* `bcrypt==4.0.1`
+
+This avoids the bcrypt metadata compatibility issue where newer bcrypt releases no longer expose `bcrypt.__about__`, while keeping bcrypt password hashing intact. Do not truncate passwords as a workaround.
+
+Local CORS defaults allow both `http://localhost:3000` and `http://127.0.0.1:3000` for frontend development.
+Local CORS note: development CORS now includes `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:3001`, and `http://127.0.0.1:3001` because Next.js may move to port 3001 when port 3000 is already occupied.
