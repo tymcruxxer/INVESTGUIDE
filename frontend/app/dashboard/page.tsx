@@ -62,7 +62,7 @@ export default function DashboardPage() {
       <motion.div className="space-y-6" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
         {assetsFallback || newsFallback || profileFallback ? (
           <div className="warning-panel">
-            Backend unavailable. Showing demo data for preview only.
+            Backend unavailable. Showing development preview data.
           </div>
         ) : null}
 
@@ -147,7 +147,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="premium-card p-6">
+        <section id="latest-news" className="premium-card p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold">Latest investment news</h2>

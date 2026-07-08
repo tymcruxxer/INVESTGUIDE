@@ -16,6 +16,7 @@ import {
   getExplainLikeIm18,
 } from "@/utils/demo-content";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
+import { normalizeTickerForApi } from "@/utils/tickers";
 import { CardSkeleton } from "@/components/skeleton";
 
 function formatMoney(value: number | undefined, currency: string) {
@@ -25,7 +26,7 @@ function formatMoney(value: number | undefined, currency: string) {
 
 export default function AssetDetailPage() {
   const params = useParams<{ ticker: string }>();
-  const ticker = (params?.ticker ?? "").toUpperCase();
+  const ticker = normalizeTickerForApi(params?.ticker);
 
   const assetQuery = useQuery({
     queryKey: ["asset-detail", ticker],
@@ -53,22 +54,23 @@ export default function AssetDetailPage() {
   const fallbackAsset = DEMO_ASSETS.find((asset) => asset.ticker === ticker) ?? null;
   const isNotFound = assetQuery.isError && (assetQuery.error as AxiosError)?.response?.status === 404 && !fallbackAsset;
   const usingFallback = assetQuery.isError && Boolean(fallbackAsset);
+  const newsUsingFallback = newsQuery.isError;
   const asset = backendAsset ?? fallbackAsset;
 
   const news = useMemo(() => {
     const backendNews = mapNewsArticles(newsQuery.data?.data);
-    if (backendNews.length > 0) return backendNews;
+    if (!newsUsingFallback) return backendNews;
     return DEMO_NEWS.filter((article) => article.asset_tickers.includes(ticker));
-  }, [newsQuery.data, ticker]);
+  }, [newsQuery.data, newsUsingFallback, ticker]);
 
   const education = useMemo(() => (asset ? getExplainLikeIm18(asset) : []), [asset]);
 
   return (
     <AppShell>
       <div className="space-y-6">
-        {usingFallback || newsQuery.isError ? (
+        {usingFallback || newsUsingFallback ? (
           <div className="warning-panel">
-            Backend unavailable. Showing demo data for preview only.
+            Backend unavailable. Showing development preview data.
           </div>
         ) : null}
 

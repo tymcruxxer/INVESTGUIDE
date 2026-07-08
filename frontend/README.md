@@ -524,3 +524,51 @@ npm.cmd run dev
 ```
 
 The public landing page routes Get Started actions to `/auth/signup` and Login actions to `/auth/login`.
+## Sprint 036 Real Backend Data Integration
+
+Sprint 036 tightened the manual demo path so frontend pages prefer persisted backend data and clearly label preview fallback content.
+
+Local API URL for manual testing:
+
+```powershell
+$env:NEXT_PUBLIC_API_URL="http://127.0.0.1:8001/api/v1"
+npm.cmd run dev
+```
+
+Backend-first behavior:
+
+* Dashboard uses backend investor profile, assets, and news where available.
+* Asset Explorer and Markets use `GET /api/v1/assets` before falling back to preview assets.
+* Asset detail uses `GET /api/v1/assets/{ticker}`, `GET /api/v1/assets/{ticker}/assessment`, and backend news data.
+* Company pages use `GET /api/v1/companies/{ticker}`, `GET /api/v1/companies/{ticker}/profile`, and `GET /api/v1/companies/{ticker}/assessment`.
+* Compare uses the backend asset catalog before falling back to preview assets.
+
+Fallback strategy:
+
+* Fallback content is shown only when the backend request fails or the backend is unavailable.
+* Fallback copy now says: `Backend unavailable. Showing development preview data.`
+* Company profile source transparency continues to show `Persisted Backend`, `Development Preview`, or `Unavailable`.
+
+Ticker routing:
+
+* The persisted Delta ticker is `DLTA`.
+* Frontend route helpers map `/company/delta` and `/assets/delta` to backend ticker `DLTA` for manual demos.
+* Search results route Delta asset/company results through the canonical ticker helper.
+
+Sprint 036 route smoke from the Next.js dev server on `http://localhost:3000` returned HTTP 200 for:
+
+* `/auth/signup`
+* `/auth/login`
+* `/onboarding`
+* `/dashboard`
+* `/assets`
+* `/assets/delta`
+* `/company/delta`
+* `/compare`
+* `/markets`
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.

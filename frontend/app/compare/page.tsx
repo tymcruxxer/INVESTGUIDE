@@ -41,7 +41,7 @@ export default function ComparePage() {
 
         {usingFallback ? (
           <div className="warning-panel">
-            Backend unavailable. Showing demo data for preview only.
+            Backend unavailable. Showing development preview data.
           </div>
         ) : null}
 

@@ -66,8 +66,8 @@ export function AssetExplorer() {
   return (
     <div className="space-y-6">
       {usingFallback ? (
-        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
-          Backend unavailable. Showing demo data for preview only.
+        <div className="warning-panel">
+          Backend unavailable. Showing development preview data.
         </div>
       ) : null}
 

@@ -9,41 +9,34 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 033.1
+Sprint Number: Sprint 036
 
-Sprint Goal: Fix the local Docker/PostgreSQL/backend runtime setup so InvestGuide can be manually tested end to end against a real PostgreSQL database.
+Sprint Goal: Make InvestGuide ready for manual product testing by using persisted backend data first and clearly labeling development preview fallback content.
 
 Current Tasks:
 
-* [x] Inspected `backend/.env` for UTF-8 BOM.
-* [x] Removed BOM and rewrote `backend/.env` as UTF-8 without BOM.
-* [x] Confirmed Docker Compose credentials match backend settings.
-* [x] Identified port `5432` conflict with a non-Docker `postgres.exe` process.
-* [x] Remapped Docker PostgreSQL host port from `5432` to `5433`.
-* [x] Updated `docker-compose.yml`, `backend/.env`, and `backend/.env.example`.
-* [x] Restarted Docker PostgreSQL with `docker compose down -v` and `docker compose up -d`.
-* [x] Applied Alembic migrations and ran unified development seed.
-* [x] Smoke-tested backend health, assets, companies, company profile, and assessment endpoints.
-* [x] Ran Python tests and frontend lint/type-check/build.
-* [x] Started frontend with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8001/api/v1` and verified requested routes return 200.
+* [x] Verified Docker PostgreSQL, migrations, unified seed, and database diagnostics.
+* [x] Smoke-tested backend health, auth, investor profile, assets, companies, news, company profile, and asset assessment endpoints.
+* [x] Added frontend canonical ticker helper so `delta` routes resolve to persisted `DLTA` data.
+* [x] Updated dashboard, asset explorer, asset detail, company page, compare, and search behavior to prefer backend data and label preview fallback clearly.
+* [x] Verified frontend manual-demo routes return HTTP 200 with the local API URL.
+* [x] Ran backend tests and frontend lint/type-check/build.
 * [x] Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
-
 Sprint Exit Criteria:
 
-* Local Docker PostgreSQL is reachable from the backend.
-* Migrations apply successfully.
-* Seed data runs successfully.
-* Backend smoke endpoints pass against PostgreSQL.
-* Frontend validation passes.
-* Frontend browser routes are reachable.
-* No product features or architecture changes are added beyond local runtime repair.
-
+* PostgreSQL is running through Docker Compose on host port `5433`.
+* Migrations and unified seed complete successfully.
+* Persisted backend asset/company/profile/assessment endpoints pass smoke tests.
+* Signup, login, `/auth/me`, and authenticated investor profile persistence pass backend smoke tests.
+* Frontend pages prefer backend data and explicitly label development preview fallback.
+* Frontend routes needed for manual demo return HTTP 200.
+* Backend tests and frontend lint/type-check/build pass.
 ---
 ## Module Status
 
-Frontend: In Progress - auth/login/signup pages, onboarding flow, protected shell, backend-connected dashboard, asset explorer, asset detail, company page with backend-first CompanyProfile loading, explicit Development Preview fallback, news sections, comparison page, and search routing exist
+Frontend: Stable - auth/login/signup pages, onboarding flow, protected shell, backend-connected dashboard, asset explorer, asset detail, company page with backend-first CompanyProfile loading, canonical DLTA route mapping, explicit Development Preview fallback, news sections, comparison page, and search routing exist
 
-Backend: Stable - FastAPI starts without reload and health endpoint works; DB-backed routes remain dependent on reachable PostgreSQL
+Backend: Stable - FastAPI starts on port 8001, health/auth/profile/assets/companies/news/assessment routes work against local Docker PostgreSQL when it is running
 
 Database: Stable Locally - Docker PostgreSQL 16 runs on host port `5433`, migrations apply, seed data loads, and diagnostics report database connected/current
 
@@ -153,7 +146,7 @@ The backend contains a basic JWT authentication foundation and user/profile link
 ## Current Blockers
 
 * Local non-Docker PostgreSQL still listens on host port `5432`; InvestGuide Docker PostgreSQL intentionally uses host port `5433` to avoid the conflict.
-* Backend API examples using `DELTA` return 404 because the canonical seeded ticker is `DLTA`; an alias/slug strategy is not implemented yet.
+* Resolved for frontend routes: `/company/delta` and `/assets/delta` now map to canonical seeded ticker `DLTA`. Backend API endpoints still expect canonical `DLTA` unless a future alias layer is designed.
 * Local PostgreSQL client commands `psql` and `pg_isready` are not available on PATH, but Docker `psql` works inside the `investguide-postgres` container.
 * AI recommendations, adaptive dashboards, portfolio tracking, watchlists, payments, live scraping, and schedulers remain intentionally unimplemented.
 * Real scraper fetching is implemented only as a disabled-by-default ZSE announcements pattern; broad live scraping remains intentionally unimplemented.
@@ -175,20 +168,19 @@ The backend contains a basic JWT authentication foundation and user/profile link
 ---
 ## Next Immediate Task
 
-Manual end-to-end product testing can now proceed against Docker PostgreSQL on port `5433`, backend on port `8001`, and frontend on port `3000`. Next implementation sprint should validate signup/login/onboarding/profile persistence through the browser before adding new product modules.
+Sprint 037 should perform hands-on browser QA of the full manual demo flow, then address only verified UX/runtime blockers before new feature work resumes.
 
 ---
 ## Definition of Done
 
-Sprint 033.1 is complete because the UTF-8 BOM was removed from `backend/.env`, Docker PostgreSQL was remapped to host port `5433` to avoid the local PostgreSQL conflict on `5432`, migrations and seed data completed successfully, backend smoke endpoints passed against PostgreSQL, frontend validation passed, and requested frontend routes returned 200.
+Sprint 036 is complete because Docker PostgreSQL is reachable, migrations and seed pass, backend auth/profile/assets/companies/profile/assessment smoke tests pass, frontend routes resolve with the local API URL, backend-first data loading and explicit development preview fallback are implemented, and backend plus frontend automated validation passed.
 
 ---
 ## Last Updated
 
-* Date: 2026-07-06
+* Date: 2026-07-08
 * AI Agent: Codex
-* Completed Task: Completed Sprint 033.1 local Docker/PostgreSQL/backend runtime repair and validation.
-
+* Completed Task: Completed Sprint 036 real backend data integration and manual demo readiness validation.
 ---
 ## Validation Results
 
@@ -327,3 +319,30 @@ Validation:
 * `npm.cmd run type-check`: passed.
 * `npm.cmd run build`: passed, 14 routes generated.
 * `python -m pytest -q`: passed, 177 tests passed, 1 non-blocking pytest cache warning.
+---
+## Sprint 036 Real Backend Data Integration Status
+
+Completed:
+
+* Added `frontend/utils/tickers.ts` for deterministic frontend route alias handling.
+* Mapped friendly `delta` routes/search results to canonical backend ticker `DLTA`.
+* Standardized frontend fallback copy to `Backend unavailable. Showing development preview data.`
+* Updated asset detail and company detail pages so backend-empty responses remain empty rather than silently injecting preview rows.
+* Preserved Company Profile data-origin labels: `Persisted Backend`, `Development Preview`, and `Unavailable`.
+
+Runtime validation:
+
+* Docker Compose PostgreSQL: running.
+* Alembic migration: current at `20260703_0001`.
+* Unified seed: completed.
+* Database diagnostics: connected, migrations current, seed data present, asset count 9.
+* Backend smoke: health, assets, companies, news, `companies/DLTA/profile`, `assets/DLTA/assessment`, signup, login, `/auth/me`, profile POST, and profile GET passed.
+* Frontend route smoke: `/auth/signup`, `/auth/login`, `/onboarding`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, and `/markets` returned HTTP 200.
+* News note: `/api/v1/news` is reachable but returned 0 persisted articles in the current local database.
+
+Validation:
+
+* `python -m pytest -q`: passed, 228 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.

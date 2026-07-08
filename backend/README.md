@@ -853,3 +853,42 @@ This avoids the bcrypt metadata compatibility issue where newer bcrypt releases 
 
 Local CORS defaults allow both `http://localhost:3000` and `http://127.0.0.1:3000` for frontend development.
 Local CORS note: development CORS now includes `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:3001`, and `http://127.0.0.1:3001` because Next.js may move to port 3001 when port 3000 is already occupied.
+## Sprint 036 Runtime Demo Validation
+
+Sprint 036 revalidated the local persisted backend path against Docker PostgreSQL on host port `5433`.
+
+Runtime commands used:
+
+```bash
+docker compose up -d
+cd backend
+python -m alembic upgrade head
+python -m app.database.seed
+cd ..
+python backend/scripts/check_database.py
+cd backend
+python -m uvicorn app.main:app --reload --port 8001
+```
+
+Backend smoke results on `http://127.0.0.1:8001/api/v1`:
+
+* `GET /health`: passed.
+* `GET /assets`: passed, returned 9 seeded assets.
+* `GET /companies`: passed, returned 9 seeded companies.
+* `GET /news`: passed, returned 0 persisted articles in the current local database.
+* `GET /companies/DLTA/profile`: passed, returned persisted company profile data.
+* `GET /assets/DLTA/assessment`: passed, returned deterministic assessment data.
+* `POST /auth/signup`: passed with a unique test account.
+* `POST /auth/login`: passed with the same test account.
+* `GET /auth/me`: passed with bearer token.
+* `POST /investor-profile`: passed with frontend-compatible onboarding values.
+* `GET /investor-profile`: passed and returned the persisted authenticated profile.
+
+Canonical ticker note:
+
+* Delta Corporation is seeded as `DLTA`.
+* The frontend maps friendly `delta` routes to `DLTA`; backend endpoints remain canonical and expect `DLTA` unless a future alias layer is designed.
+
+Known runtime limitation:
+
+* The current local PostgreSQL database has zero persisted news rows after the standard seed. News API reachability is healthy, but live or seeded article population remains a future data task.

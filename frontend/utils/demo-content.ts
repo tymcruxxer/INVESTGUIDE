@@ -1,4 +1,5 @@
 import type { Asset, Company, CompanyProfile, InvestorProfile } from "@/types";
+import { normalizeTickerForApi } from "@/utils/tickers";
 
 export interface DemoNewsItem {
   id: number;
@@ -118,22 +119,8 @@ export const DEMO_COMPANIES: Company[] = DEMO_ASSETS.filter((asset) => asset.ass
   updated_at: asset.updated_at,
 }));
 
-export const COMPANY_SLUGS: Record<string, string> = {
-  delta: "DLTA",
-  dlta: "DLTA",
-  econet: "ECO",
-  eco: "ECO",
-  innscor: "INN",
-  inn: "INN",
-  tigere: "TIGZ",
-  tigz: "TIGZ",
-  caledonia: "CMCL",
-  cmcl: "CMCL",
-};
-
 export function resolveCompanyTicker(slug: string) {
-  const normalized = slug.trim().toLowerCase();
-  return COMPANY_SLUGS[normalized] ?? slug.trim().toUpperCase();
+  return normalizeTickerForApi(slug);
 }
 export const DEMO_COMPANY_PROFILES: Record<string, CompanyProfile> = {
   DLTA: {

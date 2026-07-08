@@ -3226,3 +3226,76 @@ Validation Results:
 Session Summary:
 
 * Sprint 035 completed the color-system refinement layer on top of Sprint 034. The UI now uses a more restrained premium fintech palette and removes the remaining bright cyan, yellow, and pink accents that weakened the professional finance feel.
+---
+
+## Session 043
+
+Date: 2026-07-08
+
+Objective: Complete Sprint 036 by validating real backend data integration and preparing InvestGuide for manual product demos without adding new product features.
+
+Completed:
+
+* Read startup documentation and relevant architecture/product docs before implementation.
+* Verified backend API client defaults to `http://127.0.0.1:8001/api/v1` and auth calls use `/auth/signup` and `/auth/login`.
+* Added a shared frontend ticker helper for deterministic route alias handling.
+* Mapped `/company/delta`, `/assets/delta`, and Delta search results to canonical backend ticker `DLTA`.
+* Standardized fallback copy to `Backend unavailable. Showing development preview data.`
+* Updated asset detail and company detail pages so backend-empty responses do not silently become preview data.
+* Preserved explicit Company Profile data-origin states: `Persisted Backend`, `Development Preview`, and `Unavailable`.
+* Verified Docker PostgreSQL, migrations, seed, database diagnostics, backend smoke endpoints, auth/profile persistence, frontend route smoke, and automated validation.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Created:
+
+* `frontend/utils/tickers.ts`
+
+Files Modified:
+
+* `frontend/app/assets/[ticker]/page.tsx`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/app/compare/page.tsx`
+* `frontend/app/dashboard/page.tsx`
+* `frontend/components/layout/navbar.tsx`
+* `frontend/features/assets/asset-explorer.tsx`
+* `frontend/utils/demo-content.ts`
+* `frontend/utils/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Keep backend endpoints canonical (`DLTA`) while allowing frontend-friendly route aliases (`delta`) for manual demos.
+* Treat persisted backend data as primary; development preview data is only a labeled fallback when backend requests fail.
+* Do not inject preview news/assets when the backend successfully returns an empty list.
+* No AI, recommendations, portfolios, watchlists, live scraping, schedulers, or backend schema changes were added.
+
+Validation Results:
+
+* `docker compose up -d`: passed; `investguide-postgres` running.
+* `python -m alembic upgrade head`: passed.
+* `python -m app.database.seed`: passed.
+* `python backend/scripts/check_database.py`: passed; database connected, migrations current, seed data present, asset count 9.
+* Backend smoke on `http://127.0.0.1:8001/api/v1`: `/health`, `/assets`, `/companies`, `/news`, `/companies/DLTA/profile`, and `/assets/DLTA/assessment` passed.
+* Auth/profile smoke: signup, login, `/auth/me`, profile POST, and profile GET passed with frontend-compatible onboarding values.
+* Frontend route smoke on `http://localhost:3000`: `/auth/signup`, `/auth/login`, `/onboarding`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, and `/markets` returned HTTP 200.
+* `python -m pytest -q`: passed, 228 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Issues:
+
+* `/api/v1/news` is reachable but currently returns 0 persisted rows in the local database after the standard seed.
+* Backend API endpoints still expect canonical ticker `DLTA`; a backend alias layer remains a future architecture decision.
+* Browser-level click-through was represented by HTTP route checks and backend API smokes in this session; full human QA should still walk the UI manually.
+
+Session Summary:
+
+* Sprint 036 made the manual demo path more truthful and reliable. The local backend runs against PostgreSQL, persisted core data endpoints pass, auth/profile persistence passes, frontend routes load against the backend, and preview content is clearly labeled instead of masquerading as live data.
+
+Next Recommended Task:
+
+* Sprint 037: perform hands-on browser QA of signup, login, onboarding, dashboard, assets, company page, compare, logout/login persistence, and data-origin messaging; fix only verified demo blockers before adding new modules.

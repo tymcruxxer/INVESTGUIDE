@@ -173,7 +173,7 @@ export function getRiskLevelColor(level: "low" | "moderate" | "high" | "speculat
     case "low":
       return "text-emerald-500";
     case "moderate":
-      return "text-yellow-500";
+      return "text-amber-500";
     case "high":
       return "text-orange-500";
     case "speculative":

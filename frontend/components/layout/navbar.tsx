@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Bell, Briefcase, Building2, Moon, Newspaper, Search, Sun, UserCircle } from "lucide-react";
 import { useAuthStore, useThemeStore } from "@/store";
 import { DEMO_ASSETS, DEMO_COMPANIES, DEMO_NEWS } from "@/utils/demo-content";
+import { normalizeTickerForApi, tickerToRoute } from "@/utils/tickers";
 
 type SearchResult = {
   label: string;
@@ -32,34 +33,35 @@ export function Navbar() {
 
   const results = useMemo(() => {
     const query = search.trim().toLowerCase();
+    const canonicalQuery = normalizeTickerForApi(search).toLowerCase();
     if (query.length < 2) return [];
 
     const companies: SearchResult[] = DEMO_COMPANIES.filter((company) =>
-      [company.name, company.ticker, company.sector, company.industry]
+      [company.name, company.ticker, normalizeTickerForApi(company.ticker), company.sector, company.industry]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
+        .some((value) => String(value).toLowerCase().includes(query) || String(value).toLowerCase().includes(canonicalQuery))
     ).map((company) => ({
       label: company.name,
       detail: `${company.ticker} / ${company.exchange}`,
-      href: `/company/${company.ticker.toLowerCase()}`,
+      href: `/company/${tickerToRoute(company.ticker)}`,
       type: "Company",
     }));
 
     const assets: SearchResult[] = DEMO_ASSETS.filter((asset) =>
-      [asset.ticker, asset.company_name, asset.asset_type, asset.sector, asset.industry]
+      [asset.ticker, normalizeTickerForApi(asset.ticker), asset.company_name, asset.asset_type, asset.sector, asset.industry]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
+        .some((value) => String(value).toLowerCase().includes(query) || String(value).toLowerCase().includes(canonicalQuery))
     ).map((asset) => ({
       label: asset.company_name,
       detail: `${asset.ticker} / ${asset.asset_type}`,
-      href: `/assets/${asset.ticker.toLowerCase()}`,
+      href: `/assets/${tickerToRoute(asset.ticker)}`,
       type: "Asset",
     }));
 
     const news: SearchResult[] = DEMO_NEWS.filter((article) =>
       [article.title, article.summary, article.source, ...article.asset_tickers]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
+        .some((value) => String(value).toLowerCase().includes(query) || String(value).toLowerCase().includes(canonicalQuery))
     ).map((article) => ({
       label: article.title,
       detail: article.source,

@@ -77,9 +77,9 @@ export default function CompanyDetailPage() {
   const company = backendCompany ?? fallbackCompany;
   const relatedAssets = useMemo(() => {
     const backendAssets = mapAssets(backendDetail?.related_assets);
-    if (backendAssets.length > 0) return backendAssets;
+    if (!companyQuery.isError) return backendAssets;
     return DEMO_ASSETS.filter((asset) => asset.ticker === ticker);
-  }, [backendDetail, ticker]);
+  }, [backendDetail, companyQuery.isError, ticker]);
 
   const profileData = profileQuery.data?.data;
   const backendProfile = mapCompanyProfile(profileData?.profile);
@@ -94,9 +94,9 @@ export default function CompanyDetailPage() {
 
   const news = useMemo(() => {
     const backendNews = mapNewsArticles(backendDetail?.latest_news);
-    if (backendNews.length > 0) return backendNews;
+    if (!companyQuery.isError) return backendNews;
     return DEMO_NEWS.filter((article) => article.asset_tickers.includes(ticker));
-  }, [backendDetail, ticker]);
+  }, [backendDetail, companyQuery.isError, ticker]);
 
   const primaryAsset = relatedAssets[0] ?? DEMO_ASSETS.find((asset) => asset.ticker === ticker) ?? null;
   const education = primaryAsset ? getExplainLikeIm18(primaryAsset) : [];
@@ -108,7 +108,7 @@ export default function CompanyDetailPage() {
       <div className="space-y-6">
         {usingFallback ? (
           <div className="warning-panel">
-            Backend company data unavailable. Showing demo company intelligence for preview only.
+            Backend unavailable. Showing development preview data.
           </div>
         ) : null}
 
