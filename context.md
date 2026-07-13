@@ -3299,3 +3299,495 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 037: perform hands-on browser QA of signup, login, onboarding, dashboard, assets, company page, compare, logout/login persistence, and data-origin messaging; fix only verified demo blockers before adding new modules.
+---
+
+## Session 044
+
+Date: 2026-07-08
+
+Objective: Complete Sprint 037 by auditing and polishing the current InvestGuide product experience without adding new features or changing backend business logic.
+
+UX Issues Found:
+
+* Settings showed fake skeleton fields and clickable controls that did not save or perform real account actions.
+* Education showed permanent skeleton loaders, making it unclear whether content was loading or unavailable.
+* Dashboard news could fall back to preview data when the backend was reachable but returned no persisted articles.
+* Sidebar navigation lacked helper context and did not close cleanly on mobile link selection.
+* Global search had no feedback when a query produced zero matches.
+
+Completed:
+
+* Rebuilt Settings as an honest account/profile/status review page with clear next actions.
+* Rebuilt Education as a guided learning preview with useful topics, links into existing product surfaces, and a clear curriculum-empty state.
+* Added a Dashboard empty state for `No persisted news yet` when the backend news API returns an empty list.
+* Improved Sidebar helper labels, active `aria-current` states, mobile close behavior, and logout hover feedback.
+* Added global search no-results feedback with suggested queries and a browse-assets action.
+* Preserved all existing routes, auth flow, backend contracts, and product functionality.
+
+Files Modified:
+
+* `frontend/app/dashboard/page.tsx`
+* `frontend/app/education/page.tsx`
+* `frontend/app/settings/page.tsx`
+* `frontend/components/layout/navbar.tsx`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 228 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* Frontend route smoke on `http://localhost:3000`: `/`, `/auth/signup`, `/auth/login`, `/onboarding`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, `/markets`, `/education`, and `/settings` returned HTTP 200.
+* Backend endpoint smoke on `http://127.0.0.1:8001/api/v1`: `/health`, `/assets`, `/companies`, `/companies/DLTA/profile`, and `/assets/DLTA/assessment` passed.
+* Auth/profile smoke: signup, login, investor profile POST, and investor profile GET passed.
+
+Known Issues:
+
+* Full visual/browser QA with screenshots across desktop, tablet, and mobile remains recommended; this session used route/API smoke checks rather than a browser automation screenshot pass.
+* Notifications, password change, formal lessons, quizzes, portfolios, watchlists, AI, and live scraping remain intentionally unimplemented and are labeled accordingly where relevant.
+
+Session Summary:
+
+* Sprint 037 tightened the product experience around honesty, clarity, and intentional states. The biggest UX gaps were removed from Settings, Education, Dashboard news, Sidebar, and Search while preserving the existing architecture and business logic.
+
+Next Recommended Task:
+
+* Sprint 038: run screenshot-based desktop/tablet/mobile QA and fix only confirmed responsive layout, overflow, focus, or interaction polish defects.
+---
+
+## Session 045
+
+Date: 2026-07-10
+
+Objective: Complete Sprint 038 by adding a deterministic AI Research Engine foundation for assets and companies without LLMs, predictions, recommendations, or new product modules.
+
+Completed:
+
+* Added backend research response schema for structured AI Research cards.
+* Added deterministic opportunity, risk, evidence, education, question, summary, scoring, and composition services.
+* Added process-local caching for unchanged deterministic research inputs.
+* Added `GET /api/v1/assets/{ticker}/research`.
+* Added `GET /api/v1/companies/{ticker}/research`.
+* Added backend tests covering engines, safe payloads, and route response envelopes.
+* Added frontend `ResearchAssessment` types and API service methods.
+* Added reusable `ResearchPanel` UI.
+* Added AI Research sections to asset detail and company detail pages.
+* Updated backend README, frontend README, and PROJECT_STATE.md.
+
+Files Created:
+
+* `backend/app/schemas/research.py`
+* `backend/app/services/intelligence/education_engine.py`
+* `backend/app/services/intelligence/evidence_engine.py`
+* `backend/app/services/intelligence/models.py`
+* `backend/app/services/intelligence/opportunity_engine.py`
+* `backend/app/services/intelligence/question_engine.py`
+* `backend/app/services/intelligence/research_service.py`
+* `backend/app/services/intelligence/scoring.py`
+* `backend/app/services/intelligence/summary_engine.py`
+* `backend/tests/test_research_intelligence.py`
+* `frontend/features/assets/research-panel.tsx`
+
+Files Modified:
+
+* `backend/app/api/v1/assets.py`
+* `backend/app/api/v1/companies.py`
+* `backend/app/services/intelligence/risk_engine.py`
+* `frontend/app/assets/[ticker]/page.tsx`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* AI Research is deterministic and structured; it does not call OpenAI, Claude, Gemini, local LLMs, embeddings, RAG, or external AI services.
+* The research engine produces educational, evidence-based assessment cards rather than chat responses.
+* Existing asset/company assessment endpoints remain backward-compatible.
+* Future LLM integrations should enhance the deterministic payload, not replace it.
+* Research output avoids buy/sell wording, certainty, price targets, predictions, and personalized recommendations.
+
+Validation Results:
+
+* `python -m pytest -q` from `backend/`: passed, 184 tests, 1 non-blocking pytest cache permission warning.
+* `python -m pytest -q` from repository root: passed, 235 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Issues:
+
+* Research is rule-based and limited to available structured fields.
+* No live prices, financial statements, portfolio context, sentiment, embeddings, RAG, or LLM-generated summaries are included.
+* Runtime browser QA for the new research panels against a live backend is still recommended.
+
+Session Summary:
+
+* Sprint 038 turned the existing deterministic assessment foundation into a richer AI Research foundation. Assets and companies now expose structured research cards with opportunity, risk, evidence, education, ELI18, suggested questions, source transparency, versioning, and frontend display surfaces while preserving existing product behavior.
+
+Next Recommended Task:
+
+* Sprint 039: manually smoke-test `/assets/delta` and `/company/delta` against the running local backend to verify the new research cards render with persisted data, then fix only confirmed runtime/UI defects before expanding research inputs.
+---
+
+## Architecture Backlog Note - ResearchContext
+
+Date: 2026-07-10
+
+Decision Recorded:
+
+* Before expanding the AI Research Engine further, introduce a canonical `ResearchContext` object that bundles `company`, `asset`, `company_profile`, existing assessment output, future market data, news, metadata, and timestamps.
+* Future engines such as `OpportunityEngine`, `RiskEngine`, `EvidenceEngine`, and `EducationEngine` should receive this single context instead of each independently pulling fields.
+* This should mirror the successful `ScraperContext` pattern and make future data sources easier to incorporate, including financial statements, dividends, macroeconomic indicators, sector benchmarks, analyst consensus, news intelligence, and eventual LLM-generated educational explanations.
+* This is a backlog architecture enhancement only; no implementation was added in this note.
+---
+
+## Session 046
+
+Date: 2026-07-13
+
+Objective: Complete Sprint 039 by polishing and validating the AI Research experience without adding new intelligence capabilities, LLMs, predictions, recommendations, or backend architecture changes.
+
+UX Issues Found:
+
+* ResearchPanel hierarchy was too flat for a research-grade experience.
+* Evidence strength was present but not visually strong enough.
+* Opportunity and risk sections used long paragraphs and did not separate drivers, evidence, or watch items clearly.
+* Suggested questions were rendered as a plain list instead of exploration prompts.
+* Loading and error states reused generic cards instead of research-specific states.
+* Full screenshot/browser-device QA remains unavailable from this session environment; route/API smoke and server logs were used as validation evidence.
+
+Completed:
+
+* Rebuilt `ResearchPanel` as a structured research surface with a top-line evidence summary.
+* Added dedicated Opportunity, Risk, Evidence Strength, Education, ELI18, Suggested Questions, and Transparency sections.
+* Added semantic risk/evidence tones, score bars, hover states, focus rings, and collapsible detail sections.
+* Added clickable suggested-question chips routing to existing pages or anchors.
+* Added `ResearchPanelSkeleton` and `ResearchUnavailable` states.
+* Replaced generic research loading/error states on `/assets/[ticker]` and `/company/[ticker]`.
+* Smoke-tested backend research endpoints and frontend research routes against the local runtime.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Modified:
+
+* `frontend/features/assets/research-panel.tsx`
+* `frontend/app/assets/[ticker]/page.tsx`
+* `frontend/app/company/[ticker]/page.tsx`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Validation Results:
+
+* `python backend/scripts/check_database.py`: passed; database connected, migrations current, seed data present, asset count 9.
+* Backend smoke on `http://127.0.0.1:8001/api/v1`: `/health`, `/assets`, `/assets/DLTA`, `/assets/DLTA/research`, `/companies`, `/companies/DLTA`, `/companies/DLTA/research`, `/companies/DLTA/profile`, and `/news` returned 200.
+* Auth/profile smoke: signup, login, `/auth/me`, investor profile POST, and investor profile GET passed after using valid onboarding asset preference values.
+* Frontend route smoke on `http://localhost:3000`: `/`, `/auth/signup`, `/auth/login`, `/onboarding`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, `/markets`, `/education`, and `/settings` returned 200 after dev-server warmup.
+* `python -m pytest -q`: passed, 235 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Performance Observations:
+
+* `/assets/DLTA/research`: 200, approximately 45ms from operator smoke; backend log approximately 9ms after startup.
+* `/companies/DLTA/research`: 200, approximately 354ms from operator smoke; backend log approximately 140ms.
+* First frontend route hits were slow because Next.js dev server compiled pages on demand; warmed `/` returned 200 in approximately 570ms.
+
+Known Issues:
+
+* Full visual screenshot QA across desktop, tablet, and mobile remains recommended.
+* Research remains deterministic and rule-based with currently available structured fields only.
+* The first attempted investor profile POST used backend-internal asset type values and correctly failed validation; the rerun using frontend/onboarding values passed.
+
+Session Summary:
+
+* Sprint 039 transformed the research card from a functional output into a more polished, readable, and trustworthy research surface. It now answers what the evidence suggests, why it suggests that, how confident the engine is, and what the user can learn next, while preserving all existing product boundaries.
+
+Next Recommended Task:
+
+* Sprint 040: perform true interactive browser QA with screenshots across desktop, tablet, and mobile for research pages and core journeys; fix only confirmed responsive, console, hydration, or visual defects before expanding research data inputs.
+---
+
+## Session 047
+
+Date: 2026-07-13
+
+Objective: Complete Sprint 040 by adding deterministic cross-asset comparison, related investment reasoning, and a lightweight financial knowledge graph without LLMs, predictions, recommendations, portfolios, watchlists, alerts, or live scraping.
+
+Completed:
+
+* Added deterministic `comparison_engine.py` for asset/company comparison.
+* Added deterministic `related_engine.py` for related companies, sectors, asset types, and educational topic paths.
+* Added lightweight `knowledge_graph.py` for concept relationships and Learn Next topics.
+* Added `GET /api/v1/compare` supporting `asset_a` + `asset_b` or `company_a` + `company_b`.
+* Added `GET /api/v1/companies/{ticker}/related` for company research navigation.
+* Added frontend API methods and TypeScript contracts for comparison and related research payloads.
+* Updated `/compare` to display backend deterministic comparison output while preserving existing side-by-side asset cards.
+* Updated `/company/[ticker]` with Related Research, Related Companies, Learn Next chips, and relationship transparency.
+* Added backend tests for comparison engine, knowledge graph, related engine, compare endpoint, and related endpoint.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Created:
+
+* `backend/app/api/v1/compare.py`
+* `backend/app/services/intelligence/comparison_engine.py`
+* `backend/app/services/intelligence/knowledge_graph.py`
+* `backend/app/services/intelligence/related_engine.py`
+* `backend/tests/test_research_relationships.py`
+
+Files Modified:
+
+* `backend/app/api/v1/router.py`
+* `backend/app/api/v1/companies.py`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/app/compare/page.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Cross-asset and cross-company comparison remains deterministic and evidence-based.
+* The lightweight knowledge graph is an in-code concept map, not a graph database.
+* Related companies are ranked by shared sector, industry, exchange, asset type, and descriptive overlap.
+* Relationship links must explain why they exist and must not be presented as recommendations.
+* Process-local caching is used for deterministic comparison and relationship scoring where appropriate.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 241 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Issues:
+
+* Relationships are rule-based and limited to current structured data.
+* No graph database, financial statements, live prices, LLMs, predictions, recommendations, portfolios, watchlists, alerts, or live scraping are included.
+* Full browser screenshot QA across desktop, tablet, and mobile remains recommended after the new comparison and related-research UI.
+
+Session Summary:
+
+* Sprint 040 turned InvestGuide research pages into a connected learning network. Users can now compare assets through a backend deterministic engine and move from company research into related companies and Learn Next topics with visible relationship reasoning.
+
+Next Recommended Task:
+
+* Sprint 041: perform interactive browser QA for `/compare` and `/company/[ticker]` relationship sections, then fix only confirmed visual, responsive, or runtime issues before expanding relationship inputs.
+
+---
+
+## Session 048
+
+Date: 2026-07-13
+
+Objective: Complete Sprint 041 by polishing InvestGuide's existing product experience, navigation, motion, loading states, accessibility, and perceived performance without adding new product features or changing backend architecture/API contracts.
+
+UX Issues Found:
+
+* Global search supported Enter on the first result but lacked ArrowUp, ArrowDown, Escape, selected-result state, and richer combobox semantics.
+* Navigation active state was present but could be more visually obvious for fast scanning.
+* Loading states still used repeated ad hoc pulse blocks instead of a shared intentional skeleton style.
+* Button and card interactions were functional but could use subtler press/hover feedback.
+* Motion did not yet explicitly respect `prefers-reduced-motion`.
+
+Completed:
+
+* Added shared global polish utilities: `page-shell`, `skeleton-card`, `interactive-card`, press feedback for premium buttons, faster transition timing, and reduced-motion support.
+* Added page fade treatment to authenticated and public layouts.
+* Improved global search with ArrowDown, ArrowUp, Enter, Escape, active index management, clear action, combobox/listbox semantics, `aria-selected`, and active-result styling.
+* Improved sidebar active page affordance and mobile overlay animation.
+* Replaced several generic loading pulse blocks on core pages with the shared `skeleton-card` utility.
+* Runtime-smoked core pages and relationship APIs.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Modified:
+
+* `frontend/styles/globals.css`
+* `frontend/components/layout/navbar.tsx`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/components/layout/app-shell.tsx`
+* `frontend/app/dashboard/page.tsx`
+* `frontend/app/compare/page.tsx`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/app/assets/[ticker]/page.tsx`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 241 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* Runtime route smoke: `/`, `/auth/signup`, `/auth/login`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, `/markets`, `/education`, and `/settings` returned 200 from the Next.js dev server after page compilation.
+* Runtime API smoke: warmed `GET /api/v1/compare?asset_a=DLTA&asset_b=TIGZ` passed; warmed `GET /api/v1/companies/DLTA/related` passed with 4 related companies, 6 Learn Next topics, and 10 graph nodes.
+
+Browser QA Notes:
+
+* Dev-server logs showed route compilation and successful 200 responses without visible hydration/runtime warnings.
+* Full interactive DevTools console and screenshot QA across desktop/tablet/mobile remains recommended.
+* A backend health smoke returned `database: unavailable` during this session even though direct relationship endpoints and previous database diagnostics worked; re-run diagnostics during the next runtime QA sprint.
+
+Session Summary:
+
+* Sprint 041 improved the product feel without expanding functionality. Search is more keyboard-accessible, navigation is clearer, motion is more controlled, loading states are more consistent, and the UI has better interaction polish while preserving existing architecture and API contracts.
+
+Next Recommended Task:
+
+* Sprint 042: perform true interactive browser QA with screenshots across desktop, tablet, and mobile, focusing on search keyboard behavior, sidebar mobile behavior, `/compare`, `/company/delta`, and auth/onboarding flows; fix only confirmed visual, console, hydration, or responsive defects.
+
+---
+
+## Session 049
+
+Date: 2026-07-13
+
+Objective: Complete Sprint 042 by adding a deterministic News Intelligence Engine that explains financial events, evidence, relationships, and learning paths without LLMs, predictions, sentiment models, alerts, live scraping, or financial advice.
+
+Completed:
+
+* Created backend deterministic News Intelligence Engine at `backend/app/services/intelligence/news_engine.py`.
+* Added rule-based event classification for Earnings, Dividend, Expansion, Acquisition, Regulatory, Management, Product Launch, Partnership, Litigation, Macro Economy, Exchange, Commodity, Currency, and Market Update.
+* Added importance scoring with Low, Medium, and High labels plus explicit reasons.
+* Added evidence reporting with source quality, data completeness, confidence, data used, and missing data.
+* Added related company, sector, asset type, educational topic, Learn Next, and knowledge graph outputs.
+* Added `GET /api/v1/news/{id}/research` read-only endpoint using the existing response envelope.
+* Added focused backend tests for classification, importance, related companies, endpoint response shape, and missing-article behavior.
+* Added frontend `NewsResearch` TypeScript contracts and `newsService.getNewsResearch(id)`.
+* Created reusable dashboard News Intelligence panel at `frontend/features/news/news-intelligence-panel.tsx`.
+* Updated the dashboard latest-news section to fetch and render research for the latest backend article while disabling the research call during development preview fallback.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Created:
+
+* `backend/app/services/intelligence/news_engine.py`
+* `backend/tests/test_news_intelligence.py`
+* `frontend/features/news/news-intelligence-panel.tsx`
+
+Files Modified:
+
+* `backend/app/api/v1/news.py`
+* `frontend/app/dashboard/page.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* News Intelligence is deterministic and rule-based; no LLM, external AI, sentiment model, prediction, recommendation, or portfolio action was added.
+* Event classification prioritizes explicit event type over venue context, so regulatory/dividend events can outrank generic exchange mentions.
+* Related companies are surfaced only from explicit relationships, attached tickers/assets, or text matches against known companies.
+* Knowledge graph integration reuses the lightweight deterministic graph and adds article-to-event context.
+* Process-local caching is used for unchanged article research payloads.
+
+Validation Results:
+
+* `python -m pytest backend/tests/test_news_intelligence.py backend/tests/test_news_routes.py -q`: passed, 9 tests, 1 non-blocking pytest cache permission warning.
+* `python -m pytest -q`: passed, 247 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Issues:
+
+* News classification is keyword/rule-based and limited by available article fields.
+* Standard local seed currently may have zero persisted news articles, so the dashboard panel appears only when backend news data exists.
+* Full runtime/browser QA for the new panel against PostgreSQL-backed news articles remains recommended.
+
+Session Summary:
+
+* Sprint 042 turns InvestGuide news from a basic feed into an explainable financial learning surface. For a news article, the backend can now answer what happened, why it matters, what evidence supports the classification, which companies/concepts are connected, and what the user should learn next while preserving the educational-not-advisory boundary.
+
+Next Recommended Task:
+
+* Sprint 043: seed or ingest persisted development news articles and runtime-smoke `/api/v1/news/{id}/research` plus the dashboard News Intelligence panel against the local PostgreSQL-backed backend.
+
+---
+
+## Session 050
+
+Date: 2026-07-13
+
+Objective: Complete Sprint 043 by adding deterministic Business Intelligence, Industry Intelligence, competitor reasoning, and a Company Deep Dive surface without LLMs, predictions, recommendations, or personalized advice.
+
+Completed:
+
+* Created a deterministic backend Business Intelligence Engine.
+* Created deterministic Industry Intelligence and Competitor engines.
+* Added `GET /api/v1/companies/{ticker}/business`.
+* Added `GET /api/v1/industries/{industry}`.
+* Added backend tests for business, industry, competitor, and endpoint behavior.
+* Added frontend Business Intelligence and Industry Intelligence TypeScript contracts.
+* Added `companyService.getCompanyBusiness` and `industryService.getIndustry`.
+* Created the Company Deep Dive panel for `/company/[ticker]`.
+* Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
+
+Files Created:
+
+* `backend/app/services/intelligence/business_engine.py`
+* `backend/app/services/intelligence/industry_engine.py`
+* `backend/app/services/intelligence/competitor_engine.py`
+* `backend/app/api/v1/industries.py`
+* `backend/tests/test_business_intelligence.py`
+* `frontend/features/company/business-deep-dive.tsx`
+
+Files Modified:
+
+* `backend/app/api/v1/companies.py`
+* `backend/app/api/v1/router.py`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Business Intelligence remains deterministic and evidence-based.
+* The company deep dive is generated from company metadata, CompanyProfile enrichment, industry profiles, competitor relationships, and the existing knowledge graph.
+* Missing data is surfaced transparently instead of being inferred.
+* Competitor relationships are educational relationships, not recommendations.
+* No LLMs, predictions, buy/sell ratings, live scraping, alerts, portfolio optimization, or personalized financial advice were added.
+
+Validation Results:
+
+* `python -m pytest backend/tests/test_business_intelligence.py -q`: passed, 6 tests, 1 non-blocking pytest cache permission warning.
+* `python -m pytest backend/tests/test_business_intelligence.py backend/tests/test_research_relationships.py -q`: passed, 12 tests, 1 non-blocking pytest cache permission warning.
+* `python -m pytest -q`: passed, 253 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Issues:
+
+* Industry intelligence uses starter deterministic profiles and should be expanded as structured industry datasets are added.
+* Competitor mapping is limited by available seed/company metadata.
+* Frontend rendering is validated by type-check and production build; a dedicated component test runner is not configured.
+* Runtime smoke for `/api/v1/companies/DLTA/business`, `/api/v1/industries/Beverages`, and `/company/delta` remains recommended against the local PostgreSQL-backed backend.
+
+Session Summary:
+
+* Sprint 043 turns Company Intelligence into a deeper educational surface. Company pages can now explain what the business does, how it likely makes money from structured metadata, what drives revenue, what risks to watch, which companies are related, how the industry works, and what to learn next without crossing into advice or prediction.
+
+Next Recommended Task:
+
+* Sprint 044: runtime-smoke the new Business Intelligence endpoints and Company Deep Dive UI against the local PostgreSQL-backed backend, then expand deterministic industry datasets only where verified structured data exists.

@@ -30,27 +30,27 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 frontend/
-â”œâ”€â”€ app/                    # Next.js App Router pages
-â”‚   â”œâ”€â”€ layout.tsx         # Root layout with providers
-â”‚   â”œâ”€â”€ page.tsx           # Landing page
-â”‚   â”œâ”€â”€ dashboard/         # Dashboard page
-â”‚   â”œâ”€â”€ markets/           # Markets explorer
-â”‚   â”œâ”€â”€ assets/[ticker]/   # Asset detail page
-â”‚   â”œâ”€â”€ ai-assistant/      # AI chat interface
-â”‚   â”œâ”€â”€ education/         # Education hub
-â”‚   â””â”€â”€ settings/          # User settings
-â”œâ”€â”€ components/            # Reusable components
-â”‚   â”œâ”€â”€ layout/           # AppShell, Sidebar, Navbar
-â”‚   â”œâ”€â”€ error-boundary.tsx # Error handling
-â”‚   â””â”€â”€ skeleton.tsx       # Loading skeletons
-â”œâ”€â”€ features/             # Feature-specific modules
-â”œâ”€â”€ hooks/                # Custom React hooks
-â”œâ”€â”€ services/             # API client layer
-â”œâ”€â”€ store/                # Zustand state stores
-â”œâ”€â”€ types/                # TypeScript definitions
-â”œâ”€â”€ utils/                # Helper functions
-â”œâ”€â”€ styles/               # Global CSS and theme
-â””â”€â”€ providers/            # React providers
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ app/                    # Next.js App Router pages
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ layout.tsx         # Root layout with providers
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ page.tsx           # Landing page
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ dashboard/         # Dashboard page
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ markets/           # Markets explorer
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ assets/[ticker]/   # Asset detail page
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ ai-assistant/      # AI chat interface
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ education/         # Education hub
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ settings/          # User settings
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ components/            # Reusable components
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ layout/           # AppShell, Sidebar, Navbar
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ error-boundary.tsx # Error handling
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬Å¡   ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ skeleton.tsx       # Loading skeletons
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ features/             # Feature-specific modules
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ hooks/                # Custom React hooks
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ services/             # API client layer
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ store/                # Zustand state stores
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ types/                # TypeScript definitions
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ utils/                # Helper functions
+ÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ styles/               # Global CSS and theme
+ÃƒÂ¢Ã¢â‚¬ÂÃ¢â‚¬ÂÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ providers/            # React providers
 ```
 
 ## Technology Stack
@@ -71,31 +71,31 @@ frontend/
 
 ## Key Features
 
-### âœ¨ Architecture
+### ÃƒÂ¢Ã…â€œÃ‚Â¨ Architecture
 - **Modular Design**: Clean separation of concerns
 - **Type Safe**: Strict TypeScript throughout
 - **Scalable**: Feature-based folder structure
 - **Maintainable**: Clear naming conventions and patterns
 
-### ðŸŽ¨ Dark Mode First
+### ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¨ Dark Mode First
 - Premium fintech UI design
 - Smooth theme transitions
 - System preference detection
 - Persistent theme selection
 
-### ðŸ“± Responsive Design
+### ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â± Responsive Design
 - Mobile-first approach
 - Breakpoints: 640px, 768px, 1024px, 1600px
 - Touch-friendly navigation
 - Adaptive layouts
 
-### âš¡ Performance
+### ÃƒÂ¢Ã…Â¡Ã‚Â¡ Performance
 - Code splitting with App Router
 - Turbopack in development
 - Image optimization
 - Query caching strategies
 
-### ðŸ›¡ï¸ Robustness
+### ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â¡ÃƒÂ¯Ã‚Â¸Ã‚Â Robustness
 - Error boundaries
 - Loading states with skeletons
 - Comprehensive error handling
@@ -246,14 +246,14 @@ NEXT_PUBLIC_APP_URL=https://investguide.co.zw
 
 ## Next Steps
 
-1. âœ… Frontend foundation setup
-2. â³ Connect to backend API
-3. â³ Implement authentication flows
-4. â³ Add shadcn/ui components
-5. â³ Build feature-specific pages
-6. â³ Implement error handling
-7. â³ Add unit tests
-8. â³ Optimize performance
+1. ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Frontend foundation setup
+2. ÃƒÂ¢Ã‚ÂÃ‚Â³ Connect to backend API
+3. ÃƒÂ¢Ã‚ÂÃ‚Â³ Implement authentication flows
+4. ÃƒÂ¢Ã‚ÂÃ‚Â³ Add shadcn/ui components
+5. ÃƒÂ¢Ã‚ÂÃ‚Â³ Build feature-specific pages
+6. ÃƒÂ¢Ã‚ÂÃ‚Â³ Implement error handling
+7. ÃƒÂ¢Ã‚ÂÃ‚Â³ Add unit tests
+8. ÃƒÂ¢Ã‚ÂÃ‚Â³ Optimize performance
 
 ## Browser Support
 
@@ -274,11 +274,11 @@ Follow the coding patterns established in existing components:
 
 ## License
 
-Â© 2024 InvestGuide. All rights reserved.
+Ãƒâ€šÃ‚Â© 2024 InvestGuide. All rights reserved.
 
 ---
 
-**InvestGuide** - AI-powered investment intelligence for Zimbabwe ðŸ‡¿ðŸ‡¼
+**InvestGuide** - AI-powered investment intelligence for Zimbabwe ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¿ÃƒÂ°Ã…Â¸Ã¢â‚¬Â¡Ã‚Â¼
 
 ## Sprint 022 Auth and Onboarding Flow
 
@@ -539,8 +539,8 @@ Backend-first behavior:
 
 * Dashboard uses backend investor profile, assets, and news where available.
 * Asset Explorer and Markets use `GET /api/v1/assets` before falling back to preview assets.
-* Asset detail uses `GET /api/v1/assets/{ticker}`, `GET /api/v1/assets/{ticker}/assessment`, and backend news data.
-* Company pages use `GET /api/v1/companies/{ticker}`, `GET /api/v1/companies/{ticker}/profile`, and `GET /api/v1/companies/{ticker}/assessment`.
+* Asset detail uses `GET /api/v1/assets/{ticker}`, `GET /api/v1/assets/{ticker}/assessment`, `GET /api/v1/assets/{ticker}/research`, and backend news data.
+* Company pages use `GET /api/v1/companies/{ticker}`, `GET /api/v1/companies/{ticker}/profile`, `GET /api/v1/companies/{ticker}/assessment`, and `GET /api/v1/companies/{ticker}/research`.
 * Compare uses the backend asset catalog before falling back to preview assets.
 
 Fallback strategy:
@@ -572,3 +572,229 @@ Validation:
 * `npm.cmd run lint`: passed.
 * `npm.cmd run type-check`: passed.
 * `npm.cmd run build`: passed.
+## Sprint 037 Product Polish and UX Audit
+
+Sprint 037 focused on product polish, clarity, and QA without adding new modules or changing backend business logic.
+
+UX improvements:
+
+* Settings now shows a real account/profile review surface instead of fake skeleton fields and dead controls.
+* Education now shows useful learning-path previews and honest curriculum-empty states instead of permanent loading skeletons.
+* Dashboard news now shows an honest `No persisted news yet` empty state when the backend is reachable but has no articles.
+* Sidebar navigation now includes clearer helper labels, active `aria-current` states, and closes predictably on mobile navigation.
+* Global search now shows a helpful no-results state with a next action instead of silently disappearing.
+
+Manual QA route checks returned HTTP 200 for:
+
+* `/`
+* `/auth/signup`
+* `/auth/login`
+* `/onboarding`
+* `/dashboard`
+* `/assets`
+* `/assets/delta`
+* `/company/delta`
+* `/compare`
+* `/markets`
+* `/education`
+* `/settings`
+
+Validation:
+
+* `python -m pytest -q`: passed, 228 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+## Sprint 038 AI Research Frontend
+
+Sprint 038 adds the first structured AI Research display surfaces without adding chat, LLM calls, predictions, recommendations, portfolios, watchlists, live prices, or new product modules.
+
+Frontend additions:
+
+* `assetService.getAssetResearch(ticker)` calls `GET /api/v1/assets/{ticker}/research`.
+* `companyService.getCompanyResearch(ticker)` calls `GET /api/v1/companies/{ticker}/research`.
+* `ResearchAssessment` TypeScript response types were added in `types/index.ts`.
+* A reusable `ResearchPanel` renders opportunity, risk, evidence, education, Explain Like I am 18, suggested questions, and transparency metadata.
+* `/assets/[ticker]` now displays an AI Research section after the existing deterministic assessment.
+* `/company/[ticker]` now displays a Company AI Research section using backend company research data.
+
+The panel is intentionally not a chatbot. It presents deterministic, structured, evidence-based research from backend data and states that it is educational analysis, not financial advice or prediction.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed and generated 14 routes.
+* `python -m pytest -q`: passed from the repository root with 235 tests and 1 non-blocking pytest cache permission warning.
+## Sprint 039 Research Experience Polish
+
+Sprint 039 improves the user-facing AI Research experience without changing business logic or adding new AI capabilities.
+
+Research UI improvements:
+
+* Upgraded the reusable `ResearchPanel` into a more institutional research surface with stronger hierarchy and clearer sections.
+* Added a top-line `What the evidence suggests` summary.
+* Improved Opportunity display with score, current outlook, key drivers, and supporting evidence.
+* Improved Risk display with semantic risk tone, risk contributors, watch items, and uncertainty reducers.
+* Made Evidence Strength more prominent with data completeness, available data, missing data, and freshness details.
+* Made Education visually distinct with `Learn before you invest` positioning.
+* Reformatted Explain Like I am 18 as a friendly callout with Zimbabwe-context copy.
+* Changed Suggested Questions into clickable chips that route to existing pages or anchors.
+* Added dedicated `ResearchPanelSkeleton` and `ResearchUnavailable` states instead of generic loading/error cards.
+* Improved hover and focus states for research cards and chips.
+
+Runtime route smoke on `http://localhost:3000`:
+
+* `/`: 200 after dev-server warmup.
+* `/auth/signup`: 200.
+* `/auth/login`: 200.
+* `/onboarding`: 200.
+* `/dashboard`: 200.
+* `/assets`: 200.
+* `/assets/delta`: 200.
+* `/company/delta`: 200.
+* `/compare`: 200.
+* `/markets`: 200.
+* `/education`: 200.
+* `/settings`: 200.
+
+Validation:
+
+* `python -m pytest -q`: passed, 235 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known limitations:
+
+* Full visual browser QA with screenshots across desktop, tablet, and mobile remains recommended; this session validated route/runtime health and server logs from the local environment.
+## Sprint 040 Research Navigation
+
+Sprint 040 adds relationship-aware research navigation to the frontend while preserving the existing design system and routes.
+
+Frontend additions:
+
+* `/compare` now consumes `GET /api/v1/compare` when backend assets are available and displays deterministic business, opportunity, risk, evidence, and Learn Next comparison sections.
+* `/company/[ticker]` now consumes `GET /api/v1/companies/{ticker}/related` and displays Related Research, related companies, Learn Next topic chips, and relationship methodology.
+* New TypeScript contracts were added for `ComparePayload`, `CompanyRelatedResearch`, `KnowledgeGraphPayload`, related companies, and Learn Next topics.
+* Existing fallback behavior remains in place when the backend is unavailable.
+
+UX rule:
+
+* A research page should not end in a dead end. Company pages now guide users toward adjacent companies and educational concepts with visible relationship reasons.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `python -m pytest -q`: passed, 241 tests, 1 non-blocking pytest cache permission warning.
+
+Known limitations:
+
+* Relationship cards are deterministic and educational only.
+* No AI chat, predictions, watchlists, portfolio optimization, alerts, or live scraping were added.
+
+## Sprint 041 Premium Product Experience Polish
+
+Sprint 041 refined the existing UI without adding product features or changing backend contracts.
+
+UX and accessibility improvements:
+
+* Global search now supports ArrowDown, ArrowUp, Enter, and Escape keyboard behavior.
+* Search results use combobox/listbox semantics, active result highlighting, and `aria-selected` state.
+* Search has a clear action while active and a stronger no-results state.
+* Sidebar navigation now has a clearer active-page indicator and smoother mobile overlay transition.
+* AppShell and public pages use a shared `page-shell` fade-in treatment.
+* Shared `skeleton-card` and `interactive-card` utilities were added for more intentional loading and hover states.
+* Buttons now have subtle press feedback, and reduced-motion users are respected through a global media query.
+
+Runtime route smoke on `http://localhost:3000` returned HTTP 200 for:
+
+* `/`
+* `/auth/signup`
+* `/auth/login`
+* `/dashboard`
+* `/assets`
+* `/assets/delta`
+* `/company/delta`
+* `/compare`
+* `/markets`
+* `/education`
+* `/settings`
+
+Validation:
+
+* `python -m pytest -q`: passed, 241 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known limitations:
+
+* Full DevTools console inspection and screenshot-based browser QA across desktop, tablet, and mobile still requires an interactive browser pass.
+* Edge headless DOM inspection has been unreliable in this shell in prior validation attempts, so server logs and HTTP smoke checks were used here.
+
+## Sprint 042 News Intelligence Frontend
+
+Sprint 042 adds a premium News Intelligence panel to the existing dashboard latest-news section.
+
+Frontend additions:
+
+* `newsService.getNewsResearch(id)` calls `GET /api/v1/news/{id}/research`.
+* `NewsResearch` TypeScript contracts define event category, importance, evidence, related companies, learning topics, knowledge graph, and transparency fields.
+* `features/news/news-intelligence-panel.tsx` renders a reusable panel with:
+  * What happened?
+  * Why it matters
+  * Evidence
+  * Related companies
+  * Learn Next
+  * Related concepts
+  * Explain Like I am 18
+  * Event category and importance badges
+
+Dashboard behavior:
+
+* When backend news exists, the dashboard fetches research for the latest article and displays the News Intelligence panel.
+* When the backend is unavailable and development preview news is used, the research call is disabled.
+* The panel presents deterministic education and relationship context only. It does not show predictions, buy/sell recommendations, personalized advice, alerts, or sentiment model output.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `python -m pytest -q`: passed from the repository root with 247 tests and 1 non-blocking pytest cache permission warning.
+
+## Sprint 043 Company Deep Dive Frontend
+
+Sprint 043 adds a Company Deep Dive surface to `/company/[ticker]` using the deterministic backend Business Intelligence endpoint.
+
+Frontend additions:
+
+* `companyService.getCompanyBusiness(ticker)` calls `GET /api/v1/companies/{ticker}/business`.
+* `industryService.getIndustry(industry)` calls `GET /api/v1/industries/{industry}` for future industry explorer surfaces.
+* `BusinessIntelligence`, `IndustryIntelligence`, `CompetitorMap`, and related TypeScript contracts were added.
+* `features/company/business-deep-dive.tsx` renders a reusable deep-dive panel with:
+  * Business overview
+  * Business model
+  * Revenue drivers
+  * Industry intelligence
+  * Competitive position
+  * Operational risks
+  * Competitors
+  * Learn Next
+  * Transparency
+
+Company page behavior:
+
+* `/company/[ticker]` now fetches Business Intelligence alongside profile, assessment, research, related companies, and news.
+* If the backend business endpoint is unavailable, the page shows a clear unavailable state and preserves the existing company profile, assessment, related research, and news sections.
+* All outputs are deterministic, educational, and non-advisory.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `python -m pytest -q`: passed from the repository root with 253 tests and 1 non-blocking pytest cache permission warning.

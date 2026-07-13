@@ -8,6 +8,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Building2, FileText, GitCompare, Newspaper, Star, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/layout";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
+import { ResearchPanel, ResearchPanelSkeleton, ResearchUnavailable } from "@/features/assets/research-panel";
+import { BusinessDeepDive, BusinessDeepDiveSkeleton } from "@/features/company/business-deep-dive";
 import { CardSkeleton } from "@/components/skeleton";
 import { companyService } from "@/services/api";
 import {
@@ -71,6 +73,30 @@ export default function CompanyDetailPage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const researchQuery = useQuery({
+    queryKey: ["company-research", ticker],
+    queryFn: () => companyService.getCompanyResearch(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const businessQuery = useQuery({
+    queryKey: ["company-business", ticker],
+    queryFn: () => companyService.getCompanyBusiness(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const relatedQuery = useQuery({
+    queryKey: ["company-related", ticker],
+    queryFn: () => companyService.getCompanyRelated(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
   const backendDetail = companyQuery.data?.data;
   const backendCompany = mapCompany(backendDetail?.company);
   const fallbackCompany = DEMO_COMPANIES.find((company) => company.ticker === ticker) ?? null;
@@ -113,7 +139,7 @@ export default function CompanyDetailPage() {
         ) : null}
 
         {companyQuery.isLoading ? (
-          <div className="h-72 animate-pulse premium-card" />
+          <div className="skeleton-card h-72" />
         ) : isNotFound || !company ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <h1 className="text-2xl font-semibold">Company not found</h1>
@@ -161,7 +187,7 @@ export default function CompanyDetailPage() {
                 <div className="premium-card p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h2 className="text-xl font-semibold">Company Intelligence</h2>
+                      <h2 id="company-intelligence" className="text-xl font-semibold">Company Intelligence</h2>
                       <p className="mt-1 text-sm text-muted-foreground">Structured facts with source transparency.</p>
                     </div>
                     <ResearchStatusBadge status={verification.research_status} />
@@ -177,7 +203,7 @@ export default function CompanyDetailPage() {
                     </div>
                   ) : null}
                   {profileQuery.isLoading ? (
-                    <div className="mt-4 h-40 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />
+                    <div className="skeleton-card" />
                   ) : profile ? (
                     <div className="mt-4 space-y-4">
                       <p className="text-sm text-muted-foreground">{profile.business_summary ?? "No business summary is available yet."}</p>
@@ -208,6 +234,18 @@ export default function CompanyDetailPage() {
                   )}
                 </div>
 
+
+                <div id="business-deep-dive" className="space-y-4">
+                  {businessQuery.isLoading ? (
+                    <BusinessDeepDiveSkeleton />
+                  ) : businessQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Business Intelligence is unavailable right now. Company profile and assessment sections remain available below.
+                    </div>
+                  ) : businessQuery.data?.data ? (
+                    <BusinessDeepDive intelligence={businessQuery.data.data} />
+                  ) : null}
+                </div>
                 <div id="related-assets" className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Related Investments</h2>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -219,6 +257,55 @@ export default function CompanyDetailPage() {
                       </Link>
                     )) : <p className="text-sm text-muted-foreground">No related listed assets are connected yet.</p>}
                   </div>
+                </div>
+
+                <div className="premium-card p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold">Related Research</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">Deterministic links that explain what to explore next.</p>
+                    </div>
+                    <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">Not advice</span>
+                  </div>
+                  {relatedQuery.isLoading ? (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="skeleton-card" />
+                      <div className="skeleton-card" />
+                    </div>
+                  ) : relatedQuery.data?.data ? (
+                    <div className="mt-5 space-y-5">
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">You may also want to research</h3>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          {relatedQuery.data.data.related_companies.length > 0 ? relatedQuery.data.data.related_companies.map((item) => (
+                            <Link key={item.ticker} href={item.href} className="rounded-lg border border-white/10 bg-background-primary/70 p-4 transition hover:border-primary/60">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="font-semibold">{item.ticker}</p>
+                                <span className="text-xs text-muted-foreground">Score {item.relationship_score}</span>
+                              </div>
+                              <p className="mt-1 text-sm text-muted-foreground">{item.name}</p>
+                              <p className="mt-3 text-xs text-muted-foreground">Related because: {item.reasons[0] ?? "It shares investable-market context."}</p>
+                            </Link>
+                          )) : <p className="text-sm text-muted-foreground">No related companies are available yet.</p>}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Learn Next</h3>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {relatedQuery.data.data.educational_topics.map((topic) => (
+                            <Link key={topic.topic} href={topic.path} className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary transition hover:border-primary/70">
+                              {topic.topic}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4 text-sm text-muted-foreground">
+                        {relatedQuery.data.data.transparency.methodology}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-muted-foreground">Related research is unavailable right now.</p>
+                  )}
                 </div>
 
                 <div id="assessment" className="space-y-4">
@@ -235,6 +322,16 @@ export default function CompanyDetailPage() {
                       Company assessment is not available yet.
                     </div>
                   )}
+                </div>
+
+                <div className="space-y-4">
+                  {researchQuery.isLoading ? (
+                    <ResearchPanelSkeleton />
+                  ) : researchQuery.isError ? (
+                    <ResearchUnavailable subject="company" />
+                  ) : researchQuery.data?.data ? (
+                    <ResearchPanel research={researchQuery.data.data} title="Company AI Research" />
+                  ) : null}
                 </div>
               </div>
 
@@ -328,3 +425,6 @@ function ResearchStatusBadge({ status }: { status: ResearchStatus }) {
     </span>
   );
 }
+
+
+

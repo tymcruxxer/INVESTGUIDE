@@ -2,7 +2,7 @@
 
 FastAPI backend foundation for InvestGuide.
 
-This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, a manual development asset seed command, and the news intelligence foundation with read-only news routes, persisted content hashes for scalable duplicate detection, and a JWT authentication foundation with user-owned investor profiles.
+This package currently provides application setup, environment-based configuration, logging, middleware, database session wiring, SQLAlchemy base metadata conventions, Alembic migration scaffolding, response envelope helpers, exception handlers, API versioning, a health endpoint, the investment asset domain model layer, read-only asset API routes, deterministic asset/company research endpoints, a manual development asset seed command, and the news intelligence foundation with read-only news routes, persisted content hashes for scalable duplicate detection, and a JWT authentication foundation with user-owned investor profiles.
 
 Business features such as asset/news write endpoints, analytics, AI, production notifications, production deployment, portfolio tracking, watchlists, payments, and frontend personalization are intentionally not implemented yet.
 
@@ -807,7 +807,7 @@ Sprint 033.1 fixed the local Docker/PostgreSQL backend runtime path.
 
 Root cause:
 
-* `backend/.env` contained a UTF-8 BOM, visible in some shells as `∩╗┐APP_NAME=InvestGuide Backend`.
+* `backend/.env` contained a UTF-8 BOM, visible in some shells as `Ã¢Ë†Â©Ã¢â€¢â€”Ã¢â€ÂAPP_NAME=InvestGuide Backend`.
 * Host port `5432` had multiple listeners: Docker internals and a separate local `postgres.exe` process.
 * Backend host connections to `localhost:5432` could hit the non-Docker PostgreSQL service, causing `password authentication failed for user "investguide_user"` even though credentials worked inside the Docker container.
 
@@ -892,3 +892,174 @@ Canonical ticker note:
 Known runtime limitation:
 
 * The current local PostgreSQL database has zero persisted news rows after the standard seed. News API reachability is healthy, but live or seeded article population remains a future data task.
+## Sprint 038 AI Research Engine Foundation
+
+Sprint 038 adds a deterministic AI Research Engine foundation without connecting to any LLM, external AI provider, recommendation model, prediction model, or chatbot.
+
+Backend additions:
+
+* `GET /api/v1/assets/{ticker}/research` - returns structured research for an asset.
+* `GET /api/v1/companies/{ticker}/research` - returns structured research for a company using company facts, primary related asset data, and CompanyProfile context where available.
+* New schema: `app/schemas/research.py`.
+* New deterministic intelligence modules under `app/services/intelligence/`: opportunity, risk, evidence, education, question, summary, scoring, shared models, and research composition service.
+
+Research payload sections:
+
+* `overall_assessment`
+* `opportunity`
+* `risk`
+* `evidence`
+* `education`
+* `eli18`
+* `suggested_questions`
+* `transparency`
+* `generated_at`, `assessment_version`, and `engine_version`
+
+The research service is deterministic and evidence-based. It explains what available structured data suggests, records evidence strength and data used, and avoids buy/sell language, price targets, predictions, or personalized recommendations. A process-local cache prevents unnecessary recomputation for unchanged asset/company inputs.
+
+Future AI integration should enhance this structured research layer, not replace it. Any future LLM output should consume the deterministic research payload as source context and preserve the same safety constraints.
+
+Validation:
+
+* `python -m pytest -q` from the repository root: passed, 235 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+## Sprint 039 Research Experience Runtime Validation
+
+Sprint 039 polished and validated the AI Research runtime experience without adding new AI capabilities, LLM integrations, predictions, recommendations, portfolios, watchlists, alerts, live scraping, or backend architecture changes.
+
+Runtime validation on `http://127.0.0.1:8001/api/v1`:
+
+* `GET /health`: 200.
+* `GET /assets`: 200.
+* `GET /assets/DLTA`: 200.
+* `GET /assets/DLTA/research`: 200; measured at approximately 45ms from the operator smoke command and approximately 9ms in backend request logs after startup.
+* `GET /companies`: 200.
+* `GET /companies/DLTA`: 200.
+* `GET /companies/DLTA/research`: 200; measured at approximately 354ms from the operator smoke command and approximately 140ms in backend request logs.
+* `GET /companies/DLTA/profile`: 200.
+* `GET /news`: 200.
+* `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`, `POST /investor-profile`, and `GET /investor-profile`: passed with valid onboarding values.
+
+Performance observations:
+
+* Research endpoint response times are acceptable for the current deterministic, read-only implementation.
+* The process-local research cache remains in place for unchanged inputs.
+* No duplicate backend research calls or server-side regeneration issues were observed during route smoke; future browser tooling should verify client-side query duplication visually in DevTools if needed.
+
+Known limitations:
+
+* Browser QA was represented by local route/API smoke and server log checks from this environment; full interactive human QA across desktop, tablet, and mobile remains recommended.
+* Research remains rule-based and limited to structured fields currently available in the backend.
+## Sprint 040 Research Intelligence v2
+
+Sprint 040 extends deterministic research from single-subject analysis into relationship-aware financial intelligence.
+
+Backend additions:
+
+* `GET /api/v1/compare` compares either `asset_a` + `asset_b` or `company_a` + `company_b`.
+* `GET /api/v1/companies/{ticker}/related` returns related companies, related sectors, related asset types, Learn Next topics, and a lightweight knowledge graph.
+* `app/services/intelligence/comparison_engine.py` compares business context, opportunity framing, risk drivers, evidence strength, educational differences, and follow-up questions.
+* `app/services/intelligence/related_engine.py` ranks related companies using deterministic sector, industry, exchange, asset type, and descriptive overlap.
+* `app/services/intelligence/knowledge_graph.py` maps companies/assets to educational concepts such as Consumer Staples, Dividend Investing, REITs, Risk, and Diversification.
+
+Relationship outputs always include explanations for why links exist. They are educational research paths, not predictions, buy/sell recommendations, portfolio advice, or personalized financial advice.
+
+Validation:
+
+* `python -m pytest -q`: passed, 241 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known limitations:
+
+* Relationships are deterministic and rule-based.
+* No graph database is used.
+* No LLMs, external AI services, financial statements, live prices, portfolio context, predictions, or recommendations are included.
+
+## Sprint 041 Product Experience Polish
+
+Sprint 041 was a frontend-focused polish sprint. It did not add backend APIs, database tables, AI features, predictions, recommendations, portfolios, watchlists, notifications, live scraping, or API contract changes.
+
+Runtime notes:
+
+* `python -m pytest -q`: passed, 241 tests, 1 non-blocking pytest cache permission warning.
+* Runtime relationship API retry: `GET /api/v1/compare?asset_a=DLTA&asset_b=TIGZ` passed.
+* Runtime related API retry: `GET /api/v1/companies/DLTA/related` passed with 4 related companies, 6 Learn Next topics, and 10 knowledge graph nodes.
+* First cold `/api/v1/compare` request during smoke completed with 200 in backend logs after the client-side timeout; warmed retry passed.
+* A health smoke during this session returned `database: unavailable` even though direct relationship endpoints and prior diagnostics worked. Recheck `python backend/scripts/check_database.py` before relying on health database status in the next runtime QA pass.
+
+## Sprint 042 News Intelligence Engine
+
+Sprint 042 adds a deterministic News Intelligence layer for existing news articles. It does not use LLMs, sentiment models, predictions, buy/sell recommendations, alerts, live scraping, or portfolio advice.
+
+Backend additions:
+
+* `GET /api/v1/news/{id}/research` - returns deterministic research for one news article.
+* `app/services/intelligence/news_engine.py` - classifies article events, scores importance, evaluates evidence, links related companies/sectors/asset types, builds Learn Next topics, and integrates the lightweight knowledge graph.
+
+Research payload sections:
+
+* `event_category` - rule-based category such as Earnings, Dividend, Regulatory, Macro Economy, Exchange, Commodity, Currency, or Market Update.
+* `importance` - Low, Medium, or High with visible reasons.
+* `evidence` - source quality, data completeness, confidence, data used, and missing data.
+* `why_it_matters` and `explain_like_im_18` - deterministic educational explanations.
+* `related_companies`, `related_sectors`, `related_asset_types`, `related_topics`, `learn_next`, and `knowledge_graph`.
+* `transparency` - methodology and educational-not-advisory boundary.
+
+Design rules:
+
+* The engine explains what happened, why it matters, what users should learn next, and which companies or concepts are connected.
+* It never infers future prices and never generates investment advice.
+* Process-local caching avoids recomputing unchanged article research during the current runtime.
+
+Validation:
+
+* `python -m pytest -q`: passed, 247 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+## Sprint 043 Business Intelligence Engine
+
+Sprint 043 adds deterministic Business Intelligence and Industry Intelligence on top of the existing Company Intelligence layer. This is not an LLM feature and does not provide predictions, buy/sell recommendations, personalized advice, alerts, watchlists, portfolio optimization, or live scraping.
+
+Backend additions:
+
+* `GET /api/v1/companies/{ticker}/business` - returns deterministic company deep-dive intelligence.
+* `GET /api/v1/industries/{industry}` - returns deterministic industry overview, companies, risks, opportunities, Learn Next topics, and related industries.
+* `app/services/intelligence/business_engine.py` - composes company metadata, CompanyProfile facts, industry context, competitor reasoning, revenue drivers, operational risks, business maturity, geographic exposure, and knowledge graph expansion.
+* `app/services/intelligence/industry_engine.py` - maps industries to typical characteristics, common risks, common opportunities, economic sensitivity, cyclical/defensive profile, and educational summaries.
+* `app/services/intelligence/competitor_engine.py` - ranks direct competitors, similar businesses, and related businesses using shared industry, sector, exchange, market, and descriptive overlap.
+
+Business intelligence payload sections:
+
+* Business Summary
+* Business Model
+* Revenue Drivers
+* Competitive Position
+* Industry Position
+* Business Maturity
+* Geographic Exposure
+* Operational Risks
+* Industry Intelligence
+* Competitors
+* Knowledge Graph
+* Educational Notes
+* Transparency
+
+Architecture rules:
+
+* Uses persisted structured data or clearly marked development profile data.
+* Missing facts are marked as unavailable instead of fabricated.
+* Every label includes reasoning or methodology.
+* Competitor relationships are research paths, not recommendations.
+
+Validation:
+
+* `python -m pytest -q`: passed, 253 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.

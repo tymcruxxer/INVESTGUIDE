@@ -14,6 +14,7 @@ from app.models.asset import AssetStatus, AssetType, Exchange
 from app.schemas.asset import AssetRead
 from app.services import asset_service
 from app.services.intelligence.assessment_service import build_asset_assessment
+from app.services.intelligence.research_service import build_asset_research
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 
@@ -78,6 +79,30 @@ async def get_asset(
     return success_response(
         message="Asset retrieved successfully",
         data=_serialize_asset(asset),
+    )
+
+
+@router.get("/{ticker}/research", response_model=None)
+async def get_asset_research(
+    ticker: str,
+    db: Session = Depends(get_db),
+):
+    """Return deterministic AI Research for a ticker symbol."""
+    asset = asset_service.get_asset_by_ticker(db, ticker)
+    if asset is None:
+        normalized_ticker = ticker.strip().upper()
+        return JSONResponse(
+            status_code=404,
+            content=error_response(
+                message=f"Asset '{normalized_ticker}' was not found",
+                error_code="ASSET_NOT_FOUND",
+            ),
+        )
+
+    research_payload = build_asset_research(asset)
+    return success_response(
+        message="Asset research retrieved successfully",
+        data=research_payload,
     )
 
 

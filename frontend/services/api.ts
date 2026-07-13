@@ -9,13 +9,19 @@ import {
   ApiResponse,
   Asset,
   AssetAssessment,
+  BusinessIntelligence,
   AuthResponse,
   Company,
   CompanyDetail,
   CompanyProfileDetail,
+  CompanyRelatedResearch,
+  ComparePayload,
+  IndustryIntelligence,
   InvestorProfile,
   InvestorProfilePayload,
   NewsArticle,
+  NewsResearch,
+  ResearchAssessment,
   SignupResponse,
   User,
 } from "@/types";
@@ -189,6 +195,8 @@ export const assetService = {
 
   getAssetAssessment: (ticker: string) => get<AssetAssessment>(`/assets/${ticker}/assessment`),
 
+  getAssetResearch: (ticker: string) => get<ResearchAssessment>(`/assets/${ticker}/research`),
+
   getHistoricalPrices: (ticker: string, params?: { days?: number }) =>
     get(`/assets/${ticker}/prices`, params),
 
@@ -217,6 +225,8 @@ export const newsService = {
 
   getNewsById: (id: number) => get<NewsArticle>(`/news/${id}`),
 
+  getNewsResearch: (id: number) => get<NewsResearch>(`/news/${id}/research`),
+
   getNewsByAsset: (ticker: string, params?: { limit?: number }) =>
     get<NewsArticle[]>("/news", { ...(params ?? {}), asset: ticker }),
 };
@@ -235,7 +245,26 @@ export const companyService = {
 
   getCompanyAssessment: (ticker: string) => get<AssetAssessment>(`/companies/${ticker}/assessment`),
 
+  getCompanyBusiness: (ticker: string) => get<BusinessIntelligence>(`/companies/${ticker}/business`),
+
+  getCompanyResearch: (ticker: string) => get<ResearchAssessment>(`/companies/${ticker}/research`),
+
   getCompanyProfile: (ticker: string) => get<CompanyProfileDetail>(`/companies/${ticker}/profile`),
+
+  getCompanyRelated: (ticker: string) => get<CompanyRelatedResearch>(`/companies/${ticker}/related`),
+};
+
+export const comparisonService = {
+  compareAssets: (assetA: string, assetB: string) =>
+    get<ComparePayload>("/compare", { asset_a: assetA, asset_b: assetB }),
+
+  compareCompanies: (companyA: string, companyB: string) =>
+    get<ComparePayload>("/compare", { company_a: companyA, company_b: companyB }),
+};
+
+export const industryService = {
+  getIndustry: (industry: string) =>
+    get<IndustryIntelligence>(`/industries/${encodeURIComponent(industry)}`),
 };
 
 // ============================================================================
@@ -286,5 +315,7 @@ export function handleApiError(error: unknown): string {
   }
   return "An unknown error occurred";
 }
+
+
 
 

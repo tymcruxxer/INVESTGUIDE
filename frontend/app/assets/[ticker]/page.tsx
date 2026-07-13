@@ -16,6 +16,7 @@ import {
   getExplainLikeIm18,
 } from "@/utils/demo-content";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
+import { ResearchPanel, ResearchPanelSkeleton, ResearchUnavailable } from "@/features/assets/research-panel";
 import { normalizeTickerForApi } from "@/utils/tickers";
 import { CardSkeleton } from "@/components/skeleton";
 
@@ -50,6 +51,14 @@ export default function AssetDetailPage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const researchQuery = useQuery({
+    queryKey: ["asset-research", ticker],
+    queryFn: () => assetService.getAssetResearch(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 5,
+  });
+
   const backendAsset = mapAsset(assetQuery.data?.data);
   const fallbackAsset = DEMO_ASSETS.find((asset) => asset.ticker === ticker) ?? null;
   const isNotFound = assetQuery.isError && (assetQuery.error as AxiosError)?.response?.status === 404 && !fallbackAsset;
@@ -75,7 +84,7 @@ export default function AssetDetailPage() {
         ) : null}
 
         {assetQuery.isLoading ? (
-          <div className="h-72 animate-pulse premium-card" />
+          <div className="skeleton-card h-72" />
         ) : isNotFound || !asset ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <h1 className="text-2xl font-semibold">Asset not found</h1>
@@ -140,6 +149,14 @@ export default function AssetDetailPage() {
                 )}
               </div>
 
+              {researchQuery.isLoading ? (
+                <ResearchPanelSkeleton />
+              ) : researchQuery.isError ? (
+                <ResearchUnavailable subject="asset" />
+              ) : researchQuery.data?.data ? (
+                <ResearchPanel research={researchQuery.data.data} />
+              ) : null}
+
               <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
                 <div className="space-y-6">
                   <div className="premium-card p-6">
@@ -159,7 +176,7 @@ export default function AssetDetailPage() {
                 <div className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Related news</h2>
                   <div className="mt-4 space-y-3">
-                    {newsQuery.isLoading ? [1, 2].map((item) => <div key={item} className="h-24 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />) : news.length > 0 ? news.map((article) => (
+                    {newsQuery.isLoading ? [1, 2].map((item) => <div key={item} className="skeleton-card" />) : news.length > 0 ? news.map((article) => (
                       <article key={article.id} className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                         <p className="text-xs text-muted-foreground">{article.source} / {formatDisplayDate(article.published_at)}</p>
                         <h3 className="mt-2 text-base font-semibold">{article.title}</h3>

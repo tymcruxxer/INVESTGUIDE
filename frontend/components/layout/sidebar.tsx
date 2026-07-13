@@ -18,23 +18,24 @@ import {
   LogOut,
   Menu,
   Settings,
+  Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/markets", label: "Markets", icon: TrendingUp },
-  { href: "/assets", label: "Assets", icon: Briefcase },
-  { href: "/compare", label: "Compare", icon: GitCompare },
-  { href: "/ai-assistant", label: "AI Assistant", icon: BarChart3 },
-  { href: "/education", label: "Education", icon: BookOpen },
+  { href: "/dashboard", label: "Dashboard", icon: BarChart3, helper: "Your control center" },
+  { href: "/markets", label: "Markets", icon: TrendingUp, helper: "Browse the market" },
+  { href: "/assets", label: "Assets", icon: Briefcase, helper: "Research instruments" },
+  { href: "/compare", label: "Compare", icon: GitCompare, helper: "Compare tradeoffs" },
+  { href: "/ai-assistant", label: "AI Preview", icon: Sparkles, helper: "Coming intelligence layer" },
+  { href: "/education", label: "Education", icon: BookOpen, helper: "Build confidence" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { sidebarOpen, toggleSidebar } = useUIStore();
+  const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = () => {
@@ -47,7 +48,8 @@ export function Sidebar() {
       <button
         onClick={toggleSidebar}
         className="fixed left-4 top-4 z-40 rounded-lg border border-white/10 bg-primary p-2 text-primary-foreground shadow-lg shadow-blue-950/30 lg:hidden"
-        aria-label="Toggle navigation"
+        aria-label={sidebarOpen ? "Close navigation" : "Open navigation"}
+        aria-expanded={sidebarOpen}
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -58,6 +60,7 @@ export function Sidebar() {
           "lg:relative lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        aria-label="Primary navigation"
       >
         <div className="border-b border-white/10 p-6">
           <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1>
@@ -73,15 +76,21 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm smooth-transition",
+                  "group relative flex items-center gap-3 rounded-lg px-4 py-3 text-sm smooth-transition",
                   isActive
                     ? "bg-primary font-semibold text-primary-foreground shadow-lg shadow-blue-950/20"
                     : "text-muted-foreground hover:bg-background-tertiary hover:text-foreground"
                 )}
               >
-                <Icon size={20} />
-                <span>{item.label}</span>
+                {isActive ? <span className="absolute left-1 top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-blue-100" aria-hidden="true" /> : null}
+                <Icon size={20} className="shrink-0" />
+                <span className="min-w-0">
+                  <span className="block leading-tight">{item.label}</span>
+                  <span className={cn("mt-0.5 block text-[11px] leading-tight", isActive ? "text-blue-100" : "text-muted-foreground group-hover:text-slate-300")}>{item.helper}</span>
+                </span>
               </Link>
             );
           })}
@@ -90,6 +99,8 @@ export function Sidebar() {
         <div className="absolute bottom-0 left-0 right-0 space-y-2 border-t border-white/10 p-4">
           <Link
             href="/settings"
+            aria-current={pathname === "/settings" ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
             className={cn(
               "flex items-center gap-3 rounded-lg px-4 py-3 text-sm smooth-transition",
               pathname === "/settings"
@@ -102,7 +113,7 @@ export function Sidebar() {
           </Link>
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground smooth-transition hover:bg-background-tertiary"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground smooth-transition hover:bg-background-tertiary hover:text-foreground active:scale-[0.99]"
           >
             <LogOut size={20} />
             <span>Logout</span>
@@ -112,7 +123,7 @@ export function Sidebar() {
 
       {sidebarOpen && (
         <button
-          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-30 animate-fade-in bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={toggleSidebar}
           aria-label="Close navigation"
         />
@@ -120,3 +131,4 @@ export function Sidebar() {
     </>
   );
 }
+

@@ -92,6 +92,74 @@ export interface AssetAssessment {
   assessment_version: string;
 }
 
+
+export interface ResearchScoreSection {
+  label: string;
+  score: number;
+  summary: string;
+  reasons: string[];
+  supporting_evidence: string[];
+}
+
+export interface ResearchRiskSection {
+  overall_risk: string;
+  risk_level: "Low" | "Moderate" | "Elevated" | "High";
+  risk_score: number;
+  summary: string;
+  reasons: string[];
+  things_to_watch: string[];
+  supporting_evidence: string[];
+}
+
+export interface ResearchEvidenceSection {
+  strength: "Strong" | "Moderate" | "Limited" | "Experimental";
+  score: number;
+  summary: string;
+  reasons: string[];
+  data_used: string[];
+  missing_data: string[];
+}
+
+export interface ResearchEducationSection {
+  summary: string;
+  key_concepts: string[];
+  why_it_matters: string;
+}
+
+export interface ResearchEli18Section {
+  summary: string;
+  example: string;
+}
+
+export interface ResearchOverallSection {
+  label: string;
+  summary: string;
+  reasons: string[];
+}
+
+export interface ResearchTransparency {
+  data_used: string[];
+  assessment_generated: string;
+  evidence_strength: string;
+  last_updated?: string | null;
+  research_status: string;
+}
+
+export interface ResearchAssessment {
+  ticker: string;
+  subject_type: "asset" | "company";
+  overall_assessment: ResearchOverallSection;
+  opportunity: ResearchScoreSection;
+  risk: ResearchRiskSection;
+  evidence: ResearchEvidenceSection;
+  education: ResearchEducationSection;
+  eli18: ResearchEli18Section;
+  suggested_questions: string[];
+  transparency: ResearchTransparency;
+  generated_at: string;
+  assessment_version: string;
+  engine_version: string;
+}
 export interface Company {
   id: number;
   name: string;
@@ -156,6 +224,217 @@ export interface CompanyProfileDetail {
   verification: CompanyProfileVerification;
 }
 
+
+export interface LearnNextTopic {
+  topic: string;
+  why_it_matters: string;
+  path: string;
+}
+
+export interface KnowledgeGraphEdge {
+  from: string;
+  to: string;
+  reason: string;
+}
+
+export interface KnowledgeGraphPayload {
+  version: string;
+  root: string;
+  nodes: string[];
+  edges: KnowledgeGraphEdge[];
+  learn_next: LearnNextTopic[];
+}
+
+export interface RelatedCompanyItem {
+  ticker: string;
+  name: string;
+  sector: string;
+  industry: string;
+  exchange: string;
+  relationship_score: number;
+  reasons: string[];
+  href: string;
+}
+
+export interface RelatedNamedItem {
+  name: string;
+  reason: string;
+}
+
+export interface CompanyRelatedResearch {
+  version: string;
+  ticker: string;
+  related_companies: RelatedCompanyItem[];
+  related_sectors: RelatedNamedItem[];
+  related_asset_types: RelatedNamedItem[];
+  educational_topics: LearnNextTopic[];
+  knowledge_graph: KnowledgeGraphPayload;
+  transparency: {
+    methodology: string;
+    not_recommendation: string;
+  };
+}
+
+export interface CompareSubjectSummary {
+  ticker: string;
+  name: string;
+  sector: string;
+  industry: string;
+  exchange: string;
+  asset_type: string;
+  opportunity_label: string;
+  risk_level: string;
+  evidence_strength: string;
+}
+
+export interface CompareBusinessRow {
+  label: string;
+  left: string;
+  right: string;
+  insight: string;
+}
+
+export interface ComparePayload {
+  version: string;
+  subject_type: "asset" | "company";
+  left: CompareSubjectSummary;
+  right: CompareSubjectSummary;
+  summary: string;
+  business_comparison: {
+    summary: string;
+    rows: CompareBusinessRow[];
+  };
+  opportunity_comparison: {
+    summary: string;
+    left: { label: string; score: number; reasons: string[] };
+    right: { label: string; score: number; reasons: string[] };
+    differences: string[];
+  };
+  risk_comparison: {
+    summary: string;
+    left: { risk_level: string; score: number; drivers: string[] };
+    right: { risk_level: string; score: number; drivers: string[] };
+    things_to_watch: string[];
+  };
+  evidence_comparison: {
+    summary: string;
+    stronger_evidence: "left" | "right" | "similar";
+    left: { strength: string; score: number; data_used: string[] };
+    right: { strength: string; score: number; data_used: string[] };
+    why: string;
+  };
+  educational_comparison: {
+    summary: string;
+    plain_english: string[];
+  };
+  suggested_follow_up_questions: string[];
+  knowledge_paths: {
+    left: LearnNextTopic[];
+    right: LearnNextTopic[];
+  };
+  transparency: {
+    methodology: string;
+    not_recommendation: string;
+  };
+}
+export interface BusinessDriver {
+  name: string;
+  why_it_matters: string;
+}
+
+export interface BusinessCompetitorItem {
+  ticker: string;
+  name: string;
+  sector: string;
+  industry: string;
+  relationship_score: number;
+  relationship_type: string;
+  reasons: string[];
+  href: string;
+}
+
+export interface CompetitorMap {
+  version: string;
+  ticker: string;
+  direct_competitors: BusinessCompetitorItem[];
+  similar_businesses: BusinessCompetitorItem[];
+  related_businesses: BusinessCompetitorItem[];
+  transparency: {
+    methodology: string;
+    data_boundary: string;
+    not_recommendation: string;
+  };
+}
+
+export interface IndustryIntelligence {
+  version: string;
+  industry: string;
+  description: string;
+  typical_characteristics: string[];
+  common_risks: string[];
+  common_opportunities: string[];
+  economic_sensitivity: string;
+  cycle_profile: string;
+  educational_summary: string;
+  companies: Array<{ ticker: string; name: string; sector: string; reason: string }>;
+  learn_next: LearnNextTopic[];
+  related_industries: string[];
+  transparency: {
+    methodology: string;
+    data_boundary: string;
+  };
+}
+
+export interface BusinessIntelligence {
+  version: string;
+  ticker: string;
+  company_name: string;
+  business_summary: {
+    summary: string;
+    why_investguide_thinks_this: string[];
+  };
+  business_model: {
+    how_it_makes_money: string;
+    main_products_services: string[];
+    primary_customers: string;
+    distribution_model: string;
+    why_investguide_thinks_this: string[];
+  };
+  revenue_drivers: BusinessDriver[];
+  competitive_position: {
+    label: "Market Leader" | "Strong Competitor" | "Emerging Player" | "Niche Player";
+    confidence: "Low" | "Medium" | "High";
+    reasons: string[];
+  };
+  industry_position: {
+    industry: string;
+    summary: string;
+    peer_count: number;
+    why_investguide_thinks_this: string[];
+  };
+  business_maturity: {
+    label: "Early Growth" | "Growth" | "Mature" | "Mature with Stable Cash Flows" | "Transitional";
+    confidence: "Low" | "Medium" | "High";
+    reason: string;
+  };
+  geographic_exposure: {
+    primary_country: string;
+    headquarters: string;
+    summary: string;
+    why_investguide_thinks_this: string[];
+  };
+  operational_risks: BusinessDriver[];
+  industry_intelligence: IndustryIntelligence;
+  competitors: CompetitorMap;
+  knowledge_graph: KnowledgeGraphPayload;
+  educational_notes: Array<{ title: string; note: string }>;
+  transparency: {
+    methodology: string;
+    data_boundary: string;
+    not_advice: string;
+  };
+  generated_at: string;
+}
 export interface CompanyDetail {
   company: Company;
   related_assets: Asset[];
@@ -233,6 +512,62 @@ export interface NewsArticle {
   updated_at?: string;
 }
 
+export interface NewsEventCategory {
+  label: string;
+  reasons: string[];
+}
+
+export interface NewsImportance {
+  label: "Low" | "Medium" | "High";
+  score: number;
+  reasons: string[];
+}
+
+export interface NewsSourceQuality {
+  tier: string;
+  label: string;
+  score: number;
+  reason: string;
+}
+
+export interface NewsEvidence {
+  source_quality: NewsSourceQuality;
+  data_completeness: number;
+  confidence: "Low" | "Medium" | "High";
+  why_confidence: string[];
+  data_used: string[];
+  missing_data: string[];
+}
+
+export interface NewsRelatedCompany {
+  ticker: string;
+  name: string;
+  sector: string;
+  reason: string;
+}
+
+export interface NewsResearch {
+  article_id: number;
+  title: string;
+  summary?: string | null;
+  event_category: NewsEventCategory;
+  importance: NewsImportance;
+  evidence: NewsEvidence;
+  why_it_matters: string;
+  explain_like_im_18: string;
+  related_companies: NewsRelatedCompany[];
+  related_sectors: string[];
+  related_asset_types: string[];
+  related_topics: string[];
+  learn_next: LearnNextTopic[];
+  knowledge_graph: KnowledgeGraphPayload;
+  transparency: {
+    methodology: string;
+    not_advice: string;
+  };
+  generated_at: string;
+  engine_version: string;
+}
 export interface AiSummary {
   id: number;
   asset_id?: number;
@@ -415,3 +750,5 @@ export interface ChartDataPoint {
   value: number;
   sentiment?: number;
 }
+
+

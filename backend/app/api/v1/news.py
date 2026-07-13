@@ -8,12 +8,14 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.responses import error_response, success_response
 from app.database.session import get_db
 from app.schemas.news import NewsRead
-from app.services import news_service
+from app.services import company_service, news_service
+from app.services.intelligence.news_engine import build_news_research
 
 router = APIRouter(prefix="/news", tags=["news"])
 
@@ -32,6 +34,7 @@ def _serialize_news(article: Any) -> dict[str, Any]:
         "title": article.title,
         "summary": article.summary,
         "content": article.content,
+        "content_hash": getattr(article, "content_hash", None),
         "source": article.source,
         "author": article.author,
         "published_at": article.published_at,
@@ -84,6 +87,31 @@ async def list_news(
     )
 
 
+@router.get("/{news_id}/research", response_model=None)
+async def get_news_research(
+    news_id: int,
+    db: Session = Depends(get_db),
+):
+    """Return deterministic research context for a news article."""
+    article = news_service.get_news(db, news_id)
+    if article is None:
+        return JSONResponse(
+            status_code=404,
+            content=error_response(
+                message=f"News article '{news_id}' was not found",
+                error_code="NEWS_NOT_FOUND",
+            ),
+        )
+
+    try:
+        companies, _total = company_service.list_companies(db, limit=100)
+    except SQLAlchemyError:
+        companies = []
+    return success_response(
+        message="News research retrieved successfully",
+        data=build_news_research(article, companies),
+    )
+
 @router.get("/{news_id}", response_model=None)
 async def get_news(
     news_id: int,
@@ -104,3 +132,4 @@ async def get_news(
         message="News article retrieved successfully",
         data=_serialize_news(article),
     )
+

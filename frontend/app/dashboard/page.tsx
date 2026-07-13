@@ -5,6 +5,10 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout";
 import { assetService, investorProfileService, newsService } from "@/services/api";
+import {
+  NewsIntelligencePanel,
+  NewsIntelligenceSkeleton,
+} from "@/features/news/news-intelligence-panel";
 import { mapAssets, mapNewsArticles, formatDisplayDate } from "@/lib/mappers/data-mappers";
 import {
   buildRecommendedAssets,
@@ -49,13 +53,22 @@ export default function DashboardPage() {
   const backendAssets = useMemo(() => mapAssets(assetsQuery.data?.data), [assetsQuery.data]);
   const backendNews = useMemo(() => mapNewsArticles(newsQuery.data?.data), [newsQuery.data]);
   const assetsFallback = assetsQuery.isError || (!assetsQuery.isLoading && backendAssets.length === 0);
-  const newsFallback = newsQuery.isError || (!newsQuery.isLoading && backendNews.length === 0);
+  const newsFallback = newsQuery.isError;
   const profileFallback = profileQuery.isError && !storeProfile;
   const assets = assetsFallback ? DEMO_ASSETS : backendAssets;
   const news = newsFallback ? DEMO_NEWS : backendNews;
   const roadmap = buildRoadmap(profile);
   const recommendedAssets = buildRecommendedAssets(profile, assets);
   const personalization = getPersonalizationCopy(profile);
+  const primaryNewsId = news[0]?.id;
+
+  const newsResearchQuery = useQuery({
+    queryKey: ["news-research", primaryNewsId],
+    queryFn: () => newsService.getNewsResearch(primaryNewsId as number),
+    enabled: Boolean(primaryNewsId && !newsFallback),
+    retry: 1,
+    staleTime: 1000 * 60 * 10,
+  });
 
   return (
     <AppShell>
@@ -131,7 +144,7 @@ export default function DashboardPage() {
               <Link href="/assets" className="text-sm font-medium text-primary">Explore all</Link>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {assetsQuery.isLoading ? [1, 2, 3, 4].map((item) => <div key={item} className="h-32 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />) : recommendedAssets.map((asset) => (
+              {assetsQuery.isLoading ? [1, 2, 3, 4].map((item) => <div key={item} className="skeleton-card" />) : recommendedAssets.map((asset) => (
                 <Link key={asset.ticker} href={`/assets/${asset.ticker.toLowerCase()}`} className="rounded-lg border border-white/10 bg-background-primary/70 p-4 transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-glow">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -154,8 +167,17 @@ export default function DashboardPage() {
               <p className="mt-1 text-sm text-muted-foreground">Connected to the backend news API when available.</p>
             </div>
           </div>
+          {newsResearchQuery.isLoading ? (
+            <div className="mt-4">
+              <NewsIntelligenceSkeleton />
+            </div>
+          ) : newsResearchQuery.data?.data ? (
+            <div className="mt-4">
+              <NewsIntelligencePanel research={newsResearchQuery.data.data} />
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {newsQuery.isLoading ? [1, 2, 3, 4].map((item) => <div key={item} className="h-28 animate-pulse rounded-lg border border-white/10 bg-background-primary/70" />) : news.map((article) => (
+            {newsQuery.isLoading ? [1, 2, 3, 4].map((item) => <div key={item} className="skeleton-card" />) : news.length > 0 ? news.map((article) => (
               <article key={article.id} className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>{article.source}</span>
@@ -166,10 +188,17 @@ export default function DashboardPage() {
                 <h3 className="mt-2 text-base font-semibold">{article.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{article.summary}</p>
               </article>
-            ))}
+            )) : (
+              <div className="rounded-lg border border-dashed border-border bg-background-primary/70 p-5 lg:col-span-2">
+                <h3 className="text-base font-semibold">No persisted news yet</h3>
+                <p className="mt-2 text-sm text-muted-foreground">The backend news API is reachable, but no articles have been seeded or ingested yet. Start with the asset and company pages while the news pipeline is populated.</p>
+                <Link href="/assets" className="mt-4 inline-flex text-sm font-medium text-primary hover:text-blue-300">Browse assets instead</Link>
+              </div>
+            )}
           </div>
         </section>
       </motion.div>
     </AppShell>
   );
 }
+

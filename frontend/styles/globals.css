@@ -109,7 +109,7 @@
   }
 
   .smooth-transition {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-200 ease-out;
   }
 
   .text-gradient {
@@ -124,7 +124,7 @@
   }
 
   .premium-card-hover {
-    @apply hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow;
+    @apply hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow active:translate-y-0;
   }
 
   .premium-input {
@@ -132,11 +132,11 @@
   }
 
   .premium-button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-blue-500 to-primary px-4 py-3 font-semibold text-primary-foreground shadow-lg shadow-blue-950/40 smooth-transition hover:from-blue-400 hover:to-blue-600 disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-blue-500 to-primary px-4 py-3 font-semibold text-primary-foreground shadow-lg shadow-blue-950/40 smooth-transition hover:from-blue-400 hover:to-blue-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .premium-button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-background-secondary/80 px-4 py-3 font-semibold text-foreground smooth-transition hover:border-primary/40 hover:bg-background-tertiary;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-background-secondary/80 px-4 py-3 font-semibold text-foreground smooth-transition hover:border-primary/40 hover:bg-background-tertiary active:scale-[0.99];
   }
 
   .premium-badge {
@@ -154,5 +154,31 @@
   .warning-panel {
     @apply rounded-lg border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100;
   }
+  .page-shell {
+    @apply animate-fade-in;
+  }
+
+  .skeleton-card {
+    @apply animate-pulse rounded-lg border border-white/10 bg-gradient-to-br from-background-tertiary/80 via-background-secondary/80 to-background-tertiary/60;
+  }
+
+  .interactive-card {
+    @apply rounded-lg border border-white/10 bg-background-primary/70 smooth-transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-glow focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary;
+  }
+
 }
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
 

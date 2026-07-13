@@ -50,7 +50,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-auto bg-background-primary">
-          <div className="mx-auto max-w-[1920px] p-4 lg:p-6">{children}</div>
+          <div className="page-shell mx-auto max-w-[1920px] p-4 lg:p-6">{children}</div>
         </main>
       </div>
     </div>
@@ -67,8 +67,10 @@ export function PublicLayout({ children }: PublicLayoutProps) {
       <header className="flex h-16 items-center justify-between border-b border-white/10 bg-background-secondary/95 px-6 backdrop-blur-xl">
         <h1 className="text-2xl font-bold text-gradient">InvestGuide</h1><span className="hidden text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground sm:block">Financial Intelligence</span>
       </header>
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-8">{children}</main>
+      <main className="page-shell flex flex-1 items-center justify-center p-4 sm:p-8">{children}</main>
     </div>
   );
 }
+
+
 
