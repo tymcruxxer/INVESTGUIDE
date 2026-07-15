@@ -798,3 +798,133 @@ Validation:
 * `npm.cmd run type-check`: passed.
 * `npm.cmd run build`: passed, 14 routes generated.
 * `python -m pytest -q`: passed from the repository root with 253 tests and 1 non-blocking pytest cache permission warning.
+
+## Sprint 044 Financial Dashboard
+
+Sprint 044 adds a Company Financial Dashboard to `/company/[ticker]`.
+
+Frontend integration:
+
+* `companyService.getCompanyFinancials(ticker)` calls `GET /api/v1/companies/{ticker}/financials`.
+* `companyService.getCompanyFinancialHealth(ticker)` calls `GET /api/v1/companies/{ticker}/financial-health`.
+* `frontend/types/index.ts` includes Financial Intelligence, ratio, trend, financial health, statement row, and endpoint payload contracts.
+* `frontend/features/company/financial-dashboard.tsx` provides reusable financial components:
+  * `FinancialHealthCard`
+  * `FinancialRatioTable`
+  * `RevenuePanel`
+  * `ProfitabilityPanel`
+  * `CashFlowPanel`
+  * `BalanceSheetPanel`
+  * `TrendChart`
+  * `FinancialEducationPanel`
+
+The dashboard displays financial health, revenue, profitability, cash flow, balance sheet intelligence, ratios, trend analysis, educational notes, ELI18 explanation, data sources, available periods, and missing data.
+
+Transparency rules:
+
+* Development financial fixtures are labelled through backend transparency metadata.
+* Missing financial data is shown explicitly.
+* The dashboard remains educational and does not show predictions, buy/sell recommendations, portfolio advice, alerts, or AI-generated advice.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* Backend validation: `python -m pytest -q` passed with 260 tests.
+
+## Sprint 045 Financial Dashboard Runtime Notes
+
+Sprint 045 validates the Company Financial Dashboard against PostgreSQL-backed financial rows and improves empty/error behavior.
+
+Runtime behavior:
+
+* `/company/delta` route-smoke returned HTTP 200 from the Next.js dev server.
+* The frontend was started with `NEXT_PUBLIC_API_URL=http://127.0.0.1:8010/api/v1` because local port `8001` was occupied by a stale listener during validation.
+* The dashboard consumes `GET /api/v1/companies/{ticker}/financials` and respects backend transparency metadata.
+
+Financial states:
+
+* When financial statements exist, the complete dashboard renders.
+* When no persisted statement rows exist, the page shows: `Financial statements are not available for this company yet.`
+* When the backend is unavailable, the financial section shows: `Financial Intelligence is temporarily unavailable.`
+* The UI does not inject Delta or other preview financial rows for unrelated companies.
+* Development financial data is exposed through the backend `development_data` transparency flag and labelled in the dashboard.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* Backend validation: `python -m pytest -q` passed with 268 tests.
+
+## Sprint 046 Dividend Intelligence UI
+
+The company page now includes a Dividend Intelligence section on `/company/[ticker]`.
+
+States:
+
+* Verified backend dividend records: render persisted dividend history and source transparency.
+* Development dividend records: render the dashboard with a clear `Development Preview` label.
+* No dividend records: show an honest empty state explaining that missing platform data is not proof that no dividend was paid.
+* Backend unavailable: show `Dividend Intelligence is temporarily unavailable` without injecting fallback dividend data into another company.
+
+The UI displays dividend status, historical dividend rows, yield availability, payout ratio, cash payout ratio, growth, sustainability, things to watch, educational notes, ELI18 copy, source transparency, and suggested learning topics.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+* `/company/delta`: returned HTTP 200 against backend `http://127.0.0.1:8011/api/v1`.
+
+## Sprint 047 Data Ingestion Contract Note
+
+Sprint 047 adds a backend-only verified data pipeline framework. The frontend contract is unchanged: company, asset, news, financial, dividend, and intelligence screens continue to read from existing backend APIs.
+
+The frontend should not branch on whether data came from JSON, CSV, ZSE, VFEX, annual reports, APIs, or manual curation. Source provenance and development-preview transparency should continue to come from backend payload metadata and existing UI transparency sections.
+
+## Sprint 048 Frontend Data Contract Note
+
+Sprint 048 completes additional backend ingestion coverage without changing frontend contracts. The frontend continues to read company, asset, news, financial, dividend, and intelligence data from existing backend APIs.
+
+Frontend behavior remains source-agnostic:
+
+* The UI does not branch on JSON, CSV, future ZSE/VFEX connectors, annual reports, APIs, or manual curation.
+* Source transparency and development-preview labels continue to come from backend payload metadata.
+* Market snapshot reference prices are consumed indirectly through existing intelligence endpoints, not through a new frontend-specific data path.
+
+Route smoke validation:
+
+* `/company/delta`: HTTP 200 from Next.js dev server.
+* `/assets/delta`: HTTP 200 from Next.js dev server.
+* `/compare`: HTTP 200 from Next.js dev server.
+* `/dashboard`: HTTP 200 from Next.js dev server.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed after rerunning separately from `next build`; the first concurrent run hit a transient `.next/types` regeneration race.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+## Sprint 049 Internal Data Operations UI
+
+Sprint 049 adds internal operator pages that are not linked from public investor navigation:
+
+* `/internal/data-operations`
+* `/internal/data-operations/runs/[id]`
+
+These pages consume development-guarded backend endpoints under `/api/v1/internal/...` and show pipeline health, recent runs, source health, entity quality, rejection filtering, run metadata, issue-code distribution, retry guidance, and safe issue details.
+
+The frontend does not add public ingestion controls and does not expose write/import actions. The dashboard is intentionally practical and operations-focused rather than investor-facing.
+
+Route smoke validation:
+
+* `/internal/data-operations`: HTTP 200 on Next.js dev server port `3021`.
+* `/internal/data-operations/runs/23`: HTTP 200 on Next.js dev server port `3021`.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 15 routes generated.

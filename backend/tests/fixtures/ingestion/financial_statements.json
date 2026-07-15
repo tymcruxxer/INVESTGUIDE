@@ -1,0 +1,25 @@
+{
+  "records": [
+    {
+      "ticker": "DLTA",
+      "fiscal_year": 2024,
+      "period": "annual",
+      "currency": "ZWG",
+      "revenue": "1000000.00",
+      "cost_of_sales": "600000.00",
+      "gross_profit": "400000.00",
+      "operating_profit": "220000.00",
+      "profit_before_tax": "200000.00",
+      "net_profit": "150000.00",
+      "interest_expense": "10000.00"
+    },
+    {
+      "ticker": "ECO",
+      "fiscal_year": 2024,
+      "period": "annual",
+      "currency": "ZWG",
+      "revenue": "850000.00",
+      "net_profit": "120000.00"
+    }
+  ]
+}

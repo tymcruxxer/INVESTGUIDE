@@ -1,0 +1,33 @@
+{
+  "records": [
+    {
+      "company_ticker": "DLTA",
+      "fiscal_year": 2024,
+      "period": "annual",
+      "currency": "ZWG",
+      "operating_cash_flow": "118000000",
+      "investing_cash_flow": "-25000000",
+      "financing_cash_flow": "-30000000",
+      "net_cash_flow": "63000000",
+      "capital_expenditure": "20000000",
+      "free_cash_flow": "98000000"
+    },
+    {
+      "company_ticker": "ECO",
+      "fiscal_year": 2024,
+      "period": "annual",
+      "currency": "ZWG",
+      "operating_cash_flow": "100",
+      "investing_cash_flow": "-20",
+      "financing_cash_flow": "-10",
+      "net_cash_flow": "10"
+    },
+    {
+      "company_ticker": "",
+      "fiscal_year": 2024,
+      "period": "annual",
+      "currency": "ZWG",
+      "operating_cash_flow": "100"
+    }
+  ]
+}

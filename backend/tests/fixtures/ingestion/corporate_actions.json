@@ -1,0 +1,33 @@
+{
+  "records": [
+    {
+      "company_ticker": "DLTA",
+      "asset_ticker": "DLTA",
+      "action_type": "Dividend",
+      "title": "Development fixture dividend announcement",
+      "announcement_date": "2024-06-30",
+      "effective_date": "2024-08-02",
+      "record_date": "2024-07-19",
+      "currency": "USD",
+      "amount": "0.02",
+      "description": "Fixture corporate action; dividend records remain separate and are not double-counted."
+    },
+    {
+      "company_ticker": "ECO",
+      "asset_ticker": "ECO",
+      "action_type": "Rights Issue",
+      "title": "Development fixture rights issue",
+      "announcement_date": "2024-05-01",
+      "effective_date": "2024-05-30",
+      "ratio": "1:5",
+      "description": "Fixture corporate action for pipeline validation."
+    },
+    {
+      "company_ticker": "DLTA",
+      "asset_ticker": "DLTA",
+      "action_type": "Split",
+      "announcement_date": "2024-06-01",
+      "effective_date": "2024-05-01"
+    }
+  ]
+}

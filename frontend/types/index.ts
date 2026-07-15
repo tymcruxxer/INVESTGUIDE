@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Type Definitions for InvestGuide Frontend
  * Shared TypeScript types used across the application
  */
@@ -435,6 +435,289 @@ export interface BusinessIntelligence {
   };
   generated_at: string;
 }
+
+export interface FinancialRatio {
+  name: string;
+  value: number | null;
+  interpretation: string;
+  why_it_matters: string;
+  educational_explanation: string;
+}
+
+export interface FinancialTrend {
+  metric: string;
+  direction: "Increasing" | "Stable" | "Declining" | "Mixed" | "Insufficient Data";
+  values: Array<{ period: number | string | null; value: number | null }>;
+  explanation: string;
+  why_it_matters: string;
+}
+
+export interface FinancialHealth {
+  label: "Excellent" | "Strong" | "Healthy" | "Moderate" | "Weak" | "Concerning";
+  score: number;
+  why: string;
+  evidence: string[];
+  cautions: string[];
+  missing_data: string[];
+  uncertainty: "Low" | "Medium" | "High";
+}
+
+export interface FinancialStatementRow {
+  id: number;
+  company_id: number;
+  fiscal_year: number;
+  period: string;
+  currency?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  is_development_data: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface FinancialIntelligence {
+  ticker: string;
+  company_name: string;
+  financial_health: FinancialHealth;
+  revenue_analysis: {
+    current_revenue: number | null;
+    trend: string;
+    explanation: string;
+    why_it_matters: string;
+  };
+  profitability_analysis: {
+    net_margin: FinancialRatio;
+    operating_margin: FinancialRatio;
+    net_profit_trend: FinancialTrend;
+    explanation: string;
+  };
+  liquidity_analysis: {
+    current_ratio: FinancialRatio;
+    quick_ratio: FinancialRatio;
+    working_capital: number | null;
+    explanation: string;
+  };
+  leverage_analysis: {
+    debt_to_equity: FinancialRatio;
+    debt_ratio: FinancialRatio;
+    total_debt: number | null;
+    explanation: string;
+  };
+  cash_flow_analysis: {
+    operating_cash_flow: number | null;
+    free_cash_flow: number | null;
+    operating_cash_flow_ratio: FinancialRatio;
+    trend: FinancialTrend;
+    explanation: string;
+  };
+  growth_characteristics: {
+    label: string;
+    revenue_trend: FinancialTrend;
+    profit_trend: FinancialTrend;
+    explanation: string;
+  };
+  stability_assessment: {
+    label: string;
+    watch_items: string[];
+    explanation: string;
+  };
+  revenue_quality: {
+    revenue_drivers: string[];
+    revenue_concentration: string;
+    recurring_vs_variable: string;
+    business_stability: string;
+    educational_explanation: string;
+    current_revenue: number | null;
+  };
+  balance_sheet_intelligence: {
+    assets: number | null;
+    liabilities: number | null;
+    equity: number | null;
+    working_capital: number | null;
+    liquidity: string;
+    debt: string;
+    financial_flexibility: string;
+  };
+  ratios: FinancialRatio[];
+  trend_analysis: FinancialTrend[];
+  educational_summary: string;
+  explain_like_im_18: string;
+  knowledge_graph: {
+    nodes: Array<{ id: string; label: string; type: string }>;
+    edges: Array<{ from: string; to: string; relationship: string }>;
+  };
+  transparency: {
+    data_sources: string[];
+    available_periods: string[];
+    missing_data: string[];
+    evidence_used: string[];
+    last_updated?: string | null;
+    development_data: boolean;
+    methodology: string;
+    not_advice: string;
+    engine_version: string;
+    methodology_version: string;
+  };
+  generated_at: string;
+}
+
+export interface CompanyFinancialsPayload {
+  company: Company;
+  income_statements: FinancialStatementRow[];
+  balance_sheets: FinancialStatementRow[];
+  cash_flow_statements: FinancialStatementRow[];
+  intelligence: FinancialIntelligence;
+}
+
+export interface CompanyFinancialHealthPayload {
+  ticker: string;
+  company_name: string;
+  financial_health: FinancialHealth;
+  ratios: FinancialRatio[];
+  trend_analysis: FinancialTrend[];
+  transparency: FinancialIntelligence["transparency"];
+}
+export interface DividendRecord {
+  id: number;
+  company_id: number;
+  asset_id?: number | null;
+  announcement_date?: string | null;
+  record_date?: string | null;
+  ex_dividend_date?: string | null;
+  payment_date?: string | null;
+  fiscal_year?: number | null;
+  dividend_type: "Interim" | "Final" | "Special" | "Other";
+  dividend_per_share?: number | null;
+  currency?: string | null;
+  shares_outstanding?: number | null;
+  total_dividend_amount?: number | null;
+  source_name?: string | null;
+  source_type?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
+  verified_at?: string | null;
+  is_development_data: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface DividendMetric {
+  status: string;
+  value: number | null;
+  period: number | null;
+  interpretation: string;
+  why_it_matters: string;
+  missing_inputs: string[];
+  limitations: string[];
+}
+
+export interface DividendIntelligence {
+  ticker: string;
+  company_name: string;
+  dividend_status: {
+    label: string;
+    explanation: string;
+    evidence_used: string[];
+    missing_data: string[];
+    confidence: "Low" | "Medium" | "High";
+  };
+  dividend_history: {
+    periods: Array<{
+      fiscal_year?: number | null;
+      dividend_type?: string | null;
+      dividend_per_share: number | null;
+      currency?: string | null;
+      announcement_date?: string | null;
+      record_date?: string | null;
+      ex_dividend_date?: string | null;
+      payment_date?: string | null;
+      total_dividend_amount: number | null;
+    }>;
+    annual_totals: Array<{
+      fiscal_year: number;
+      annual_dividend_per_share: number;
+      total_dividend_amount: number;
+      record_count: number;
+      currency?: string | null;
+    }>;
+    periods_available: number;
+    missing_periods: number[];
+    trend_label: string;
+    methodology: string;
+  };
+  dividend_yield: DividendMetric & {
+    price_date?: string | null;
+    dividend_period_used?: number | null;
+    educational_explanation?: string;
+  };
+  payout_ratio: DividendMetric;
+  cash_payout_ratio: DividendMetric;
+  dividend_growth: {
+    annual_growth: Array<{ from: number; to: number; growth: number }>;
+    compound_annual_growth_rate: number | null;
+    trend_label: string;
+    explanation: string;
+    confidence: "Low" | "Medium" | "High";
+    missing_years: number[];
+  };
+  dividend_consistency: {
+    label: string;
+    periods_available: number;
+    consecutive_periods: boolean;
+    amount_variability: string;
+    missing_periods: number[];
+    explanation: string;
+  };
+  dividend_coverage: {
+    profit_coverage: DividendMetric;
+    cash_coverage: DividendMetric;
+    summary: string;
+  };
+  sustainability_assessment: {
+    score: number;
+    label: string;
+    supporting_evidence: string[];
+    risks: string[];
+    missing_data: string[];
+    confidence: "Low" | "Medium" | "High";
+    methodology: string;
+  };
+  key_risks: Array<{ risk: string; why_it_matters: string }>;
+  educational_summary: string;
+  explain_like_im_18: string;
+  data_transparency: {
+    data_sources: string[];
+    available_periods: string[];
+    missing_data: string[];
+    development_data: boolean;
+    evidence_used: string[];
+    methodology: string;
+    not_advice: string;
+    engine_version: string;
+    methodology_version: string;
+  };
+  suggested_learning_topics: string[];
+  knowledge_graph: {
+    nodes: Array<{ id: string; label: string; type: string }>;
+    edges: Array<{ from: string; to: string; relationship: string }>;
+  };
+  generated_at: string;
+  engine_version: string;
+  methodology_version: string;
+}
+
+export interface CompanyDividendsPayload {
+  company: Company;
+  dividends: DividendRecord[];
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+}
+
+export interface CompanyDividendIntelligencePayload {
+  company: Company;
+  dividends: DividendRecord[];
+  intelligence: DividendIntelligence;
+}
 export interface CompanyDetail {
   company: Company;
   related_assets: Asset[];
@@ -752,3 +1035,129 @@ export interface ChartDataPoint {
 }
 
 
+
+
+
+// ============================================================================
+// Internal Data Operations Types
+// ============================================================================
+
+export interface QualityScorePayload {
+  score: number;
+  label: string;
+  reasons: string[];
+}
+
+export interface FreshnessPayload {
+  latest_update?: string | null;
+  target_days: number;
+  age_days?: number | null;
+  status: string;
+  score: QualityScorePayload;
+  explanation: string;
+}
+
+export interface IngestionRunSummary {
+  id: number;
+  entity: string;
+  mode: string;
+  status: string;
+  source_name: string;
+  source_type: string;
+  source_url?: string | null;
+  dataset_version?: string | null;
+  checksum?: string | null;
+  verification_status: string;
+  is_development_data: boolean;
+  triggered_by?: string | null;
+  started_at: string;
+  completed_at?: string | null;
+  duration_ms?: number | null;
+  received_count: number;
+  normalized_count: number;
+  valid_count: number;
+  inserted_count: number;
+  updated_count: number;
+  skipped_count: number;
+  rejected_count: number;
+  warning_count: number;
+  error_count: number;
+  error_summary?: string | null;
+  warning_summary?: string | null;
+}
+
+export interface IngestionRecordIssue {
+  id: number;
+  ingestion_run_id: number;
+  entity_type: string;
+  record_index?: number | null;
+  external_key?: string | null;
+  severity: string;
+  issue_code: string;
+  field_name?: string | null;
+  message: string;
+  raw_value_summary?: string | null;
+  created_at?: string | null;
+}
+
+export interface SourceHealthPayload {
+  source_name: string;
+  source_type: string;
+  last_successful_run?: string | null;
+  last_failed_run?: string | null;
+  success_rate: number;
+  recent_rejected_record_count: number;
+  recent_warning_count: number;
+  average_run_duration_ms?: number | null;
+  latest_dataset_version?: string | null;
+  latest_checksum?: string | null;
+  freshness_status: string;
+  current_health: string;
+}
+
+export interface EntityQualityPayload {
+  entity_type: string;
+  total_records: number;
+  verified_records: number;
+  development_records: number;
+  unverified_records: number;
+  latest_import?: string | null;
+  latest_verified_update?: string | null;
+  quality_score: QualityScorePayload;
+  completeness: QualityScorePayload;
+  validity: QualityScorePayload;
+  provenance: QualityScorePayload;
+  freshness: FreshnessPayload;
+  consistency: QualityScorePayload;
+  freshness_status: string;
+  open_warning_count: number;
+  open_rejection_count: number;
+  source_count: number;
+}
+
+export interface DataQualitySummaryPayload {
+  pipeline_health: string;
+  latest_ingestion_run?: IngestionRunSummary | null;
+  verified_record_count: number;
+  development_record_count: number;
+  stale_dataset_count: number;
+  rejected_record_count: number;
+  entities: EntityQualityPayload[];
+}
+
+export interface IngestionRunDetailPayload {
+  run: IngestionRunSummary;
+  issue_code_distribution: Record<string, number>;
+  retry_guidance: string[];
+}
+
+export interface CompanyDataQualityPayload {
+  ticker: string;
+  company_name: string;
+  components: Record<string, QualityScorePayload | FreshnessPayload>;
+  development_data_present: boolean;
+  missing_critical_fields: string[];
+  news_coverage: { linked_articles: number };
+  suggested_operator_actions: string[];
+  provenance_status: string;
+}

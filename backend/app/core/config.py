@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0-alpha"
     environment: str = Field(default="development", validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"))
     debug: bool = Field(default=True, validation_alias="APP_DEBUG")
+    allow_development_data: bool = Field(default=True, validation_alias="ALLOW_DEVELOPMENT_DATA")
     api_v1_prefix: str = "/api/v1"
 
     database_url: str = Field(
@@ -87,4 +88,5 @@ def get_masked_database_url(database_url: str) -> str:
 def get_settings() -> Settings:
     """Return cached application settings."""
     return Settings()
+
 

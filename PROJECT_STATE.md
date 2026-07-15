@@ -1,4 +1,4 @@
-# InvestGuide Project State
+﻿# InvestGuide Project State
 
 ## Project Summary
 
@@ -9,30 +9,38 @@
 
 ## Current Sprint
 
-Sprint Number: Sprint 043
+Sprint Number: Sprint 046
 
-Sprint Goal: Add deterministic Business Intelligence, Industry Intelligence, competitor reasoning, and a Company Deep Dive surface without LLMs, predictions, recommendations, or personalized advice.
+Sprint Goal: Add deterministic Dividend Intelligence with persisted dividend records, development-only fixture isolation, read-only APIs, company-page UI, future ingestion contracts, and runtime validation.
 
 Current Tasks:
 
-* [x] Added deterministic backend Business Intelligence Engine.
-* [x] Added deterministic Industry Intelligence Engine.
-* [x] Added deterministic Competitor Engine.
-* [x] Added GET /api/v1/companies/{ticker}/business endpoint.
-* [x] Added GET /api/v1/industries/{industry} endpoint.
-* [x] Added Company Deep Dive frontend panel on /company/[ticker].
-* [x] Added tests for business, industry, competitor, and endpoint behavior.
+* [x] Ran Docker/PostgreSQL runtime validation.
+* [x] Applied Alembic migration head `20260713_0002`.
+* [x] Ran unified manual seed workflow with financial statement fixtures.
+* [x] Smoke-tested `GET /api/v1/companies/DLTA/financials`.
+* [x] Smoke-tested `GET /api/v1/companies/DLTA/financial-health`.
+* [x] Route-smoke tested `/company/delta` against the Next.js dev server.
+* [x] Added `ALLOW_DEVELOPMENT_DATA` environment guard.
+* [x] Blocked development seed commands outside allowed development mode.
+* [x] Added verified-over-development financial data precedence.
+* [x] Added safe development-data cleanup dry-run/confirm workflow.
+* [x] Added future ZSE/VFEX ingestion contract scaffolding.
+* [x] Added tests for production guard, precedence, cleanup, empty data, and partial data transparency.
 * [x] Ran Python tests, frontend lint, frontend type-check, and frontend build.
 * [x] Updated backend README, frontend README, PROJECT_STATE.md, and context.md.
 
 Sprint Exit Criteria:
 
-* Business Intelligence explains what a company does, how it makes money, key revenue drivers, risks, maturity, competitors, and industry forces.
-* Industry endpoint returns description, characteristics, risks, opportunities, companies, Learn Next, and related industries.
-* Company page displays a premium Company Deep Dive panel.
-* No LLMs, predictions, buy/sell recommendations, alerts, live scraping, portfolio optimization, or personalized advice are added.
+* Financial endpoints pass PostgreSQL runtime smoke tests.
+* Company Financial Dashboard route compiles and serves.
+* Empty and partial financial-data states are honest.
+* Development seeds are explicitly blocked in production.
+* Development data cannot silently override verified data.
+* Production financial reads exclude development rows.
+* Safe development-data cleanup workflow exists and defaults to dry-run.
+* Future verified source ingestion contracts exist.
 * Validation passes.
-* Backend tests and frontend lint/type-check/build pass.
 ---
 ## Module Status
 
@@ -62,7 +70,7 @@ Testing: Stable - root pytest passes backend/scraper tests; frontend lint, type-
 
 Deployment: Not Started
 
-Documentation: Stable - Sprint 043 Business Intelligence documentation added
+Documentation: Stable - Sprint 046 Dividend Intelligence documentation added
 
 ---
 
@@ -92,7 +100,7 @@ AI: deterministic AI Research Engine foundation implemented without LLMs; compar
 
 Deployment: Vercel/Railway or Render/Supabase/Upstash planned, not implemented
 
-Testing: frontend lint/type-check/build pass; `python -m pytest` from repository root runs backend and scraper tests with 253 tests passing
+Testing: frontend lint/type-check/build pass; `python -m pytest` from repository root runs backend and scraper tests with 280 tests passing
 
 ---
 
@@ -171,29 +179,27 @@ The backend contains a basic JWT authentication foundation and user/profile link
 ---
 ## Next Immediate Task
 
-Sprint 044 should runtime-smoke `/api/v1/companies/DLTA/business`, `/api/v1/industries/Beverages`, and `/company/delta` against the local PostgreSQL-backed backend, then fix only confirmed data, layout, or UX issues.
-
+Sprint 046 should resolve stale local backend port listeners or standardize dev-server port discovery, then perform full browser QA for the Company Financial Dashboard with screenshots and fix only confirmed runtime, layout, or data-transparency issues.
 ---
 ## Definition of Done
 
-Sprint 043 is complete because the deterministic Business Intelligence Engine, Industry Intelligence Engine, Competitor Engine, read-only business/industry endpoints, Company Deep Dive panel, tests, frontend validation, and documentation updates are complete without adding LLMs, predictions, recommendations, live scraping, alerts, portfolio optimization, or personalized advice.
-
+Sprint 045 is complete because PostgreSQL runtime validation, financial endpoint smoke tests, Company Financial Dashboard route smoke, production development-data guard, verified-over-development precedence, safe cleanup workflow, future ingestion contracts, tests, frontend validation, and documentation updates are complete without adding live integrations, scraping, predictions, recommendations, alerts, watchlists, portfolio optimization, or personalized advice.
 ---
 ## Last Updated
 
 * Date: 2026-07-13
 * AI Agent: Codex
-* Completed Task: Completed Sprint 043 deterministic Business Intelligence Engine and Company Deep Dive.
+* Completed Task: Completed Sprint 046 Dividend Intelligence Engine and verified dividend data foundation.
 ---
 ## Validation Results
 
-* Tests: `python -m pytest -q` passed, 253 tests, 1 non-blocking pytest cache permission warning.
+* Tests: `python -m pytest -q` passed, 280 tests, 1 non-blocking pytest cache permission warning.
 * Frontend lint: `npm.cmd run lint` passed.
 * Frontend type-check: `npm.cmd run type-check` passed.
 * Frontend build: `npm.cmd run build` passed, 14 routes generated.
 * Runtime route smoke: `/`, `/auth/signup`, `/auth/login`, `/dashboard`, `/assets`, `/assets/delta`, `/company/delta`, `/compare`, `/markets`, `/education`, and `/settings` returned 200 after dev-server compilation.
 * Runtime API smoke: warmed `GET /api/v1/compare?asset_a=DLTA&asset_b=TIGZ` passed; warmed `GET /api/v1/companies/DLTA/related` passed with 4 related companies, 6 Learn Next topics, and 10 knowledge graph nodes.
-* Runtime note: `GET /api/v1/health` reported `database: unavailable` during this session even though direct relationship endpoints worked; re-run database diagnostics in the next browser QA pass.
+* Runtime note: database diagnostics passed at revision `20260713_0002`. Port `8001` was occupied by a stale listener during Sprint 045, so financial endpoint smoke ran on port `8010`.
 
 ---
 
@@ -522,3 +528,340 @@ Recommended Sprint 044:
 * Runtime-smoke `/api/v1/companies/DLTA/business`, `/api/v1/industries/Beverages`, and `/company/delta` against local PostgreSQL-backed data, then fix only confirmed data, responsive layout, or UX issues.
 
 
+
+---
+
+## Sprint 044 Financial Intelligence Engine
+
+Sprint 044 adds deterministic financial statement understanding to the Company Intelligence layer.
+
+Implemented:
+
+* Persisted `income_statements`, `balance_sheets`, and `cash_flow_statements` models.
+* Alembic migration `20260713_0002_create_financial_statements.py`.
+* Duplicate-aware manual financial statement seed runner.
+* Unified manual seed workflow now includes financial statements.
+* Deterministic Financial Intelligence Engine for financial health, revenue, profitability, liquidity, leverage, cash flow, growth, stability, ratios, trends, educational summaries, ELI18 explanations, and transparency.
+* `GET /api/v1/companies/{ticker}/financials`.
+* `GET /api/v1/companies/{ticker}/financial-health`.
+* Reusable Company Financial Dashboard components on `/company/[ticker]`.
+* Backend tests for ratios, trend analysis, financial health, missing data, and endpoint envelopes.
+
+Architecture Decisions:
+
+* Financial Intelligence remains deterministic and evidence-based.
+* Development financial fixtures are explicitly marked with `is_development_data` and source metadata.
+* Ratio outputs include value, interpretation, why it matters, and educational explanation.
+* Financial Health labels are educational assessments, not investment recommendations.
+* Missing data and uncertainty are first-class parts of every financial payload.
+* No LLMs, predictions, buy/sell recommendations, alerts, live scraping, portfolio optimization, watchlists, or personalized advice were added.
+
+Validation:
+
+* `python -m pytest -q`: passed, 260 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Limitations:
+
+* Financial seed data is development fixture data, not verified production filings.
+* The ratio engine is deterministic and educational; it does not perform valuation, forecasting, or investment recommendation.
+* Runtime smoke against local PostgreSQL-backed seed data is recommended for Sprint 045.
+
+Recommended Sprint 045:
+
+* Runtime-smoke financial endpoints and the Company Financial Dashboard against local PostgreSQL, then improve data transparency or UX only where real runtime validation reveals issues.
+
+
+---
+
+## Sprint 045 Financial Runtime Validation and Development Data Isolation
+
+Sprint 045 validates the Financial Intelligence feature against local PostgreSQL and hardens the boundary between development fixtures and future verified production data.
+
+Implemented:
+
+* `ALLOW_DEVELOPMENT_DATA` backend setting.
+* Central development data guard in `app/database/development_data_guard.py`.
+* Production guard calls inside development seed functions and seed CLI entrypoints.
+* Financial statement service precedence: verified rows win; development rows are returned only when fixture policy permits them.
+* Safe cleanup command `python -m app.database.cleanup_development_data` with dry-run default and explicit `--confirm` deletion.
+* Future verified ingestion contract package under `app/services/ingestion/`.
+* Honest financial empty state on `/company/[ticker]` when no financial statement rows exist.
+* Tests for fixture policy, production blocking, financial precedence, production exclusion, empty/partial financial outputs, and cleanup behavior.
+
+Runtime Validation:
+
+* `docker compose up -d`: PostgreSQL running.
+* `python -m alembic upgrade head`: migrated to `20260713_0002`.
+* `python -m app.database.seed`: completed after migration was rerun sequentially.
+* `python backend/scripts/check_database.py`: connected, migrations current, current revision `20260713_0002`, seed data present, asset count 9.
+* `GET /api/v1/companies/DLTA/financials`: passed on `http://127.0.0.1:8010`.
+* `GET /api/v1/companies/DLTA/financial-health`: passed on `http://127.0.0.1:8010`.
+* `/company/delta`: returned HTTP 200 from Next.js dev server.
+
+Port Note:
+
+* Requested backend port `8001` was occupied by a stale/unresolvable local listener during this session. Runtime financial smoke used clean port `8010` and this deviation is documented rather than hidden.
+
+Validation:
+
+* `python -m pytest -q`: passed, 268 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Limitations:
+
+* Financial rows are still development fixture data and not verified ZSE/VFEX filings.
+* Future ingestion contracts are scaffolded only; no live source integration or scraper was added.
+* Full visual browser QA with screenshots is still recommended.
+
+Recommended Sprint 046:
+
+* Resolve stale local port listeners or standardize dev-server port discovery, then perform full browser QA of the financial dashboard and fix only confirmed runtime, responsive, or transparency defects.
+
+
+---
+
+## Sprint 046 Direction Update
+
+Sprint 046 should build the reusable verified data pipeline framework, not live ZSE/VFEX connectors.
+
+Target architecture:
+
+External Source -> Normalizer -> Validator -> Importer -> Database -> Research Engines -> Frontend
+
+Scope guidance:
+
+* Build source-agnostic pipeline contracts.
+* Support future ZSE, VFEX, CSV imports, annual reports, APIs, and manual admin uploads through the same workflow.
+* Keep frontend and research engines insulated from source-specific ingestion details.
+* Do not implement live connectors until the pipeline framework is stable.
+
+Recommended Sprint 046:
+
+* Implement the reusable verified data pipeline framework with normalizer, validator, importer, audit/source metadata, and tests using local fixtures only.
+
+---
+
+## Sprint 046 Dividend Intelligence Engine
+
+Sprint 046 adds deterministic Dividend Intelligence and persisted dividend data foundations.
+
+Implemented:
+
+* `dividends` table.
+* `corporate_actions` table.
+* Dividend and corporate-action ORM models and relationships.
+* Manual development dividend seed runner.
+* Unified development seed support for dividends.
+* Production-safe dividend fixture isolation using the existing development-data guard.
+* Safe cleanup reporting/deletion support for dividend fixtures.
+* Dividend Intelligence Engine for status, history, yield availability, payout ratio, cash payout ratio, growth, consistency, sustainability, risks, education, ELI18, transparency, and learning topics.
+* Read-only APIs: `GET /api/v1/companies/{ticker}/dividends` and `GET /api/v1/companies/{ticker}/dividend-intelligence`.
+* Company page Dividend Intelligence section.
+* Future source-agnostic ingestion contracts for dividends and corporate actions.
+
+Runtime validation:
+
+* Docker PostgreSQL running.
+* Alembic current at `20260714_0002`.
+* Manual seed passed.
+* Database diagnostics passed.
+* Dividend endpoints passed on backend port `8011`.
+* `/company/delta` returned HTTP 200.
+
+Validation:
+
+* `python -m pytest -q`: passed, 280 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed.
+
+Known limitations:
+
+* Dividend fixture values are development-only sample data and not verified ZSE/VFEX records.
+* Dividend yield remains unavailable until verified reference price data exists.
+* No live ZSE/VFEX integrations, scraping, predictions, recommendations, alerts, watchlists, portfolio optimization, or personalized advice were added.
+
+Recommended Sprint 047:
+
+* Build the reusable verified data pipeline framework: External Source -> Normalizer -> Validator -> Importer -> Database -> Research Engines -> Frontend. Use local fixtures only and keep live ZSE/VFEX connectors out of scope.
+
+---
+
+## Sprint 047 Verified Data Pipeline Framework
+
+Sprint 047 builds the reusable verified-data ingestion framework without adding live connectors, scraping, public ingestion APIs, AI, recommendations, predictions, portfolio features, watchlists, alerts, or frontend product changes.
+
+Implemented:
+
+* Source-agnostic ingestion contracts for source metadata, verification status, import modes, normalized records, validation issues, import results, and pipeline results.
+* Local JSON and CSV source adapters with checksum, record count, dataset version, and development-data metadata.
+* Normalization helpers for tickers, exchanges, currencies, dates, datetimes, decimals, URLs, company names, statement periods, dividend types, corporate action types, whitespace, and UTF-8 BOM handling.
+* Runtime normalizers, validators, and importers for companies, income statements, dividends, and news.
+* Normalized contracts for companies, assets, company profiles, income statements, balance sheets, cash flow statements, dividends, corporate actions, news, and market snapshots.
+* `IngestionPipeline` orchestration: source adapter -> normalizer -> validator -> importer -> audit.
+* `IngestionRegistry` mapping supported entities to their components.
+* CLI entry point: `python -m app.services.ingestion.cli`.
+* Audit persistence through `ingestion_runs` and Alembic migration `20260715_0001_create_ingestion_runs.py`.
+* Local development/test ingestion fixtures for companies, CSV companies, income statements, dividends, and news.
+* Tests for local source adapters, registry wiring, dry-run behavior, audit rows, strict rejection, idempotent lenient imports, and compatibility with existing financial/dividend intelligence engines.
+* Architecture documentation in `docs/architecture/data-ingestion-pipeline.md`.
+
+Architecture Decisions:
+
+* The ingestion pipeline is the canonical future path for ZSE, VFEX, CSV, JSON, annual reports, APIs, manual curation, and admin uploads.
+* Dry-run remains the default and does not write entity rows, but audit rows are recorded for traceability.
+* Development fixture imports require the existing development-data policy for non-dry-run modes.
+* Verified/non-development data must not be overwritten by lower-quality development fixture rows.
+* Frontend contracts remain unchanged; UI and intelligence engines consume persisted backend data through existing APIs.
+* Missing parent references in lenient imports are skipped and reported as warnings; strict validation remains available for all-or-nothing batches.
+
+Runtime Validation:
+
+* `docker compose up -d`: PostgreSQL container running.
+* `python -m alembic upgrade head`: migrated to `20260715_0001`.
+* `python -m alembic current`: `20260715_0001 (head)`.
+* Company dry-run fixture import: passed, 2 valid records, duplicate-aware update plan.
+* Income statement dry-run fixture import: passed, 2 valid records.
+* Company lenient fixture import: passed, 2 updates.
+* Income statement lenient fixture import: passed, 2 updates.
+* Dividend lenient fixture import: passed, 1 insert and 1 update after fixture alignment.
+* News lenient fixture import: passed, 2 inserts.
+* `python -m app.database.seed`: passed.
+* `python scripts/check_database.py`: connected, migrations current, seed data present, asset count 9.
+* Backend smoke on `http://127.0.0.1:8012`: health, financial health, dividend intelligence, and news endpoints passed.
+
+Validation:
+
+* `python -m pytest -q`: passed, 236 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known Limitations:
+
+* Runtime importers are implemented for companies, income statements, dividends, and news only; other normalized contracts are ready but not persisted until their models/importers are needed.
+* Source adapters are local JSON/CSV only; no live ZSE/VFEX connector, scraper, external API, scheduler, or admin UI exists.
+* Fixture data remains development/test data and is not verified production financial information.
+* Audit rows store run summaries and source metadata, not raw source documents.
+
+Recommended Sprint 048:
+
+* Add verified balance sheet and cash flow pipeline importers using the same framework, then runtime-smoke financial intelligence with all three statement types imported through the pipeline before any live source work begins.
+
+---
+
+## Sprint 048 Verified Data Ingestion Framework Completion
+
+Sprint 048 completes the backend verified data ingestion framework coverage for the current InvestGuide intelligence stack.
+
+Status: Complete
+
+Implemented:
+
+* Asset ingestion normalizer, validator, importer, and fixture coverage.
+* Company Profile ingestion normalizer, validator, importer, and fixture coverage.
+* Balance Sheet ingestion normalizer, validator, importer, and fixture coverage.
+* Cash Flow Statement ingestion normalizer, validator, importer, and fixture coverage.
+* Corporate Action ingestion normalizer, validator, importer, and fixture coverage.
+* Market Snapshot model, Alembic migration, service, importer, validator, and fixture coverage.
+* Ingestion registry coverage for all current entities: companies, assets, company profiles, income statements, balance sheets, cash flow statements, dividends, corporate actions, news, and market snapshots.
+* Dividend Intelligence now uses the latest acceptable persisted market snapshot as a reference-price source when available.
+
+Architecture decisions:
+
+* The source-agnostic ingestion pipeline remains the canonical path for future ZSE, VFEX, CSV, JSON, annual report, API, and manual curation imports.
+* Frontend contracts remain unchanged and do not branch on source-specific ingestion details.
+* Dry-run remains safe by default; lenient imports valid rows and records rejected rows; strict mode rejects the full batch when validation fails.
+* Verified/non-development rows remain protected from lower-quality development fixture overwrites.
+* Corporate-action fixture ingestion maps only to the current persisted `CorporateAction` schema; future richer action fields require a separate model/migration decision.
+
+Runtime validation:
+
+* Docker PostgreSQL running.
+* Alembic migrated to `20260715_0002 (head)`.
+* Database diagnostics passed with seed data present and asset count 9.
+* Dry-run and lenient imports passed for assets, company profiles, balance sheets, cash flow statements, corporate actions, and market snapshots.
+* Backend smoke passed for company profile, financials, financial health, dividend intelligence, asset assessment, assets, and news.
+* Frontend route smoke passed for `/company/delta`, `/assets/delta`, `/compare`, and `/dashboard`.
+
+Validation:
+
+* `python -m pytest -q`: passed, 240 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed after separate rerun; initial concurrent run raced with build-generated `.next/types` regeneration.
+* `npm.cmd run build`: passed, 14 routes generated.
+
+Known limitations:
+
+* Source adapters remain local JSON/CSV only.
+* No live ZSE/VFEX connector, scraper, scheduler, public ingestion endpoint, or admin upload UI exists yet.
+* Fixture rows remain development/test data and are not verified production financial information.
+* Corporate action persistence is intentionally limited to the existing model fields.
+
+Recommended Sprint 049:
+
+* Build operator-facing ingestion diagnostics and data quality reports, or begin one controlled live-source adapter only after the pipeline can clearly report source health, rejection reasons, and import provenance.
+
+---
+
+## Sprint 049 Ingestion Operations, Data Quality, and Provenance Dashboard
+
+Status: Complete
+
+Implemented:
+
+* Record-level `IngestionRecordIssue` persistence with safe summaries only.
+* Alembic migration `20260715_0003_add_ingestion_record_issues.py`.
+* Stable deterministic issue codes for validation, import, rejection, and database write failures.
+* Data-quality scoring for completeness, validity, provenance, freshness, consistency, and overall quality.
+* Central freshness targets.
+* Source-health summaries.
+* Entity-level data-quality summaries.
+* Company-level data-quality reports and deterministic operator recommendations.
+* Development-data visibility in quality summaries and internal dashboard.
+* Internal read-only APIs under `/api/v1/internal`.
+* Internal operations dashboard at `/internal/data-operations`.
+* Internal run detail page at `/internal/data-operations/runs/[id]`.
+* Diagnostics CLI under `python -m app.services.ingestion.diagnostics`.
+* Safe CSV/JSON rejected-record export.
+* Operations documentation in `docs/operations/data-quality-and-ingestion-operations.md`.
+
+Architecture decisions:
+
+* Internal operations are read-only and development/debug guarded until admin roles exist.
+* Issue rows store concise safe summaries, not raw source documents or secrets.
+* Quality scoring is operational data quality, not financial health or investment scoring.
+* Development fixtures are visible and explicitly penalized in production-readiness scoring.
+* No live connector, scraper, scheduler, public ingestion endpoint, AI, prediction, or recommendation was added.
+
+Runtime validation:
+
+* Docker PostgreSQL running.
+* Alembic current at `20260715_0003 (head)`.
+* Generated successful dry-run, successful lenient, warning/rejection, and failed strict ingestion runs.
+* Diagnostics CLI passed for runs, sources, quality, company `DLTA`, and CSV issue export.
+* Database diagnostics passed.
+* Internal API smoke passed on backend port `8014`.
+* Internal frontend pages returned HTTP 200 on port `3021`.
+
+Validation:
+
+* `python -m pytest -q`: passed, 247 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 15 routes generated.
+
+Known limitations:
+
+* Internal access uses development/debug protection because admin roles do not exist yet.
+* No live ZSE/VFEX connector, scheduler, external API, scraping, or public ingestion write path exists.
+* Quality scoring is deterministic and heuristic; it should evolve as verified live data and admin workflows mature.
+
+Recommended Sprint 050:
+
+* Add admin-role protection for internal operations or implement one controlled live-source adapter only after operator access, source health, issue reporting, and provenance review are accepted.

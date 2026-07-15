@@ -1,0 +1,24 @@
+{
+  "records": [
+    {
+      "title": "Delta publishes development fixture trading update",
+      "summary": "A local fixture article used to validate deterministic news ingestion.",
+      "content": "This is sample development content for pipeline tests only.",
+      "source": "Development Fixture",
+      "published_at": "2024-06-30",
+      "url": "https://example.test/news/delta-fixture-update",
+      "language": "en",
+      "related_tickers": ["DLTA"]
+    },
+    {
+      "title": "Zimbabwe market development fixture update",
+      "summary": "A sample market article used for ingestion validation.",
+      "content": "This fixture is not live news and should not be shown as verified production data.",
+      "source": "Development Fixture",
+      "published_at": "2024-07-01",
+      "url": "https://example.test/news/market-fixture-update",
+      "language": "en",
+      "related_tickers": ["ECO", "DLTA"]
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * API Service Layer
  * Centralized API client for all backend communication
  */
@@ -9,20 +9,31 @@ import {
   ApiResponse,
   Asset,
   AssetAssessment,
-  BusinessIntelligence,
   AuthResponse,
+  BusinessIntelligence,
   Company,
+  CompanyDataQualityPayload,
   CompanyDetail,
+  CompanyDividendIntelligencePayload,
+  CompanyDividendsPayload,
+  CompanyFinancialHealthPayload,
+  CompanyFinancialsPayload,
   CompanyProfileDetail,
   CompanyRelatedResearch,
   ComparePayload,
+  DataQualitySummaryPayload,
+  EntityQualityPayload,
   IndustryIntelligence,
+  IngestionRecordIssue,
+  IngestionRunDetailPayload,
+  IngestionRunSummary,
   InvestorProfile,
   InvestorProfilePayload,
   NewsArticle,
   NewsResearch,
   ResearchAssessment,
   SignupResponse,
+  SourceHealthPayload,
   User,
 } from "@/types";
 
@@ -247,6 +258,14 @@ export const companyService = {
 
   getCompanyBusiness: (ticker: string) => get<BusinessIntelligence>(`/companies/${ticker}/business`),
 
+  getCompanyFinancials: (ticker: string) => get<CompanyFinancialsPayload>(`/companies/${ticker}/financials`),
+
+  getCompanyDividends: (ticker: string) => get<CompanyDividendsPayload>(`/companies/${ticker}/dividends`),
+
+  getCompanyDividendIntelligence: (ticker: string) => get<CompanyDividendIntelligencePayload>(`/companies/${ticker}/dividend-intelligence`),
+
+  getCompanyFinancialHealth: (ticker: string) => get<CompanyFinancialHealthPayload>(`/companies/${ticker}/financial-health`),
+
   getCompanyResearch: (ticker: string) => get<ResearchAssessment>(`/companies/${ticker}/research`),
 
   getCompanyProfile: (ticker: string) => get<CompanyProfileDetail>(`/companies/${ticker}/profile`),
@@ -318,4 +337,32 @@ export function handleApiError(error: unknown): string {
 
 
 
+
+
+
+
+
+
+
+
+export const internalOperationsService = {
+  getRuns: (params: { page?: number; limit?: number } = {}) =>
+    get<IngestionRunSummary[]>("/internal/ingestion/runs", params),
+
+  getRunDetail: (runId: number) =>
+    get<IngestionRunDetailPayload>(`/internal/ingestion/runs/${runId}`),
+
+  getRunIssues: (runId: number, params: { page?: number; limit?: number; severity?: string; issue_code?: string } = {}) =>
+    get<IngestionRecordIssue[]>(`/internal/ingestion/runs/${runId}/issues`, params),
+
+  getSources: () => get<SourceHealthPayload[]>("/internal/ingestion/sources"),
+
+  getDataQualitySummary: () => get<DataQualitySummaryPayload>("/internal/data-quality/summary"),
+
+  getEntityQuality: (entityType: string) =>
+    get<EntityQualityPayload>(`/internal/data-quality/entities/${entityType}`),
+
+  getCompanyQuality: (ticker: string) =>
+    get<CompanyDataQualityPayload>(`/internal/data-quality/companies/${ticker}`),
+};
 

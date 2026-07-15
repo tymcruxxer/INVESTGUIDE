@@ -1,0 +1,23 @@
+﻿{
+  "records": [
+    {
+      "ticker": "DLTA",
+      "fiscal_year": 2024,
+      "dividend_type": "Final",
+      "announcement_date": "2024-06-30",
+      "record_date": "2024-07-19",
+      "payment_date": "2024-08-02",
+      "dividend_per_share": "0.02",
+      "currency": "USD"
+    },
+    {
+      "ticker": "ECO",
+      "fiscal_year": 2024,
+      "dividend_type": "Interim",
+      "announcement_date": "2024-09-30",
+      "dividend_per_share": "0.01",
+      "currency": "USD"
+    }
+  ]
+}
+

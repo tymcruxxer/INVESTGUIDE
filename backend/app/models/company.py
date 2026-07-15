@@ -1,4 +1,4 @@
-"""Company profile SQLAlchemy model."""
+﻿"""Company profile SQLAlchemy model."""
 
 from __future__ import annotations
 
@@ -15,8 +15,10 @@ from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.asset import Asset
-    from app.models.news import News
     from app.models.company_profile import CompanyProfile
+    from app.models.financial_statement import BalanceSheet, CashFlowStatement, IncomeStatement
+    from app.models.dividend import CorporateAction, Dividend
+    from app.models.news import News
 
 
 def enum_values(enum_class: type[StrEnum]) -> list[str]:
@@ -106,3 +108,30 @@ class Company(TimestampMixin, Base):
         cascade="all, delete-orphan",
         uselist=False,
     )
+    income_statements: Mapped[list[IncomeStatement]] = relationship(
+        "IncomeStatement",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    balance_sheets: Mapped[list[BalanceSheet]] = relationship(
+        "BalanceSheet",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    cash_flow_statements: Mapped[list[CashFlowStatement]] = relationship(
+        "CashFlowStatement",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    dividends: Mapped[list[Dividend]] = relationship(
+        "Dividend",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    corporate_actions: Mapped[list[CorporateAction]] = relationship(
+        "CorporateAction",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+
+

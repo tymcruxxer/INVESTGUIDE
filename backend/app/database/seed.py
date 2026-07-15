@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.database.development_data_guard import ensure_development_data_allowed
 from app.database.seed_assets import SEED_ASSETS
 from app.database.seed_investor_profile import DEMO_INVESTOR_PROFILE
 from app.database.session import SessionLocal
@@ -61,6 +62,7 @@ def seed_development_assets(
     seed_assets: Iterable[dict[str, object]] = SEED_ASSETS,
 ) -> SeedResult:
     """Insert development assets while skipping existing tickers."""
+    ensure_development_data_allowed()
     normalized_assets = [normalize_seed_asset(asset) for asset in seed_assets]
     tickers = [str(asset["ticker"]) for asset in normalized_assets]
 
@@ -123,6 +125,7 @@ def _company_data_from_asset(asset: Asset) -> dict[str, object]:
 
 def seed_development_companies(db: Session) -> CompanySeedResult:
     """Create or update issuer records from seeded assets and link assets to them."""
+    ensure_development_data_allowed()
     assets = list(db.scalars(select(Asset).order_by(Asset.ticker.asc())).all())
     inserted = 0
     updated = 0
@@ -186,6 +189,7 @@ def seed_development_investor_profile(
     profile_data: dict[str, object] = DEMO_INVESTOR_PROFILE,
 ) -> InvestorProfileSeedResult:
     """Insert one demo investor profile if no profile exists yet."""
+    ensure_development_data_allowed()
     existing_count = db.scalar(select(func.count()).select_from(InvestorProfile)) or 0
     if existing_count > 0:
         existing_profile = db.scalars(select(InvestorProfile).order_by(InvestorProfile.id.asc())).first()
@@ -213,18 +217,25 @@ def seed_development_investor_profile(
 
 def main() -> None:
     """Run the manual development seed command."""
+    ensure_development_data_allowed()
     logger.info("Starting manual development seed")
     with SessionLocal() as db:
         asset_result = seed_development_assets(db)
         company_result = seed_development_companies(db)
         from app.database.seed_company_profiles import seed_company_profiles
+        from app.database.seed_financial_statements import seed_financial_statements
+        from app.database.seed_dividends import seed_dividends
 
         company_profile_result = seed_company_profiles(db)
+        financial_result = seed_financial_statements(db)
+        dividend_result = seed_dividends(db)
         profile_result = seed_development_investor_profile(db)
     logger.info(
         "Manual development seed finished: %s assets inserted, %s assets skipped, "
         "%s companies inserted, %s companies updated, %s companies skipped, "
         "%s company profiles inserted, %s company profiles updated, %s company profiles skipped, "
+        "%s financial statement rows inserted, %s financial statement rows updated, %s financial statement rows skipped, "
+        "%s dividend rows inserted, %s dividend rows updated, %s dividend rows skipped, "
         "%s investor profiles inserted, %s investor profiles skipped",
         asset_result.inserted,
         asset_result.skipped,
@@ -234,6 +245,12 @@ def main() -> None:
         company_profile_result.inserted,
         company_profile_result.updated,
         company_profile_result.skipped,
+        financial_result.inserted,
+        financial_result.updated,
+        financial_result.skipped,
+        dividend_result.inserted,
+        dividend_result.updated,
+        dividend_result.skipped,
         profile_result.inserted,
         profile_result.skipped,
     )
@@ -241,3 +258,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+

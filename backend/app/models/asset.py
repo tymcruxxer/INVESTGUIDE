@@ -1,4 +1,4 @@
-"""Investment asset SQLAlchemy model."""
+﻿"""Investment asset SQLAlchemy model."""
 
 from __future__ import annotations
 
@@ -139,7 +139,11 @@ class Asset(TimestampMixin, Base):
         secondary=asset_news,
         back_populates="assets",
     )
+    dividends: Mapped[list[Dividend]] = relationship("Dividend", back_populates="asset")
+    corporate_actions: Mapped[list[CorporateAction]] = relationship("CorporateAction", back_populates="asset")
 
 # Import after class declaration so SQLAlchemy can resolve the relationship target.
 from app.models.news import News  # noqa: E402
+
+
 

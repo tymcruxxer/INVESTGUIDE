@@ -1,0 +1,31 @@
+{
+  "records": [
+    {
+      "company_ticker": "DLTA",
+      "business_summary": "Development fixture profile for local pipeline validation.",
+      "primary_business": "Beverages",
+      "products_services": ["Lager beer", "Soft drinks"],
+      "industry": "Beverages",
+      "country": "Zimbabwe",
+      "headquarters": "Harare",
+      "website": "https://www.delta.co.zw",
+      "founded_year": 1946,
+      "employees": 5000,
+      "research_status": "development"
+    },
+    {
+      "company_ticker": "ECO",
+      "business_summary": "Development fixture telecommunications profile.",
+      "primary_business": "Mobile network operations",
+      "products_services": ["Voice", "Data", "Mobile money"],
+      "industry": "Mobile Telecommunications",
+      "country": "Zimbabwe",
+      "headquarters": "Harare",
+      "research_status": "development"
+    },
+    {
+      "company_ticker": "",
+      "business_summary": "Rejected because company ticker is missing."
+    }
+  ]
+}

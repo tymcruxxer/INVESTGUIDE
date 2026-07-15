@@ -1,4 +1,4 @@
-"""Version 1 API router."""
+﻿"""Version 1 API router."""
 
 from fastapi import APIRouter
 
@@ -7,6 +7,7 @@ from app.api.v1.assets import router as assets_router
 from app.api.v1.companies import router as companies_router
 from app.api.v1.compare import router as compare_router
 from app.api.v1.health import router as health_router
+from app.api.v1.internal.data_operations import router as data_operations_router
 from app.api.v1.ingestion import router as ingestion_router
 from app.api.v1.industries import router as industries_router
 from app.api.v1.investor_profile import router as investor_profile_router
@@ -21,5 +22,8 @@ api_router.include_router(compare_router)
 api_router.include_router(news_router)
 api_router.include_router(industries_router)
 api_router.include_router(ingestion_router)
+api_router.include_router(data_operations_router)
 api_router.include_router(investor_profile_router)
+
+
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useMemo } from "react";
@@ -10,6 +10,8 @@ import { AppShell } from "@/components/layout";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
 import { ResearchPanel, ResearchPanelSkeleton, ResearchUnavailable } from "@/features/assets/research-panel";
 import { BusinessDeepDive, BusinessDeepDiveSkeleton } from "@/features/company/business-deep-dive";
+import { FinancialDashboard, FinancialDashboardSkeleton } from "@/features/company/financial-dashboard";
+import { DividendDashboard, DividendDashboardSkeleton } from "@/features/company/dividend-dashboard";
 import { CardSkeleton } from "@/components/skeleton";
 import { companyService } from "@/services/api";
 import {
@@ -84,6 +86,22 @@ export default function CompanyDetailPage() {
   const businessQuery = useQuery({
     queryKey: ["company-business", ticker],
     queryFn: () => companyService.getCompanyBusiness(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const financialQuery = useQuery({
+    queryKey: ["company-financials", ticker],
+    queryFn: () => companyService.getCompanyFinancials(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const dividendQuery = useQuery({
+    queryKey: ["company-dividend-intelligence", ticker],
+    queryFn: () => companyService.getCompanyDividendIntelligence(ticker),
     retry: 1,
     enabled: Boolean(ticker),
     staleTime: 1000 * 60 * 10,
@@ -244,6 +262,49 @@ export default function CompanyDetailPage() {
                     </div>
                   ) : businessQuery.data?.data ? (
                     <BusinessDeepDive intelligence={businessQuery.data.data} />
+                  ) : null}
+                </div>
+                <div id="financial-dashboard" className="space-y-4">
+                  {financialQuery.isLoading ? (
+                    <FinancialDashboardSkeleton />
+                  ) : financialQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Financial Intelligence is temporarily unavailable. Business intelligence and assessment sections remain available.
+                    </div>
+                  ) : financialQuery.data?.data &&
+                    financialQuery.data.data.income_statements.length +
+                      financialQuery.data.data.balance_sheets.length +
+                      financialQuery.data.data.cash_flow_statements.length ===
+                      0 ? (
+                    <div className="premium-card p-6">
+                      <h2 className="text-xl font-semibold">
+                        Financial statements are not available for this company yet.
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        InvestGuide needs at least one persisted income statement, balance sheet, or cash flow statement before it can complete financial analysis. Business intelligence, assessments, related assets, and research remain available on this page.
+                      </p>
+                    </div>
+                  ) : financialQuery.data?.data?.intelligence ? (
+                    <FinancialDashboard intelligence={financialQuery.data.data.intelligence} />
+                  ) : null}
+                </div>
+
+                <div id="dividend-intelligence" className="space-y-4">
+                  {dividendQuery.isLoading ? (
+                    <DividendDashboardSkeleton />
+                  ) : dividendQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Dividend Intelligence is temporarily unavailable. Financial and business intelligence sections remain available.
+                    </div>
+                  ) : dividendQuery.data?.data?.intelligence && dividendQuery.data.data.dividends.length > 0 ? (
+                    <DividendDashboard intelligence={dividendQuery.data.data.intelligence} />
+                  ) : dividendQuery.data?.data ? (
+                    <div className="premium-card p-6">
+                      <h2 className="text-xl font-semibold">No verified dividend records are available for this company yet.</h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        The company may still have dividend history outside InvestGuide. Missing platform data is not proof that no dividend was paid. Business intelligence, financial health, assessments, and related research remain available.
+                      </p>
+                    </div>
                   ) : null}
                 </div>
                 <div id="related-assets" className="premium-card p-6">
@@ -425,6 +486,11 @@ function ResearchStatusBadge({ status }: { status: ResearchStatus }) {
     </span>
   );
 }
+
+
+
+
+
 
 
 

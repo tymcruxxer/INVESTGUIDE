@@ -1,0 +1,39 @@
+{
+  "records": [
+    {
+      "ticker": "DLTA",
+      "company_ticker": "DLTA",
+      "company_name": "Delta Corporation Limited",
+      "exchange": "ZSE",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "asset_type": "equity",
+      "currency": "ZWG",
+      "description": "Development fixture listed equity.",
+      "listing_date": "1946-01-01",
+      "market_cap": "1000000",
+      "status": "active"
+    },
+    {
+      "ticker": "ECO",
+      "company_ticker": "ECO",
+      "company_name": "Econet Wireless Zimbabwe Limited",
+      "exchange": "ZSE",
+      "sector": "Telecommunications",
+      "industry": "Mobile Telecommunications",
+      "asset_type": "equity",
+      "currency": "ZWG",
+      "description": "Development fixture listed equity.",
+      "status": "active"
+    },
+    {
+      "ticker": "BADASSET",
+      "company_ticker": "MISSING",
+      "company_name": "Missing Parent Fixture",
+      "exchange": "ZSE",
+      "asset_type": "equity",
+      "currency": "ZWG",
+      "status": "active"
+    }
+  ]
+}

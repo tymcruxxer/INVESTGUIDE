@@ -1,0 +1,35 @@
+{
+  "records": [
+    {
+      "ticker": "DLTA",
+      "name": "Delta Corporation Limited",
+      "legal_name": "Delta Corporation Limited",
+      "exchange": "ZSE",
+      "sector": "Consumer Staples",
+      "industry": "Beverages",
+      "country": "Zimbabwe",
+      "headquarters": "Harare",
+      "website": "https://www.delta.co.zw",
+      "description": "Development fixture company profile for local ingestion validation.",
+      "founded_year": 1946,
+      "market": "ZSE",
+      "currency": "ZWG",
+      "status": "active"
+    },
+    {
+      "ticker": "ECO",
+      "name": "Econet Wireless Zimbabwe Limited",
+      "legal_name": "Econet Wireless Zimbabwe Limited",
+      "exchange": "ZSE",
+      "sector": "Telecommunications",
+      "industry": "Mobile Telecommunications",
+      "country": "Zimbabwe",
+      "headquarters": "Harare",
+      "website": "https://www.econet.co.zw",
+      "description": "Development fixture company profile for local ingestion validation.",
+      "market": "ZSE",
+      "currency": "ZWG",
+      "status": "active"
+    }
+  ]
+}

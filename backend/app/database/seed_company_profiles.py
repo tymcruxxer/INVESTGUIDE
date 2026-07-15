@@ -1,4 +1,4 @@
-﻿"""Manual development seed runner for persisted company profiles."""
+"""Manual development seed runner for persisted company profiles."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.database.development_data_guard import ensure_development_data_allowed
 from app.database.company_profile_seed import COMPANY_PROFILE_FIXTURES
 from app.database.session import SessionLocal
 from app.models.company import Company
@@ -76,6 +77,7 @@ def seed_company_profiles(
     fixtures: dict[str, dict[str, Any]] = COMPANY_PROFILE_FIXTURES,
 ) -> CompanyProfileSeedResult:
     """Seed development company profiles without overwriting verified research."""
+    ensure_development_data_allowed()
     inserted = 0
     updated = 0
     skipped = 0
@@ -131,6 +133,7 @@ def seed_company_profiles(
 
 def main() -> None:
     """Run company profile seeding as an explicit manual command."""
+    ensure_development_data_allowed()
     logger.info("Starting manual company profile seed")
     with SessionLocal() as db:
         result = seed_company_profiles(db)
@@ -144,3 +147,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
