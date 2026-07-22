@@ -39,7 +39,7 @@ def make_asset(**overrides: object) -> SimpleNamespace:
 
 def test_asset_routes_are_registered_under_api_v1() -> None:
     """Read-only asset routes are mounted under the versioned router."""
-    routes = {route.path for route in app.routes if hasattr(route, "path")}
+    routes = {route.path for route in app.routes}
 
     assert "/api/v1/assets" in routes
     assert "/api/v1/assets/{ticker}" in routes

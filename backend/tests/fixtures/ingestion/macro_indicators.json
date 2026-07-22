@@ -1,0 +1,68 @@
+﻿[
+  {
+    "indicator_type": "inflation",
+    "name": "Annual Inflation",
+    "value": 57.4,
+    "unit": "%",
+    "reporting_period": "2026-06-30",
+    "country": "Zimbabwe",
+    "currency": "ZWG",
+    "source_name": "Development Macro Fixture",
+    "source_type": "DEVELOPMENT_FIXTURE",
+    "source_url": "https://www.zimstat.co.zw/",
+    "notes": "Development preview value for UI and engine validation only."
+  },
+  {
+    "indicator_type": "interest_rate",
+    "name": "Policy Rate",
+    "value": 35.0,
+    "unit": "%",
+    "reporting_period": "2026-06-30",
+    "country": "Zimbabwe",
+    "currency": "ZWG",
+    "source_name": "Development Macro Fixture",
+    "source_type": "DEVELOPMENT_FIXTURE",
+    "source_url": "https://www.rbz.co.zw/",
+    "notes": "Development preview value for UI and engine validation only."
+  },
+  {
+    "indicator_type": "exchange_rate",
+    "name": "USD Reference Rate",
+    "value": 26.5,
+    "unit": "ZWG per USD",
+    "reporting_period": "2026-06-30",
+    "country": "Zimbabwe",
+    "currency": "USD",
+    "source_name": "Development Macro Fixture",
+    "source_type": "DEVELOPMENT_FIXTURE",
+    "source_url": "https://www.rbz.co.zw/",
+    "notes": "Development preview value for UI and engine validation only."
+  },
+  {
+    "indicator_type": "gdp",
+    "name": "Real GDP Growth",
+    "value": 3.2,
+    "unit": "%",
+    "reporting_period": "2025-12-31",
+    "country": "Zimbabwe",
+    "currency": null,
+    "source_name": "Development Macro Fixture",
+    "source_type": "DEVELOPMENT_FIXTURE",
+    "source_url": "https://www.zimstat.co.zw/",
+    "notes": "Development preview value for UI and engine validation only."
+  },
+  {
+    "indicator_type": "commodity_price",
+    "name": "Gold Reference Price",
+    "value": 2350.0,
+    "unit": "USD/oz",
+    "reporting_period": "2026-06-30",
+    "country": "Global",
+    "currency": "USD",
+    "commodity": "Gold",
+    "source_name": "Development Macro Fixture",
+    "source_type": "DEVELOPMENT_FIXTURE",
+    "source_url": "https://www.worldbank.org/en/research/commodity-markets",
+    "notes": "Development preview value for UI and engine validation only."
+  }
+]

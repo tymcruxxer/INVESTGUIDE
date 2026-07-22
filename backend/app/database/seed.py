@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.database.development_data_guard import ensure_development_data_allowed
 from app.database.seed_assets import SEED_ASSETS
@@ -225,18 +226,30 @@ def main() -> None:
         from app.database.seed_company_profiles import seed_company_profiles
         from app.database.seed_financial_statements import seed_financial_statements
         from app.database.seed_dividends import seed_dividends
+        from app.database.seed_macro_indicators import seed_macro_indicators
+        from app.database.seed_sectors import seed_sectors
+        from app.database.seed_admin_users import seed_admin_users
+        from app.services.rbac_service import bootstrap_rbac
 
         company_profile_result = seed_company_profiles(db)
         financial_result = seed_financial_statements(db)
         dividend_result = seed_dividends(db)
+        macro_result = seed_macro_indicators(db)
+        sector_result = seed_sectors(db)
         profile_result = seed_development_investor_profile(db)
+        settings = get_settings()
+        rbac_result = bootstrap_rbac(db, owner_email=settings.admin_owner_email, owner_password=settings.admin_owner_password)
+        admin_user_result = seed_admin_users(db)
     logger.info(
         "Manual development seed finished: %s assets inserted, %s assets skipped, "
         "%s companies inserted, %s companies updated, %s companies skipped, "
         "%s company profiles inserted, %s company profiles updated, %s company profiles skipped, "
         "%s financial statement rows inserted, %s financial statement rows updated, %s financial statement rows skipped, "
         "%s dividend rows inserted, %s dividend rows updated, %s dividend rows skipped, "
-        "%s investor profiles inserted, %s investor profiles skipped",
+        "%s macro indicators inserted, %s macro indicators updated, %s macro indicators skipped, "
+        "%s sectors inserted, %s sectors updated, %s sectors skipped, %s industries inserted, %s industries updated, %s industries skipped, "
+        "%s investor profiles inserted, %s investor profiles skipped, "
+        "%s roles inserted, %s permissions inserted, %s role-permissions inserted, owner created=%s, owner assigned=%s",
         asset_result.inserted,
         asset_result.skipped,
         company_result.inserted,
@@ -251,13 +264,35 @@ def main() -> None:
         dividend_result.inserted,
         dividend_result.updated,
         dividend_result.skipped,
+        macro_result.inserted,
+        macro_result.updated,
+        macro_result.skipped,
+        sector_result.inserted,
+        sector_result.updated,
+        sector_result.skipped,
+        sector_result.industries_inserted,
+        sector_result.industries_updated,
+        sector_result.industries_skipped,
         profile_result.inserted,
         profile_result.skipped,
+        rbac_result.roles_inserted,
+        rbac_result.permissions_inserted,
+        rbac_result.role_permissions_inserted,
+        rbac_result.owner_created,
+        rbac_result.owner_assigned,
     )
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
 
 
 

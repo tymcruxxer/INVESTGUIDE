@@ -1,4 +1,4 @@
-"""Application configuration."""
+﻿"""Application configuration."""
 
 import json
 from functools import lru_cache
@@ -11,6 +11,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 ENV_FILE = BACKEND_DIR / ".env"
+
 
 class Settings(BaseSettings):
     """Environment-driven backend settings."""
@@ -46,6 +47,14 @@ class Settings(BaseSettings):
         default=60,
         validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
+    admin_owner_email: str = Field(
+        default="owner@investguide.local",
+        validation_alias="ADMIN_OWNER_EMAIL",
+    )
+    admin_owner_password: str = Field(
+        default="ChangeMe123!",
+        validation_alias="ADMIN_OWNER_PASSWORD",
+    )
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
@@ -76,7 +85,6 @@ class Settings(BaseSettings):
         return value
 
 
-
 def get_masked_database_url(database_url: str) -> str:
     """Return a database URL with credentials masked for diagnostics."""
     if "://" not in database_url or "@" not in database_url:
@@ -84,9 +92,9 @@ def get_masked_database_url(database_url: str) -> str:
     scheme, rest = database_url.split("://", 1)
     _, host_part = rest.rsplit("@", 1)
     return f"{scheme}://***:***@{host_part}"
+
+
 @lru_cache
 def get_settings() -> Settings:
     """Return cached application settings."""
     return Settings()
-
-

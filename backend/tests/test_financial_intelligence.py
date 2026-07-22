@@ -1,4 +1,4 @@
-"""Financial Intelligence Engine tests."""
+﻿"""Financial Intelligence Engine tests."""
 
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -13,6 +13,7 @@ from app.services.intelligence.financial_engine import (
     calculate_ratios,
     clear_financial_cache,
 )
+from app.services.intelligence.financial_statement_engine import build_financial_statement_intelligence
 
 client = TestClient(app)
 
@@ -218,3 +219,70 @@ def test_company_financial_endpoint_returns_404(monkeypatch) -> None:
     assert response.status_code == 404
     assert response.json()["error_code"] == "COMPANY_NOT_FOUND"
 
+
+
+
+def test_financial_statement_intelligence_builds_section_payload() -> None:
+    payload = build_financial_statement_intelligence(
+        make_company(),
+        income_statements=[make_income(2024), make_income(2023)],
+        balance_sheets=[make_balance(2024), make_balance(2023)],
+        cash_flow_statements=[make_cash_flow(2024), make_cash_flow(2023)],
+    )
+
+    assert payload["sections"]["revenue"]["headline"]
+    assert payload["sections"]["profitability"]["why_it_matters"]
+    assert payload["sections"]["liquidity"]["explain_like_im_18"]
+    assert payload["sections"]["earnings_quality"]["confidence"] in {"Low", "Medium", "High"}
+    assert payload["evidence"]["confidence"] in {"Low", "Medium", "High"}
+    assert "strong buy" not in str(payload).lower()
+    assert "price target" not in str(payload).lower()
+
+
+def test_financial_statement_intelligence_handles_missing_data() -> None:
+    payload = build_financial_statement_intelligence(make_company())
+
+    assert payload["evidence"]["confidence"] == "Low"
+    assert payload["missing_fields"]
+    assert payload["sections"]["revenue"]["headline"] == "Revenue is unavailable."
+
+
+def test_company_financial_statements_endpoint_returns_provenance(monkeypatch) -> None:
+    company = make_company()
+
+    monkeypatch.setattr(companies_module.company_service, "get_company_by_ticker", lambda *args, **kwargs: company)
+    monkeypatch.setattr(
+        companies_module.financial_statement_service,
+        "get_company_financial_statements",
+        lambda *args, **kwargs: ([make_income(2024)], [make_balance(2024)], [make_cash_flow(2024)]),
+    )
+
+    response = client.get("/api/v1/companies/DLTA/financial-statements")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["success"] is True
+    assert body["message"] == "Company financial statements retrieved successfully"
+    assert body["data"]["income_statements"][0]["source_name"]
+    assert body["data"]["available_reporting_periods"]
+    assert body["data"]["data_origin"] == "Development Preview"
+
+
+def test_company_financial_intelligence_endpoint_returns_sections(monkeypatch) -> None:
+    company = make_company()
+
+    monkeypatch.setattr(companies_module.company_service, "get_company_by_ticker", lambda *args, **kwargs: company)
+    monkeypatch.setattr(
+        companies_module.financial_statement_service,
+        "get_company_financial_statements",
+        lambda *args, **kwargs: ([make_income(2024), make_income(2023)], [make_balance(2024), make_balance(2023)], [make_cash_flow(2024), make_cash_flow(2023)]),
+    )
+
+    response = client.get("/api/v1/companies/DLTA/financial-intelligence")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["success"] is True
+    assert body["message"] == "Company financial statement intelligence retrieved successfully"
+    assert body["data"]["intelligence"]["sections"]["cash_flow"]["headline"]
+    assert body["data"]["intelligence"]["transparency"]["not_advice"]

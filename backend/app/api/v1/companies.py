@@ -19,6 +19,7 @@ from app.services import company_enrichment, company_service, dividend_service, 
 from app.services.intelligence.assessment_service import build_asset_assessment
 from app.services.intelligence.business_engine import build_business_intelligence
 from app.services.intelligence.financial_engine import build_financial_intelligence
+from app.services.intelligence.financial_statement_engine import build_financial_statement_intelligence
 from app.services.intelligence.dividend_engine import build_dividend_intelligence
 from app.services.intelligence.research_service import build_company_research
 from app.services.intelligence.related_engine import build_related_research
@@ -367,6 +368,70 @@ async def get_company_financials(
     )
 
 
+@router.get("/{ticker}/financial-statements", response_model=None)
+async def get_company_financial_statements(
+    ticker: str,
+    db: Session = Depends(get_db),
+):
+    """Return persisted structured financial statement rows with provenance."""
+    company = company_service.get_company_by_ticker(db, ticker)
+    if company is None:
+        normalized_ticker = ticker.strip().upper()
+        return JSONResponse(
+            status_code=404,
+            content=error_response(
+                message=f"Company '{normalized_ticker}' was not found",
+                error_code="COMPANY_NOT_FOUND",
+            ),
+        )
+
+    income, balance, cash_flow = financial_statement_service.get_company_financial_statements(db, company)
+    return success_response(
+        message="Company financial statements retrieved successfully",
+        data={
+            "company": _serialize_company(company),
+            "income_statements": [_serialize_statement(row) for row in income],
+            "balance_sheets": [_serialize_statement(row) for row in balance],
+            "cash_flow_statements": [_serialize_statement(row) for row in cash_flow],
+            "available_reporting_periods": financial_statement_service.get_available_reporting_periods(db, company),
+            "missing_fields": financial_statement_service.get_missing_financial_fields(db, company),
+            "data_origin": "Development Preview" if any(row.is_development_data for row in [*income, *balance, *cash_flow]) else ("Persisted Backend" if [*income, *balance, *cash_flow] else "Unavailable"),
+        },
+    )
+
+
+@router.get("/{ticker}/financial-intelligence", response_model=None)
+async def get_company_financial_statement_intelligence(
+    ticker: str,
+    db: Session = Depends(get_db),
+):
+    """Return deterministic explainable financial statement intelligence."""
+    company = company_service.get_company_by_ticker(db, ticker)
+    if company is None:
+        normalized_ticker = ticker.strip().upper()
+        return JSONResponse(
+            status_code=404,
+            content=error_response(
+                message=f"Company '{normalized_ticker}' was not found",
+                error_code="COMPANY_NOT_FOUND",
+            ),
+        )
+
+    income, balance, cash_flow = financial_statement_service.get_company_financial_statements(db, company)
+    return success_response(
+        message="Company financial statement intelligence retrieved successfully",
+        data={
+            "company": _serialize_company(company),
+            "intelligence": build_financial_statement_intelligence(
+                company,
+                income_statements=income,
+                balance_sheets=balance,
+                cash_flow_statements=cash_flow,
+            ),
+        },
+    )
+
+
 @router.get("/{ticker}/financial-health", response_model=None)
 async def get_company_financial_health(
     ticker: str,
@@ -476,6 +541,8 @@ async def get_company_assessment(
         message="Company assessment retrieved successfully",
         data=assessment_payload,
     )
+
+
 
 
 

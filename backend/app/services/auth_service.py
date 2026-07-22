@@ -80,6 +80,9 @@ def verify_credentials(db: Session, email: str, password: str) -> User | None:
         return None
     if not verify_password(password, user.hashed_password):
         return None
+    user.last_login_at = datetime.now(UTC)
+    db.commit()
+    db.refresh(user)
     return user
 
 
@@ -146,3 +149,5 @@ def get_optional_current_user(
         return _user_from_credentials(db, credentials)
     except AuthServiceError as exc:
         raise _unauthorized(exc.message) from exc
+
+

@@ -865,3 +865,239 @@ Known limitations:
 Recommended Sprint 050:
 
 * Add admin-role protection for internal operations or implement one controlled live-source adapter only after operator access, source health, issue reporting, and provenance review are accepted.
+
+---
+
+## Sprint 050 Macro Intelligence Engine
+
+Status: Complete
+
+Implemented:
+
+* Persisted `macro_indicators` model for inflation, interest rates, exchange rates, GDP, and commodity prices.
+* Alembic migration `20260715_0004_create_macro_indicators.py`.
+* Development macro fixture data and manual seed runner.
+* Unified development seed workflow now includes macro indicators.
+* Verified data pipeline support for `macro_indicators` normalizing, validation, importing, and registry execution.
+* Deterministic Macro Intelligence Engine for indicator explanation, evidence, Learn Next, related companies, sector sensitivity, company impact, and macro knowledge graph relationships.
+* Read-only macro APIs under `/api/v1/macro`.
+* Company macro impact API at `/api/v1/macro/company/{ticker}`.
+* Dynamic frontend macro pages at `/macro/[type]`.
+* Company page Macro Factors panel.
+* Architecture documentation at `docs/architecture/macro-intelligence.md`.
+
+Architecture decisions:
+
+* Macro data follows the verified-data pipeline and is not hardcoded in the frontend.
+* Verified/non-development rows take precedence over Development Preview rows.
+* Macro Intelligence remains deterministic and educational; it does not forecast, predict, recommend, or provide personalized financial advice.
+* Sector impact logic is reusable for future sector pages, but no Sector Explorer was added.
+* No live RBZ/ZIMSTAT/ZSE/VFEX connector, scraper, scheduler, LLM, prediction, portfolio feature, watchlist, alert, or recommendation was added.
+
+Runtime validation:
+
+* Docker PostgreSQL running.
+* Alembic current at `20260715_0004`.
+* Manual seed workflow passed with macro fixtures.
+* Database diagnostics passed with seed data present and asset count 9.
+* Backend smoke passed on port `8015`: `/macro`, `/macro/inflation`, `/macro/inflation/research`, `/macro/gdp`, `/macro/exchange-rates`, `/macro/commodities`, and `/macro/company/DLTA`.
+* Frontend route smoke passed on port `3022`: `/macro/inflation`, `/macro/gdp`, and `/company/delta`.
+
+Validation:
+
+* `python -m pytest -q`: passed, 307 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 15 routes generated.
+
+Known limitations:
+
+* Macro values are development preview fixtures until verified official imports exist.
+* No live macro source integration exists.
+* No historical macro charts were added.
+* Sector impact is service-ready, but full sector pages remain future work.
+
+Recommended Sprint 051:
+
+* Add admin-role protection for internal operations and macro provenance review, or build the first controlled verified macro import adapter only after operator access and source validation are accepted.
+
+---
+
+## Sprint 051 Sector Intelligence Engine
+
+Status: Complete
+
+Implemented:
+
+* Persisted Sector and Industry domain models with provenance, verification, ingestion, development-data, and timestamp metadata.
+* Alembic migration `20260715_0005_create_sectors_and_industries.py`.
+* Manual development seed workflow for sectors and industries through `python -m app.database.seed`.
+* Verified data pipeline support for `sectors` and `industries`.
+* Deterministic Sector Intelligence Engine and Industry Intelligence research output.
+* Read-only APIs under `/api/v1/sectors` and `/api/v1/industries`.
+* Dynamic frontend pages `/sector/[slug]` and `/industry/[slug]`.
+* Company page Sector Intelligence panel.
+* Macro affected-sector links to sector research pages.
+* Architecture documentation at `docs/architecture/sector-intelligence.md`.
+
+Architecture decisions:
+
+* Sector and industry data uses the same verified-data precedence model as company, macro, financial, and dividend intelligence: verified data first, validated manual data second, development preview third, unavailable last.
+* Sector and industry slugs are indexed but not globally unique so verified rows can supersede development-preview rows without destructive replacement.
+* Sector Intelligence is deterministic education and relationship mapping, not forecasting, prediction, recommendation, or investment advice.
+* Frontend pages consume backend APIs and provenance fields; they do not hardcode sector facts.
+
+Runtime validation:
+
+* Docker PostgreSQL running.
+* Alembic current at `20260715_0005`.
+* Unified manual seed workflow completed.
+* Database diagnostics passed with seed data present and asset count 9.
+* Backend smoke passed on port `8016`: `/sectors`, `/sectors/consumer-staples`, `/sectors/consumer-staples/research`, `/industries`, `/industries/beverages`, `/industries/beverages/research`, `/companies/DLTA`, and `/macro/inflation`.
+* Frontend route smoke passed on port `3023`: `/company/delta`, `/sector/consumer-staples`, `/industry/beverages`, and `/macro/inflation`.
+
+Validation:
+
+* `python -m pytest -q`: passed, 265 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 18 routes generated.
+
+Known limitations:
+
+* Sector and industry rows are development preview seed data until verified source imports are configured.
+* No live sector source adapter, scraper, scheduler, admin write UI, prediction, recommendation, or AI feature was added.
+* Company-to-sector mapping currently uses existing company and asset metadata rather than a dedicated historical sector classification table.
+
+Recommended Sprint 052:
+
+* Add admin-role protection for internal operations and verified-data review workflows, or implement one controlled verified reference-data import adapter for sectors/industries after source ownership and operator approval are defined.
+
+---
+
+## Sprint 052 Financial Statement Intelligence Engine
+
+Status: Complete pending live database migration smoke.
+
+Completed:
+
+* Added financial statement provenance columns and indexes through migration `20260721_0006_add_financial_statement_provenance.py`.
+* Added deterministic Financial Statement Intelligence Engine.
+* Added statement retrieval helpers for latest statements, history, missing data, and available periods.
+* Added read-only company APIs for financial statements and financial intelligence.
+* Added backend tests for the engine and APIs.
+* Added company page Financial Statement Intelligence panel.
+* Added frontend API methods and TypeScript contracts.
+* Added architecture documentation at `docs/architecture/financial-statement-intelligence.md`.
+
+Architecture decisions:
+
+* Financial Statement Intelligence is deterministic and evidence-based; it does not use LLMs, predictions, recommendations, or personalized financial advice.
+* Every section returns confidence, evidence, provenance, educational context, ELI18 text, and Learn Next topics.
+* Development data remains labelled as Development Preview; production confidence should rely on verified imported or validated manual records.
+* Existing financial, dividend, macro, sector, company, and research functionality remains unchanged.
+
+Validation results:
+
+* Backend tests: passed, `269 passed in 23.94s`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 19 routes generated.
+* Alembic live/database check: pending; local Alembic CLI timed out while loading configured database state.
+
+Known limitations:
+
+* No live financial statement connectors exist yet.
+* Statement data is still development/verified-pipeline dependent.
+* No financial forecasts, price targets, buy/sell signals, AI summaries, or portfolio optimization were added.
+
+Recommended Sprint 053:
+
+* Add a controlled verified financial statement import adapter and runtime migration smoke validation against Docker PostgreSQL, or add developer diagnostics for Alembic/database readiness before expanding statement intelligence.
+
+---
+
+## Sprint 052 Owner and Administration Foundation
+
+Status: Complete.
+
+Completed:
+
+* Added Owner/Admin RBAC foundation with roles, permissions, role-permissions, and user-role assignments.
+* Added audit infrastructure for privileged action recording.
+* Added sensitive-action request infrastructure for future re-authentication, MFA-compatible, and confirmation workflows.
+* Added Alembic migration `20260721_0007_create_rbac_and_audit_foundation.py`.
+* Added development RBAC bootstrap to `python -m app.database.seed`.
+* Added server-side permission dependency and Owner protection helper.
+* Added secure admin APIs under `/api/v1/admin`.
+* Added dedicated frontend admin shell and placeholder admin pages.
+* Added architecture documentation at `docs/architecture/admin-platform.md`.
+
+Architecture decisions:
+
+* Admin access uses the existing JWT authentication system rather than a separate login system.
+* Server-side permission checks are mandatory for every admin endpoint.
+* Owner bypasses normal permission checks while remaining auditable.
+* Owner deletion, suspension, and demotion are blocked through reusable service helpers; ownership transfer is deferred to a dedicated future workflow.
+* Frontend admin routing is separate from the investor app and clearly marks Admin Mode.
+
+Validation results:
+
+* Backend focused admin tests: passed, 14 tests.
+* Backend full suite: passed, `283 passed in 35.14s`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 22 routes generated.
+
+Known limitations:
+
+* No user management UI, role editor, audit log viewer, data source manager, ingestion dashboard, analytics dashboard, feature flags, billing, notifications, or AI configuration was added.
+* Production Owner provisioning still needs a secure operator workflow.
+* Admin pages are foundational placeholders for future modules.
+
+Recommended Sprint 053:
+
+* Implement a controlled admin user-management read-only view and audit log viewer, or add secure production Owner provisioning before expanding administrative operations.
+
+---
+
+## Sprint 053 User, Role & Permission Management
+
+Status: Complete.
+
+Completed:
+
+* Added user directory, user detail, role assignment/removal, account suspend/restore, role catalog, and permission inspection APIs under `/api/v1/admin`.
+* Added user suspension metadata and login metadata to the User model.
+* Added role assignment reason, user-role history, and privilege-change history models.
+* Added migration `20260721_0008_add_admin_user_management_metadata.py`.
+* Expanded built-in RBAC roles for operations, finance, support, and moderation.
+* Added duplicate-aware development admin user seeding to the manual seed workflow.
+* Added frontend admin pages for `/admin/users`, `/admin/users/[id]`, `/admin/roles`, and `/admin/roles/[id]`.
+* Added architecture documentation at `docs/architecture/user-role-management.md`.
+
+Architecture decisions:
+
+* User payloads expose role slugs and effective permissions but never password hashes or secrets.
+* Full permission metadata is exposed through the read-only role and permission catalog APIs.
+* Owner assignment/removal/transfer remains outside normal user-management workflows.
+* Sensitive role/status changes require confirmation and reason, then write audit, sensitive-action, and history records.
+* Development sample admin users are seeded manually only through `python -m app.database.seed`.
+
+Validation results:
+
+* Backend full test suite: passed, `290 passed in 47.47s`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 20 static pages generated plus dynamic admin detail routes.
+
+Known limitations:
+
+* Production Owner provisioning and ownership transfer are not implemented.
+* Permission editing, audit log export, MFA/re-authentication enforcement, billing, feature flags, data-source registry, ingestion center, and platform analytics remain future admin modules.
+* Frontend admin operations rely on existing JWT auth and server-side RBAC; no new authentication system was added.
+
+Recommended Sprint 054:
+
+* Add a dedicated audit log viewer/export workflow or production Owner provisioning and transfer workflow before expanding administrative operations.
+

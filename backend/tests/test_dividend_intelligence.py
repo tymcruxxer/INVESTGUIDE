@@ -173,6 +173,7 @@ def test_company_dividend_intelligence_endpoint_returns_payload(monkeypatch) -> 
     monkeypatch.setattr(companies_module.company_service, "get_company_by_ticker", lambda *args, **kwargs: company)
     monkeypatch.setattr(companies_module.dividend_service, "get_company_dividends", lambda *args, **kwargs: dividends)
     monkeypatch.setattr(companies_module.financial_statement_service, "get_company_financial_statements", lambda *args, **kwargs: ([make_income(2024), make_income(2023, net_profit=76_000_000)], [], [make_cash_flow(2024), make_cash_flow(2023, operating_cash_flow=95_000_000)]))
+    monkeypatch.setattr(companies_module.market_snapshot_service, "get_latest_company_reference_snapshot", lambda *args, **kwargs: None)
 
     response = client.get("/api/v1/companies/DLTA/dividend-intelligence")
     body = response.json()

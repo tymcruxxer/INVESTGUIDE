@@ -1,4 +1,4 @@
-"""Deterministic Financial Intelligence Engine."""
+﻿"""Deterministic Financial Intelligence Engine."""
 
 from __future__ import annotations
 
@@ -322,7 +322,13 @@ def _statement_snapshot(statement: Any) -> tuple[tuple[str, Any], ...]:
         "period",
         "currency",
         "source_name",
+        "source_type",
         "source_url",
+        "imported_at",
+        "verified_at",
+        "verification_status",
+        "dataset_version",
+        "external_key",
         "is_development_data",
         "updated_at",
         "revenue",
@@ -574,3 +580,4 @@ def _latest_updated(rows: list[dict[str, Any]]) -> str | None:
 
 def _find_trend(trends: list[dict[str, Any]], metric: str) -> dict[str, Any]:
     return next((trend for trend in trends if trend["metric"] == metric), {"metric": metric, "direction": "Insufficient Data", "values": [], "explanation": "No data available.", "why_it_matters": ""})
+

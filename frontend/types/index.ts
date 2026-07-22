@@ -570,7 +570,82 @@ export interface CompanyFinancialsPayload {
   intelligence: FinancialIntelligence;
 }
 
-export interface CompanyFinancialHealthPayload {
+
+export interface FinancialStatementSectionProvenance {
+  source: string;
+  reporting_period: string;
+  verification_status: string;
+  last_updated?: string | null;
+}
+
+export interface FinancialStatementIntelligenceSection {
+  headline: string;
+  value: number | null;
+  trend: string;
+  explanation: string;
+  evidence: string[];
+  confidence: "Low" | "Medium" | "High";
+  provenance: FinancialStatementSectionProvenance;
+  why_it_matters: string;
+  explain_like_im_18: string;
+  learn_next: string[];
+}
+
+export interface FinancialStatementIntelligence {
+  ticker: string;
+  company_name: string;
+  statement_coverage: {
+    income_statement_periods: number;
+    balance_sheet_periods: number;
+    cash_flow_periods: number;
+    complete_latest_period: boolean;
+  };
+  available_reporting_periods: string[];
+  missing_fields: string[];
+  sections: Record<"revenue" | "profitability" | "liquidity" | "leverage" | "cash_flow" | "earnings_quality", FinancialStatementIntelligenceSection>;
+  evidence: {
+    confidence: "Low" | "Medium" | "High";
+    confidence_reason: string;
+    data_used: string[];
+    missing_data: string[];
+  };
+  educational_layer: {
+    why_financial_statements_matter: string;
+    learn_next: string[];
+    explain_like_im_18: string;
+  };
+  transparency: {
+    source: string;
+    sources: string[];
+    reporting_period: string;
+    verification_status: string;
+    last_updated?: string | null;
+    development_data: boolean;
+    confidence: "Low" | "Medium" | "High";
+    methodology: string;
+    not_advice: string;
+    engine_version: string;
+    methodology_version: string;
+    base_financial_engine_version: string;
+    base_financial_methodology_version: string;
+  };
+  generated_at: string;
+}
+
+export interface CompanyFinancialStatementsPayload {
+  company: Company;
+  income_statements: FinancialStatementRow[];
+  balance_sheets: FinancialStatementRow[];
+  cash_flow_statements: FinancialStatementRow[];
+  available_reporting_periods: string[];
+  missing_fields: string[];
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+}
+
+export interface CompanyFinancialStatementIntelligencePayload {
+  company: Company;
+  intelligence: FinancialStatementIntelligence;
+}export interface CompanyFinancialHealthPayload {
   ticker: string;
   company_name: string;
   financial_health: FinancialHealth;
@@ -905,6 +980,108 @@ export interface User {
   updated_at: string;
 }
 
+
+export interface AdminPermission {
+  id: number;
+  code: string;
+  name: string;
+  category: string;
+  description?: string | null;
+}
+
+export interface AdminRole {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_system_role: boolean;
+  is_owner_role: boolean;
+  is_active: boolean;
+  assigned_user_count?: number;
+  permissions?: AdminPermission[];
+}
+
+export interface AdminMe {
+  user: User;
+  roles: AdminRole[];
+  permissions: string[];
+  is_owner: boolean;
+  primary_role?: AdminRole | null;
+  mode: "admin";
+}
+
+export interface AdminNavigationItem {
+  label: string;
+  href: string;
+  permission: string;
+}
+
+export interface AdminNavigationPayload {
+  items: AdminNavigationItem[];
+  mode: "admin";
+}
+
+export interface AdminPermissionsPayload {
+  permissions: AdminPermission[];
+  grouped_permissions: Record<string, AdminPermission[]>;
+  roles: AdminRole[];
+  user_permissions: string[];
+  owner_bypass: boolean;
+  audit: Record<string, boolean>;
+  sensitive_actions: Record<string, boolean>;
+  generated_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface AdminUserSummary {
+  id: number;
+  email: string;
+  username?: string | null;
+  display_name?: string | null;
+  roles: string[];
+  is_active: boolean;
+  is_verified: boolean;
+  status: "active" | "suspended";
+  created_at?: string | null;
+  last_login_at?: string | null;
+  suspended_at?: string | null;
+  subscription_tier: string;
+}
+
+export interface AdminAuditSummaryItem {
+  action: string;
+  result: string;
+  reason?: string | null;
+  created_at?: string | null;
+}
+
+export interface AdminUserDetail extends AdminUserSummary {
+  permissions: string[];
+  activity_summary: Record<string, unknown>;
+  audit_summary: AdminAuditSummaryItem[];
+  suspension_reason?: string | null;
+  restored_at?: string | null;
+}
+
+export interface AdminUserListPayload {
+  users: AdminUserSummary[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AdminRoleMutationPayload {
+  role_id: number;
+  action: "assign" | "remove";
+  reason: string;
+  confirmation: boolean;
+}
+
+export interface AdminUserStatusPayload {
+  status: "active" | "suspended";
+  reason: string;
+  confirmation: boolean;
+}
 export interface AuthTokens {
   access_token: string;
   token_type: "bearer";
@@ -1161,3 +1338,252 @@ export interface CompanyDataQualityPayload {
   suggested_operator_actions: string[];
   provenance_status: string;
 }
+
+export interface MacroIndicatorRecord {
+  id: number;
+  indicator_type: "inflation" | "interest_rate" | "exchange_rate" | "gdp" | "commodity_price";
+  name: string;
+  value: number;
+  unit: string;
+  reporting_period: string;
+  country: string;
+  currency?: string | null;
+  commodity?: string | null;
+  notes?: string | null;
+  source_name?: string | null;
+  source_type?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
+  verified_at?: string | null;
+  verification_status?: string | null;
+  dataset_version?: string | null;
+  is_development_data: boolean;
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface MacroEvidence {
+  confidence: "Low" | "Medium" | "High";
+  source_quality: string;
+  data_completeness: number;
+  data_used: string[];
+  missing_data: string[];
+  why_confidence: string[];
+}
+
+export interface MacroCompanyImpactItem {
+  indicator_type: string;
+  label: string;
+  why_it_matters: string;
+  relationship_chain: string[];
+  explanation: string;
+  not_prediction: string;
+}
+
+export interface MacroRelatedCompany {
+  ticker: string;
+  name: string;
+  sector: string;
+  reason: string;
+  href: string;
+}
+
+export interface MacroResearchPayload {
+  indicator_type: string;
+  label: string;
+  current_value?: MacroIndicatorRecord | null;
+  historical_availability: {
+    records_available: number;
+    periods: string[];
+  };
+  overview: string;
+  why_investors_care: string;
+  typical_business_impacts: string[];
+  typical_sector_impacts: string[];
+  evidence: MacroEvidence;
+  explain_like_im_18: string;
+  affected_sectors: Array<{ sector: string; reason: string }>;
+  affected_companies: MacroRelatedCompany[];
+  knowledge_graph: KnowledgeGraphPayload;
+  learn_next: LearnNextTopic[];
+  transparency: {
+    methodology: string;
+    data_origin: string;
+    not_advice: string;
+  };
+  generated_at: string;
+  engine_version: string;
+}
+
+export interface MacroIndicatorPayload {
+  indicator_type: string;
+  records: MacroIndicatorRecord[];
+  latest?: MacroIndicatorRecord | null;
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+}
+
+export interface MacroOverviewPayload {
+  indicators: MacroIndicatorRecord[];
+  research: MacroResearchPayload[];
+  transparency: {
+    methodology: string;
+    not_advice: string;
+  };
+  generated_at: string;
+  engine_version: string;
+}
+
+export interface CompanyMacroImpactPayload {
+  ticker: string;
+  company_name: string;
+  sector: string;
+  industry: string;
+  factors: MacroCompanyImpactItem[];
+  knowledge_graph: KnowledgeGraphPayload;
+  transparency: {
+    methodology: string;
+    data_points_seen: number;
+    not_advice: string;
+  };
+  generated_at: string;
+  engine_version: string;
+}
+
+// ============================================================================
+// Sector and Industry Intelligence Types
+// ============================================================================
+
+export interface SectorSummary {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  country: string;
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+}
+
+export interface IndustrySummary {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  sector_id: number;
+  data_origin: "Development Preview" | "Persisted Backend" | "Unavailable";
+}
+
+export interface SectorRecord extends SectorSummary {
+  exchange_coverage?: string | null;
+  overview?: string | null;
+  source_name?: string | null;
+  source_type?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
+  verified_at?: string | null;
+  verification_status: string;
+  dataset_version?: string | null;
+  is_development_data: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+  industries: IndustrySummary[];
+}
+
+export interface IndustryRecord extends IndustrySummary {
+  sector: SectorSummary;
+  overview?: string | null;
+  source_name?: string | null;
+  source_type?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
+  verified_at?: string | null;
+  verification_status: string;
+  dataset_version?: string | null;
+  is_development_data: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+  companies?: SectorCompanyItem[];
+}
+
+export interface SectorCompanyItem {
+  ticker: string;
+  name: string;
+  sector: string;
+  industry: string;
+  exchange: string;
+  href: string;
+  reason: string;
+}
+
+export interface SectorResearchPayload {
+  version: string;
+  sector: SectorRecord;
+  overview: {
+    what_it_is: string;
+    typical_businesses: string[];
+    why_investors_study_it: string;
+  };
+  typical_characteristics: string[];
+  typical_opportunities: Array<{ label: string; why_it_matters: string }>;
+  typical_risks: Array<{ label: string; why_it_matters: string }>;
+  macro_relationships: Array<{ indicator_type: string; label: string; relationship: string; path: string }>;
+  financial_characteristics: string[];
+  industries: IndustrySummary[];
+  companies: SectorCompanyItem[];
+  related_sectors: Array<{ name: string; reason: string }>;
+  evidence: {
+    evidence_strength: string;
+    available_data: string[];
+    missing_data: string[];
+    transparency: string;
+  };
+  knowledge_graph: KnowledgeGraphPayload;
+  learn_next: LearnNextTopic[];
+  transparency: {
+    source_name?: string | null;
+    source_url?: string | null;
+    verification_status: string;
+    data_origin: string;
+    methodology: string;
+    not_advice: string;
+  };
+  generated_at: string;
+}
+
+export interface IndustryResearchPayload {
+  version: string;
+  industry: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string | null;
+    overview?: string | null;
+    data_origin: string;
+  };
+  sector: {
+    name: string;
+    slug: string;
+    description?: string | null;
+  };
+  overview: string;
+  typical_business_model: string;
+  macro_exposure: Array<{ indicator_type: string; label: string; relationship: string; path: string }>;
+  typical_risks: Array<{ label: string; why_it_matters: string }>;
+  typical_opportunities: Array<{ label: string; why_it_matters: string }>;
+  related_companies: SectorCompanyItem[];
+  learn_next: LearnNextTopic[];
+  knowledge_graph: KnowledgeGraphPayload;
+  transparency: SectorResearchPayload["transparency"];
+  generated_at: string;
+}
+
+export interface SectorDetailPayload {
+  sector: SectorRecord;
+  companies: SectorCompanyItem[];
+  industry_count: number;
+  company_count: number;
+}
+
+
+
+
+

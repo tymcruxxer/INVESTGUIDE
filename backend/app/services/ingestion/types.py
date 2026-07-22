@@ -91,6 +91,9 @@ class EntityType(StrEnum):
     CORPORATE_ACTIONS = "corporate_actions"
     NEWS = "news"
     MARKET_SNAPSHOTS = "market_snapshots"
+    MACRO_INDICATORS = "macro_indicators"
+    SECTORS = "sectors"
+    INDUSTRIES = "industries"
 
 
 @dataclass(frozen=True)
@@ -359,10 +362,48 @@ class NormalizedMarketSnapshot(BaseNormalizedRecord):
     currency: str | None = None
 
 
+
+@dataclass(frozen=True)
+class NormalizedMacroIndicator(BaseNormalizedRecord):
+    """Normalized macroeconomic indicator record."""
+
+    indicator_type: str
+    name: str
+    value: Decimal
+    unit: str
+    reporting_period: date
+    country: str = "Zimbabwe"
+    currency: str | None = None
+    commodity: str | None = None
+    notes: str | None = None
+
+@dataclass(frozen=True)
+class NormalizedSector(BaseNormalizedRecord):
+    """Normalized sector reference record."""
+
+    name: str
+    slug: str
+    description: str | None = None
+    exchange_coverage: str | None = None
+    country: str = "Zimbabwe"
+    overview: str | None = None
+
+
+@dataclass(frozen=True)
+class NormalizedIndustry(BaseNormalizedRecord):
+    """Normalized industry reference record."""
+
+    name: str
+    slug: str
+    sector_slug: str
+    description: str | None = None
+    overview: str | None = None
 def build_external_key(*parts: object) -> str:
     """Build a deterministic external key from normalized parts."""
     normalized = "|".join(str(part).strip().upper() for part in parts if part not in (None, ""))
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 
 
 

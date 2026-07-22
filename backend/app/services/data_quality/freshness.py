@@ -12,6 +12,8 @@ FRESHNESS_TARGET_DAYS: dict[str, int] = {
     "news": 1,
     "company_profiles": 90,
     "companies": 90,
+    "sectors": 180,
+    "industries": 180,
     "assets": 90,
     "income_statements": 365,
     "balance_sheets": 365,
@@ -88,3 +90,5 @@ def score_freshness(entity_type: str, latest_update: object, development_only: b
         score=QualityScore.from_value(value, [reason]),
         explanation=reason,
     )
+
+

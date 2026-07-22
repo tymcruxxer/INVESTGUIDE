@@ -15,7 +15,9 @@ from app.models.company_profile import CompanyProfile, ResearchStatus
 from app.models.dividend import CorporateAction, CorporateActionType, Dividend, DividendType
 from app.models.financial_statement import BalanceSheet, CashFlowStatement, IncomeStatement, StatementPeriod
 from app.models.market_snapshot import MarketSnapshot
+from app.models.macro import MacroIndicator, MacroIndicatorType
 from app.models.news import News
+from app.models.sector import Industry, Sector
 from app.services.ingestion.types import (
     BaseNormalizedRecord,
     ImportResult,
@@ -29,6 +31,9 @@ from app.services.ingestion.types import (
     NormalizedDividend,
     NormalizedIncomeStatement,
     NormalizedMarketSnapshot,
+    NormalizedMacroIndicator,
+    NormalizedSector,
+    NormalizedIndustry,
     NormalizedNews,
 )
 from app.utils.hashing import generate_content_hash
@@ -561,3 +566,159 @@ class MarketSnapshotImporter:
 
 
 
+
+
+class MacroIndicatorImporter:
+    """Upsert macro indicators by type/name/period/country/currency/source."""
+
+    def import_records(self, db: Session, records: list[BaseNormalizedRecord], mode: IngestionMode = IngestionMode.DRY_RUN) -> ImportResult:
+        rows = [cast(NormalizedMacroIndicator, record) for record in records]
+        if mode == IngestionMode.DRY_RUN:
+            return ImportResult(inserted=len(rows))
+        inserted = updated = skipped = 0
+        try:
+            for row in rows:
+                indicator_type = MacroIndicatorType(row.indicator_type)
+                existing = db.scalar(
+                    select(MacroIndicator).where(
+                        MacroIndicator.indicator_type == indicator_type,
+                        func.lower(MacroIndicator.name) == row.name.lower(),
+                        MacroIndicator.reporting_period == row.reporting_period,
+                        MacroIndicator.country == row.country,
+                        MacroIndicator.currency == row.currency,
+                        MacroIndicator.source_type == row.source.source_type.value,
+                    )
+                )
+                if existing and _should_preserve_existing(existing.is_development_data, row.source.is_development_data):
+                    skipped += 1
+                    continue
+                values = {
+                    "indicator_type": indicator_type,
+                    "name": row.name,
+                    "value": _decimal_to_float(row.value),
+                    "unit": row.unit,
+                    "reporting_period": row.reporting_period,
+                    "country": row.country,
+                    "currency": row.currency,
+                    "commodity": row.commodity,
+                    "notes": row.notes,
+                    "source_name": row.source.source_name,
+                    "source_type": row.source.source_type.value,
+                    "source_url": row.source.source_url,
+                    "imported_at": row.source.imported_at,
+                    "verified_at": row.source.verified_at,
+                    "verification_status": row.source.verification_status.value,
+                    "dataset_version": row.source.dataset_version,
+                    "external_key": row.external_key,
+                    "is_development_data": row.source.is_development_data,
+                }
+                if existing is None:
+                    db.add(MacroIndicator(**values))
+                    inserted += 1
+                else:
+                    for field, value in values.items():
+                        setattr(existing, field, value)
+                    updated += 1
+            db.commit()
+        except SQLAlchemyError as exc:
+            db.rollback()
+            return ImportResult(errors=[str(exc)])
+        return ImportResult(inserted=inserted, updated=updated, skipped=skipped)
+
+
+
+class SectorImporter:
+    """Upsert sector reference records by slug."""
+
+    def import_records(self, db: Session, records: list[BaseNormalizedRecord], mode: IngestionMode = IngestionMode.DRY_RUN) -> ImportResult:
+        rows = [cast(NormalizedSector, record) for record in records]
+        if mode == IngestionMode.DRY_RUN:
+            existing = set(db.scalars(select(Sector.slug).where(Sector.slug.in_([row.slug for row in rows]))).all())
+            return ImportResult(inserted=len([row for row in rows if row.slug not in existing]), updated=len([row for row in rows if row.slug in existing]))
+        inserted = updated = skipped = 0
+        try:
+            for row in rows:
+                sector = db.scalar(select(Sector).where(Sector.slug == row.slug))
+                if sector and _should_preserve_existing(sector.is_development_data, row.source.is_development_data):
+                    skipped += 1
+                    continue
+                values = {
+                    "name": row.name,
+                    "slug": row.slug,
+                    "description": row.description,
+                    "exchange_coverage": row.exchange_coverage,
+                    "country": row.country,
+                    "overview": row.overview,
+                    "source_name": row.source.source_name,
+                    "source_type": row.source.source_type.value,
+                    "source_url": row.source.source_url,
+                    "imported_at": row.source.imported_at,
+                    "verified_at": row.source.verified_at,
+                    "verification_status": row.source.verification_status.value,
+                    "dataset_version": row.source.dataset_version,
+                    "external_key": row.external_key,
+                    "is_development_data": row.source.is_development_data,
+                }
+                if sector is None:
+                    db.add(Sector(**values))
+                    inserted += 1
+                else:
+                    for field, value in values.items():
+                        setattr(sector, field, value)
+                    updated += 1
+            db.commit()
+        except SQLAlchemyError as exc:
+            db.rollback()
+            return ImportResult(errors=[str(exc)])
+        return ImportResult(inserted=inserted, updated=updated, skipped=skipped)
+
+
+class IndustryImporter:
+    """Upsert industry reference records by slug and parent sector."""
+
+    def import_records(self, db: Session, records: list[BaseNormalizedRecord], mode: IngestionMode = IngestionMode.DRY_RUN) -> ImportResult:
+        rows = [cast(NormalizedIndustry, record) for record in records]
+        if mode == IngestionMode.DRY_RUN:
+            existing = set(db.scalars(select(Industry.slug).where(Industry.slug.in_([row.slug for row in rows]))).all())
+            return ImportResult(inserted=len([row for row in rows if row.slug not in existing]), updated=len([row for row in rows if row.slug in existing]))
+        inserted = updated = skipped = 0
+        warnings: list[str] = []
+        try:
+            for row in rows:
+                sector = db.scalar(select(Sector).where(Sector.slug == row.sector_slug))
+                if sector is None:
+                    skipped += 1
+                    warnings.append(f"Sector not found for slug {row.sector_slug}")
+                    continue
+                industry = db.scalar(select(Industry).where(Industry.slug == row.slug))
+                if industry and _should_preserve_existing(industry.is_development_data, row.source.is_development_data):
+                    skipped += 1
+                    continue
+                values = {
+                    "sector_id": sector.id,
+                    "name": row.name,
+                    "slug": row.slug,
+                    "description": row.description,
+                    "overview": row.overview,
+                    "source_name": row.source.source_name,
+                    "source_type": row.source.source_type.value,
+                    "source_url": row.source.source_url,
+                    "imported_at": row.source.imported_at,
+                    "verified_at": row.source.verified_at,
+                    "verification_status": row.source.verification_status.value,
+                    "dataset_version": row.source.dataset_version,
+                    "external_key": row.external_key,
+                    "is_development_data": row.source.is_development_data,
+                }
+                if industry is None:
+                    db.add(Industry(**values))
+                    inserted += 1
+                else:
+                    for field, value in values.items():
+                        setattr(industry, field, value)
+                    updated += 1
+            db.commit()
+        except SQLAlchemyError as exc:
+            db.rollback()
+            return ImportResult(errors=[str(exc)])
+        return ImportResult(inserted=inserted, updated=updated, skipped=skipped, warnings=warnings)

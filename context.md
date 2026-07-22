@@ -1,4 +1,4 @@
-# Project Overview
+﻿# Project Overview
 
 InvestGuide is an AI-powered Zimbabwean investment intelligence platform. Its mission is to bridge the gap between institutional-grade financial intelligence and everyday Zimbabwean investors by transforming fragmented ZSE, VFEX, REIT, macroeconomic, news, sentiment, and research information into understandable, educational, analytics-driven insights.
 
@@ -4386,3 +4386,447 @@ Session Summary:
 Next Recommended Task:
 
 * Sprint 050: add admin-role protection for internal operations, or implement exactly one controlled live-source adapter only after operator access, provenance review, and data-quality reporting are accepted.
+
+---
+
+## Session 058
+
+Date: 2026-07-15
+
+Objective: Complete Sprint 050 by adding deterministic Macro Intelligence and economic relationship mapping without live connectors, forecasting, LLMs, recommendations, or personalized advice.
+
+Completed:
+
+* Added persisted `MacroIndicator` model for inflation, interest rates, exchange rates, GDP, and commodity prices.
+* Added Alembic migration `20260715_0004_create_macro_indicators.py`.
+* Added macro development fixture data and `seed_macro_indicators()`.
+* Updated the unified manual seed workflow to include macro indicators.
+* Extended the verified data pipeline with `macro_indicators` normalizer, validator, importer, registry entry, tests, and fixture coverage.
+* Added `macro_service` with verified-over-development precedence.
+* Added deterministic Macro Intelligence Engine for overview, evidence, sector impact, company impact, related companies, knowledge graph, and Learn Next.
+* Added read-only macro APIs under `/api/v1/macro`.
+* Added frontend API types/service methods for macro intelligence.
+* Added dynamic macro pages at `/macro/[type]`.
+* Added Company page Macro Factors panel using backend data.
+* Added `docs/architecture/macro-intelligence.md` and updated backend/frontend/data-ingestion documentation.
+
+Files Created:
+
+* `backend/app/models/macro.py`
+* `backend/alembic/versions/20260715_0004_create_macro_indicators.py`
+* `backend/app/services/macro_service.py`
+* `backend/app/services/intelligence/macro_engine.py`
+* `backend/app/api/v1/macro.py`
+* `backend/app/database/seed_macro_indicators.py`
+* `backend/tests/fixtures/ingestion/macro_indicators.json`
+* `backend/tests/test_macro_intelligence.py`
+* `frontend/app/macro/[type]/page.tsx`
+* `docs/architecture/macro-intelligence.md`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/app/api/v1/router.py`
+* `backend/app/database/seed.py`
+* `backend/app/services/data_quality/freshness.py`
+* `backend/app/services/ingestion/types.py`
+* `backend/app/services/ingestion/normalizers/records.py`
+* `backend/app/services/ingestion/validators/records.py`
+* `backend/app/services/ingestion/importers/records.py`
+* `backend/app/services/ingestion/registry.py`
+* `backend/tests/test_verified_ingestion_pipeline.py`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/app/company/[ticker]/page.tsx`
+* `docs/architecture/data-ingestion-pipeline.md`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Macro data uses one shared `macro_indicators` table with `indicator_type` instead of five near-duplicate tables.
+* Macro data follows the verified-data pipeline and supports source, verification, ingestion, development-data, and timestamp metadata.
+* Verified/non-development rows take precedence over Development Preview fixtures.
+* Macro Intelligence is deterministic relationship reasoning, not forecasting or prediction.
+* Frontend macro pages consume backend APIs only and clearly display Development Preview provenance when fixture rows are used.
+
+Runtime Validation:
+
+* `docker compose up -d`: PostgreSQL running.
+* `python -m alembic upgrade head`: migrated to `20260715_0004`.
+* `python -m app.database.seed`: passed after macro fixture loading was made UTF-8 BOM tolerant.
+* `python scripts/check_database.py`: database connected, migrations current, seed data present, asset count 9.
+* Backend smoke on port `8015`: `/api/v1/macro`, `/api/v1/macro/inflation`, `/api/v1/macro/inflation/research`, `/api/v1/macro/gdp`, `/api/v1/macro/exchange-rates`, `/api/v1/macro/commodities`, and `/api/v1/macro/company/DLTA` all returned success envelopes.
+* Frontend smoke on port `3022`: `/macro/inflation`, `/macro/gdp`, and `/company/delta` returned HTTP 200.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 307 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 15 routes generated.
+
+Known Issues:
+
+* Macro values are development fixture data until verified official imports exist.
+* No live macro adapters, scraping, schedulers, or source polling exist.
+* No historical macro charts or full sector pages exist yet.
+* The macro engine explains typical relationships and does not forecast company outcomes.
+
+Session Summary:
+
+* Sprint 050 gives InvestGuide its first deterministic Macro Intelligence layer: persisted macro records, verified/development precedence, pipeline ingestion support, macro research APIs, company macro impact, sector sensitivity mapping, knowledge graph paths, Learn Next, frontend macro pages, and company-page Macro Factors.
+
+Next Recommended Task:
+
+* Sprint 051: add admin-role protection for internal operations and macro provenance review, or implement exactly one controlled verified macro import adapter only after operator access and source validation are accepted.
+
+---
+
+## Session 059
+
+Date: 2026-07-15
+
+Objective: Complete Sprint 051 by adding deterministic Sector and Industry Intelligence, persisted sector/industry reference data, verified pipeline support, backend APIs, frontend sector/industry research pages, and runtime validation.
+
+Completed:
+
+* Added persisted `Sector` and `Industry` models with source, verification, ingestion, development-data, and timestamp metadata.
+* Added Alembic migration `20260715_0005_create_sectors_and_industries.py`.
+* Added sector and industry development seed data plus `seed_sectors()`.
+* Updated the unified manual seed workflow to include sectors and industries.
+* Extended the verified data pipeline with sector/industry normalizers, validators, importers, registry entries, freshness thresholds, fixtures, and tests.
+* Added `sector_service` with verified-over-development precedence and serialization helpers.
+* Added deterministic Sector Intelligence Engine for sector research, industry research, macro relationships, company links, knowledge graph paths, Learn Next topics, and transparency.
+* Added read-only sector and industry APIs under `/api/v1/sectors` and `/api/v1/industries`.
+* Added frontend API methods and TypeScript contracts for sector and industry intelligence.
+* Added dynamic frontend pages at `/sector/[slug]` and `/industry/[slug]`.
+* Added Company page Sector Intelligence panel and macro affected-sector links.
+* Added `docs/architecture/sector-intelligence.md` and updated backend/frontend/data-ingestion documentation.
+* Updated a stale industry route test to mock the new `sector_service` boundary rather than the old industry intelligence route contract.
+
+Files Created:
+
+* `backend/app/models/sector.py`
+* `backend/alembic/versions/20260715_0005_create_sectors_and_industries.py`
+* `backend/app/services/sector_service.py`
+* `backend/app/services/intelligence/sector_engine.py`
+* `backend/app/api/v1/sectors.py`
+* `backend/app/database/seed_sectors.py`
+* `backend/tests/fixtures/ingestion/sectors.json`
+* `backend/tests/fixtures/ingestion/industries.json`
+* `backend/tests/test_sector_intelligence.py`
+* `frontend/app/sector/[slug]/page.tsx`
+* `frontend/app/industry/[slug]/page.tsx`
+* `docs/architecture/sector-intelligence.md`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/app/api/v1/router.py`
+* `backend/app/api/v1/industries.py`
+* `backend/app/database/seed.py`
+* `backend/app/services/data_quality/freshness.py`
+* `backend/app/services/ingestion/types.py`
+* `backend/app/services/ingestion/normalizers/records.py`
+* `backend/app/services/ingestion/validators/records.py`
+* `backend/app/services/ingestion/importers/records.py`
+* `backend/app/services/ingestion/registry.py`
+* `backend/tests/test_verified_ingestion_pipeline.py`
+* `backend/tests/test_business_intelligence.py`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/app/macro/[type]/page.tsx`
+* `docs/architecture/data-ingestion-pipeline.md`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Sector and industry records follow the same verified-data precedence contract used elsewhere: verified imported data, validated manual data, Development Preview, then unavailable.
+* Sector and industry slugs are indexed rather than globally unique to allow development-preview rows and future verified rows to coexist during precedence selection.
+* Sector Intelligence remains deterministic and educational; it does not forecast, predict, recommend, personalize advice, or call AI/LLM services.
+* Frontend surfaces consume backend API payloads and provenance metadata instead of hardcoded sector facts.
+
+Runtime Validation:
+
+* `docker compose up -d`: PostgreSQL running.
+* `python -m alembic upgrade head`: migrated to `20260715_0005`.
+* `python -m app.database.seed`: completed successfully.
+* `python scripts/check_database.py`: database connected, migrations current, seed data present, asset count 9.
+* Backend smoke on port `8016`: `/api/v1/health`, `/api/v1/sectors`, `/api/v1/sectors/consumer-staples`, `/api/v1/sectors/consumer-staples/research`, `/api/v1/industries`, `/api/v1/industries/beverages`, `/api/v1/industries/beverages/research`, `/api/v1/companies/DLTA`, and `/api/v1/macro/inflation` returned success envelopes.
+* Frontend smoke on port `3023`: `/company/delta`, `/sector/consumer-staples`, `/industry/beverages`, and `/macro/inflation` returned HTTP 200.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 265 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 18 routes generated.
+
+Known Issues:
+
+* Sector and industry data remains Development Preview until verified source imports exist.
+* No live source adapter, scheduler, scraper, AI, prediction, recommendation, portfolio feature, watchlist, or admin write UI was added.
+* Company sector mapping is based on current company/asset metadata; no historical sector classification table exists yet.
+
+Session Summary:
+
+* Sprint 051 gives InvestGuide a deterministic Sector Intelligence layer: persisted sector and industry reference data, verified pipeline support, seed workflow, sector and industry research APIs, macro relationship links, knowledge graph paths, Learn Next, frontend sector/industry pages, and company-page Sector Intelligence.
+
+Next Recommended Task:
+
+* Sprint 052: add admin-role protection and verified-data review workflow for internal operations, or implement one controlled verified reference-data import adapter for sectors/industries after source ownership and operator approval are defined.
+
+---
+
+## Session 060
+
+Date: 2026-07-21
+
+Objective: Complete Sprint 052 by adding deterministic Financial Statement Intelligence across backend models, services, APIs, frontend company pages, tests, and documentation.
+
+Completed:
+
+* Added financial statement provenance fields for source type, imported timestamp, verified timestamp, verification status, dataset version, and external key.
+* Added Alembic migration `20260721_0006_add_financial_statement_provenance.py`.
+* Added financial statement service helpers for latest statements, reporting periods, trends, missing fields, and serialization.
+* Added deterministic Financial Statement Intelligence Engine with revenue, profitability, liquidity, leverage, cash flow, and earnings quality sections.
+* Added `GET /api/v1/companies/{ticker}/financial-statements`.
+* Added `GET /api/v1/companies/{ticker}/financial-intelligence`.
+* Added frontend API methods, TypeScript types, and company page Financial Statement Intelligence panel.
+* Added `docs/architecture/financial-statement-intelligence.md`.
+* Fixed a missing `_latest_updated` helper in the new financial statement engine.
+* Fixed one existing dividend endpoint test to mock reference-price lookup and avoid accidental real PostgreSQL access during unit tests.
+
+Files Created:
+
+* `backend/alembic/versions/20260721_0006_add_financial_statement_provenance.py`
+* `backend/app/services/intelligence/financial_statement_engine.py`
+* `frontend/features/company/financial-statement-intelligence.tsx`
+* `docs/architecture/financial-statement-intelligence.md`
+
+Files Modified:
+
+* `backend/app/models/financial_statement.py`
+* `backend/app/services/financial_statement_service.py`
+* `backend/app/services/intelligence/financial_engine.py`
+* `backend/app/api/v1/companies.py`
+* `backend/tests/test_financial_intelligence.py`
+* `backend/tests/test_dividend_intelligence.py`
+* `frontend/app/company/[ticker]/page.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* The backend remains the source of truth for financial statement intelligence.
+* The new engine is deterministic, educational, and evidence-based; it does not use AI, predictions, buy/sell recommendations, or personalized financial advice.
+* Statement intelligence returns confidence, provenance, missing-data transparency, ELI18 explanations, and Learn Next topics for every section.
+* The frontend consumes backend payloads instead of duplicating financial logic.
+
+Validation Results:
+
+* `python -m pytest tests/test_financial_intelligence.py -q --tb=short`: passed, 11 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 269 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 19 routes generated.
+* `python -m alembic history -r-5:current`: timed out while loading the configured local database state; live migration validation remains pending.
+
+Known Issues:
+
+* Local Alembic/database runtime validation is pending because the current environment timed out while loading database state.
+* Financial statement records remain dependent on development fixtures or verified ingestion pipeline data until live/manual verified imports are available.
+* No live connectors, AI, predictions, recommendations, portfolio optimization, or frontend financial calculators were added.
+
+Session Summary:
+
+* Sprint 052 gives InvestGuide a deterministic Financial Statement Intelligence layer with backend APIs, provenance-aware statement metadata, company-page presentation, educational explanations, and passing backend/frontend validation.
+
+Next Recommended Task:
+
+* Sprint 053: validate the new migration against Docker PostgreSQL and add one controlled verified financial statement import adapter or database diagnostics before expanding financial statement intelligence further.
+
+---
+
+## Session 061
+
+Date: 2026-07-21
+
+Objective: Complete Sprint 052 Owner and Administration Foundation by adding secure RBAC, Owner protections, audit infrastructure, admin APIs, a dedicated frontend admin shell, and documentation.
+
+Completed:
+
+* Added RBAC models for roles, permissions, role-permissions, and user-role assignments.
+* Added audit log model and audit recording service.
+* Added sensitive-action request model for future re-authentication, MFA-compatible, and confirmation workflows.
+* Added migration `20260721_0007_create_rbac_and_audit_foundation.py`.
+* Added RBAC service with default roles, permission catalog, permission checks, Owner bypass, Owner protection, navigation filtering, and development bootstrap.
+* Added development Owner bootstrap settings to backend configuration and `.env.example`.
+* Updated the manual development seed workflow to seed roles, permissions, role permissions, and one default Owner account.
+* Added secure admin APIs: `/api/v1/admin/me`, `/api/v1/admin/navigation`, and `/api/v1/admin/permissions`.
+* Added focused backend tests for RBAC model metadata, bootstrap idempotency, Owner protections, permission checks, admin endpoint authorization, navigation filtering, and audit creation.
+* Added frontend admin service methods and TypeScript contracts.
+* Added dedicated admin shell, `/admin`, `/admin/dashboard`, and `/admin/settings` pages.
+* Added backend-gated Admin Dashboard switch in the user sidebar.
+* Added `docs/architecture/admin-platform.md`.
+
+Files Created:
+
+* `backend/app/models/rbac.py`
+* `backend/app/models/audit.py`
+* `backend/app/models/sensitive_action.py`
+* `backend/app/services/rbac_service.py`
+* `backend/app/services/audit_service.py`
+* `backend/app/schemas/admin.py`
+* `backend/app/api/v1/admin.py`
+* `backend/alembic/versions/20260721_0007_create_rbac_and_audit_foundation.py`
+* `backend/tests/test_admin_rbac.py`
+* `frontend/components/layout/admin-shell.tsx`
+* `frontend/app/admin/layout.tsx`
+* `frontend/app/admin/page.tsx`
+* `frontend/app/admin/dashboard/page.tsx`
+* `frontend/app/admin/settings/page.tsx`
+* `docs/architecture/admin-platform.md`
+
+Files Modified:
+
+* `backend/app/models/user.py`
+* `backend/app/models/__init__.py`
+* `backend/app/core/config.py`
+* `backend/app/database/seed.py`
+* `backend/app/api/v1/router.py`
+* `backend/.env.example`
+* `frontend/components/layout/sidebar.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Admin functionality shares the existing JWT auth system but uses server-side RBAC dependencies for protected endpoints.
+* Owner is a protected system role with exactly one active default assignment after bootstrap.
+* Owner bypasses normal permission checks but privileged reads are auditable.
+* Destructive Owner changes require a future dedicated ownership-transfer workflow and are blocked in normal service helpers.
+* Audit and sensitive-action infrastructure are implemented before user-management and role-editor features.
+* The frontend admin experience is a separate shell with its own navigation, loading, unauthorized, and Admin Mode states.
+
+Validation Results:
+
+* `python -m compileall app/models/rbac.py app/models/audit.py app/models/sensitive_action.py app/services/rbac_service.py app/services/audit_service.py app/api/v1/admin.py app/core/config.py app/database/seed.py`: passed.
+* `python -m pytest tests/test_admin_rbac.py -q --tb=short -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 14 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 283 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 22 routes generated.
+
+Known Issues:
+
+* Production Owner provisioning is not implemented and must be designed before production launch.
+* User management, role editing, audit views, data source controls, ingestion dashboards, analytics dashboards, feature flags, and AI provider configuration remain future admin modules.
+* Admin shell pages are intentionally foundational placeholders.
+
+Session Summary:
+
+* Sprint 052 establishes InvestGuide's administration operating layer: RBAC, Owner protections, audit infrastructure, sensitive-action scaffolding, secure admin APIs, frontend Admin Mode shell, documentation, and passing validation.
+
+Next Recommended Task:
+
+* Sprint 053: build read-only admin user management and audit log views, or implement secure production Owner provisioning before adding editable admin operations.
+
+---
+
+## Session 062
+
+Date: 2026-07-22
+
+Objective: Complete Sprint 053 User, Role & Permission Management by adding secure user directory, role inspection, role/status changes, admin sample seeds, and documentation.
+
+Completed:
+
+* Added admin user-management metadata to the User model: last login, suspension, restoration, and actor references.
+* Added role assignment reason, user-role history, and privilege-change history records.
+* Added migration `20260721_0008_add_admin_user_management_metadata.py`.
+* Expanded built-in roles to include operations, finance, support, and moderator roles with deterministic permission inheritance.
+* Added `admin_user_service` with user listing, detail lookup, role assignment/removal, account suspension/restoration, Owner protections, duplicate prevention, and audit/history writes.
+* Added admin APIs for users, roles, and permission inspection.
+* Added duplicate-aware development admin sample user seed and integrated it into the manual seed workflow.
+* Added frontend admin user directory, user detail, role catalog, and role detail pages.
+* Added architecture documentation at `docs/architecture/user-role-management.md`.
+* Updated backend and frontend README notes.
+
+Files Created:
+
+* `backend/app/services/admin_user_service.py`
+* `backend/app/database/seed_admin_users.py`
+* `backend/alembic/versions/20260721_0008_add_admin_user_management_metadata.py`
+* `backend/tests/test_admin_user_management.py`
+* `frontend/app/admin/users/page.tsx`
+* `frontend/app/admin/users/[id]/page.tsx`
+* `frontend/app/admin/roles/page.tsx`
+* `frontend/app/admin/roles/[id]/page.tsx`
+* `docs/architecture/user-role-management.md`
+
+Files Modified:
+
+* `backend/app/models/user.py`
+* `backend/app/models/rbac.py`
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/admin.py`
+* `backend/app/api/v1/admin.py`
+* `backend/app/services/auth_service.py`
+* `backend/app/services/rbac_service.py`
+* `backend/app/database/seed.py`
+* `backend/tests/test_admin_rbac.py`
+* `frontend/components/layout/admin-shell.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* User management is controlled by server-side RBAC dependencies, not frontend-only guards.
+* User directory/detail responses are safe-by-default and do not expose password hashes or secrets.
+* Role and permission metadata remains read-only; editable permission management is deferred.
+* Owner role assignment/removal/suspension is blocked in normal workflows; transfer requires a future dedicated workflow.
+* Role and account status changes require reason and confirmation and are recorded in audit/history tables.
+
+Validation Results:
+
+* `python -m compileall backend/app/services/auth_service.py backend/app/services/rbac_service.py backend/app/services/admin_user_service.py backend/app/api/v1/admin.py backend/app/schemas/admin.py backend/app/database/seed.py backend/app/database/seed_admin_users.py`: passed.
+* `python -m pytest tests/test_admin_rbac.py tests/test_admin_user_management.py -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 21 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 290 tests.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run build`: passed, 20 static pages generated plus dynamic admin detail routes.
+
+Known Issues:
+
+* Production Owner provisioning and ownership transfer are not implemented.
+* Permission editing, audit export, MFA/re-authentication enforcement, feature flags, billing, data-source registry, ingestion center, and platform analytics are intentionally deferred.
+* Runtime browser validation of the new admin pages remains recommended once a seeded local backend is running.
+
+Session Summary:
+
+* Sprint 053 turns the admin shell into a practical user, role, and permission-management foundation while preserving Owner protections, auditability, and read-only permission governance.
+
+Next Recommended Task:
+
+* Sprint 054: implement an audit log viewer/export workflow or production Owner provisioning and transfer workflow before adding broader admin operations.
+

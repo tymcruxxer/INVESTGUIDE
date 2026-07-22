@@ -5,15 +5,16 @@ import { useMemo } from "react";
 import { AxiosError } from "axios";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, FileText, GitCompare, Newspaper, Star, TrendingUp } from "lucide-react";
+import { Building2, FileText, GitCompare, Globe2, Newspaper, Star, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/layout";
 import { AssetAssessmentPanel } from "@/features/assets/asset-assessment-panel";
 import { ResearchPanel, ResearchPanelSkeleton, ResearchUnavailable } from "@/features/assets/research-panel";
 import { BusinessDeepDive, BusinessDeepDiveSkeleton } from "@/features/company/business-deep-dive";
 import { FinancialDashboard, FinancialDashboardSkeleton } from "@/features/company/financial-dashboard";
+import { FinancialStatementIntelligencePanel, FinancialStatementIntelligenceSkeleton } from "@/features/company/financial-statement-intelligence";
 import { DividendDashboard, DividendDashboardSkeleton } from "@/features/company/dividend-dashboard";
 import { CardSkeleton } from "@/components/skeleton";
-import { companyService } from "@/services/api";
+import { companyService, macroService, sectorService } from "@/services/api";
 import {
   formatDisplayDate,
   mapAssets,
@@ -37,7 +38,7 @@ const quickActions = [
   { label: "Compare", href: "/compare", icon: GitCompare, disabled: false },
   { label: "Latest News", href: "#latest-news", icon: Newspaper, disabled: false },
   { label: "Assessment", href: "#assessment", icon: Star, disabled: false },
-  { label: "Financial Statements", href: "#", icon: FileText, disabled: true },
+  { label: "Financial Statements", href: "#financial-statement-intelligence", icon: FileText, disabled: false },
   { label: "Watchlist", href: "#", icon: Building2, disabled: true },
 ];
 
@@ -99,6 +100,14 @@ export default function CompanyDetailPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  const statementIntelligenceQuery = useQuery({
+    queryKey: ["company-financial-statement-intelligence", ticker],
+    queryFn: () => companyService.getCompanyFinancialStatementIntelligence(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
   const dividendQuery = useQuery({
     queryKey: ["company-dividend-intelligence", ticker],
     queryFn: () => companyService.getCompanyDividendIntelligence(ticker),
@@ -110,6 +119,14 @@ export default function CompanyDetailPage() {
   const relatedQuery = useQuery({
     queryKey: ["company-related", ticker],
     queryFn: () => companyService.getCompanyRelated(ticker),
+    retry: 1,
+    enabled: Boolean(ticker),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const macroImpactQuery = useQuery({
+    queryKey: ["company-macro-impact", ticker],
+    queryFn: () => macroService.getCompanyImpact(ticker),
     retry: 1,
     enabled: Boolean(ticker),
     staleTime: 1000 * 60 * 10,
@@ -142,6 +159,15 @@ export default function CompanyDetailPage() {
     return DEMO_NEWS.filter((article) => article.asset_tickers.includes(ticker));
   }, [backendDetail, companyQuery.isError, ticker]);
 
+  const sectorSlug = company?.sector ? company.sector.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "";
+
+  const sectorResearchQuery = useQuery({
+    queryKey: ["company-sector-intelligence", sectorSlug],
+    queryFn: () => sectorService.getSectorResearch(sectorSlug),
+    retry: 1,
+    enabled: Boolean(sectorSlug),
+    staleTime: 1000 * 60 * 10,
+  });
   const primaryAsset = relatedAssets[0] ?? DEMO_ASSETS.find((asset) => asset.ticker === ticker) ?? null;
   const education = primaryAsset ? getExplainLikeIm18(primaryAsset) : [];
   const isNotFound = companyQuery.isError && (companyQuery.error as AxiosError)?.response?.status === 404 && !fallbackCompany;
@@ -264,6 +290,18 @@ export default function CompanyDetailPage() {
                     <BusinessDeepDive intelligence={businessQuery.data.data} />
                   ) : null}
                 </div>
+                <div id="financial-statement-intelligence" className="space-y-4">
+                  {statementIntelligenceQuery.isLoading ? (
+                    <FinancialStatementIntelligenceSkeleton />
+                  ) : statementIntelligenceQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Financial Statement Intelligence is temporarily unavailable. The existing Financial Health dashboard remains available below.
+                    </div>
+                  ) : statementIntelligenceQuery.data?.data?.intelligence ? (
+                    <FinancialStatementIntelligencePanel intelligence={statementIntelligenceQuery.data.data.intelligence} />
+                  ) : null}
+                </div>
+
                 <div id="financial-dashboard" className="space-y-4">
                   {financialQuery.isLoading ? (
                     <FinancialDashboardSkeleton />
@@ -307,6 +345,30 @@ export default function CompanyDetailPage() {
                     </div>
                   ) : null}
                 </div>
+                <div id="macro-factors" className="space-y-4">
+                  {macroImpactQuery.isLoading ? (
+                    <div className="skeleton-card h-64" />
+                  ) : macroImpactQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Macro Factors are temporarily unavailable. Company intelligence and financial sections remain available.
+                    </div>
+                  ) : macroImpactQuery.data?.data ? (
+                    <MacroFactorsPanel impact={macroImpactQuery.data.data} />
+                  ) : null}
+                </div>
+
+                <div id="sector-intelligence" className="space-y-4">
+                  {sectorResearchQuery.isLoading ? (
+                    <div className="skeleton-card h-64" />
+                  ) : sectorResearchQuery.isError ? (
+                    <div className="premium-card p-6 text-sm text-muted-foreground">
+                      Sector Intelligence is temporarily unavailable. Macro Factors and company research remain available.
+                    </div>
+                  ) : sectorResearchQuery.data?.data ? (
+                    <SectorIntelligencePanel research={sectorResearchQuery.data.data} />
+                  ) : null}
+                </div>
+
                 <div id="related-assets" className="premium-card p-6">
                   <h2 className="text-xl font-semibold">Related Investments</h2>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -491,6 +553,127 @@ function ResearchStatusBadge({ status }: { status: ResearchStatus }) {
 
 
 
+
+
+
+
+function MacroFactorsPanel({ impact }: { impact: { factors: Array<{ indicator_type: string; label: string; why_it_matters: string; relationship_chain: string[]; not_prediction: string }>; transparency: { methodology: string; not_advice: string; data_points_seen: number } } }) {
+  const routeFor = (indicatorType: string) => ({
+    inflation: "/macro/inflation",
+    interest_rate: "/macro/interest-rates",
+    exchange_rate: "/macro/exchange-rates",
+    gdp: "/macro/gdp",
+    commodity_price: "/macro/commodities",
+  }[indicatorType] ?? "/macro/inflation");
+
+  return (
+    <div className="premium-card p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Globe2 className="text-primary" size={20} />
+            <h2 className="text-xl font-semibold">Macro Factors</h2>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">How economic indicators typically connect to this company.</p>
+        </div>
+        <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">Deterministic</span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {impact.factors.map((factor) => (
+          <Link key={factor.indicator_type} href={routeFor(factor.indicator_type)} className="rounded-lg border border-white/10 bg-background-primary/70 p-4 transition hover:border-primary/60">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-semibold">{factor.label}</p>
+              <span className="text-xs text-primary">Learn</span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">{factor.why_it_matters}</p>
+            <p className="mt-3 text-xs text-muted-foreground">{factor.relationship_chain.slice(0, 4).join(" -> ")}</p>
+          </Link>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border border-white/10 bg-background-primary/70 p-4 text-sm text-muted-foreground">
+        {impact.transparency.methodology} {impact.transparency.not_advice}
+      </div>
+    </div>
+  );
+}
+
+
+
+
+function SectorIntelligencePanel({ research }: { research: { sector: { name: string; slug: string; is_development_data: boolean }; overview: { what_it_is: string }; typical_risks: Array<{ label: string; why_it_matters: string }>; macro_relationships: Array<{ label: string; relationship: string; path: string }>; industries: Array<{ name: string; slug: string }>; companies: Array<{ ticker: string; name: string; href: string; reason: string }>; learn_next: Array<{ topic: string; path: string }>; transparency: { data_origin: string; not_advice: string } } }) {
+  return (
+    <div className="premium-card p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Building2 className="text-primary" size={20} />
+            <h2 className="text-xl font-semibold">Sector Intelligence</h2>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">How this company fits into its wider market sector.</p>
+        </div>
+        <Link href={`/sector/${research.sector.slug}`} className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary transition hover:border-primary/70">
+          View sector
+        </Link>
+      </div>
+      {research.sector.is_development_data ? (
+        <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-200">
+          Development Preview: sector reference data is fixture-backed until verified taxonomy data is imported.
+        </div>
+      ) : null}
+      <p className="mt-4 text-sm leading-6 text-muted-foreground">{research.overview.what_it_is}</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
+          <p className="font-semibold">Macro relationships</p>
+          <div className="mt-3 space-y-2">
+            {research.macro_relationships.slice(0, 3).map((item) => (
+              <Link key={item.label} href={item.path} className="block text-sm text-muted-foreground transition hover:text-primary">
+                {item.label}: {item.relationship}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-background-primary/70 p-4">
+          <p className="font-semibold">Typical risks</p>
+          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+            {research.typical_risks.slice(0, 3).map((item) => <li key={item.label}>{item.label}</li>)}
+          </ul>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Industries</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {research.industries.slice(0, 5).map((industry) => (
+              <Link key={industry.slug} href={`/industry/${industry.slug}`} className="rounded-lg border border-white/10 bg-background-primary/70 px-3 py-2 text-sm transition hover:border-primary/60">
+                {industry.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Related companies</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {research.companies.slice(0, 5).map((company) => (
+              <Link key={company.ticker} href={company.href} className="rounded-lg border border-white/10 bg-background-primary/70 px-3 py-2 text-sm transition hover:border-primary/60">
+                {company.ticker}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {research.learn_next.slice(0, 4).map((topic) => (
+          <Link key={topic.topic} href={topic.path} className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary transition hover:border-primary/70">
+            {topic.topic}
+          </Link>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border border-white/10 bg-background-primary/70 p-4 text-sm text-muted-foreground">
+        Data origin: {research.transparency.data_origin}. {research.transparency.not_advice}
+      </div>
+    </div>
+  );
+}
 
 
 

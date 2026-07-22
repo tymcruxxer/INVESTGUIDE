@@ -1,4 +1,4 @@
-"""Business Intelligence Engine tests."""
+﻿"""Business Intelligence Engine tests."""
 
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -148,15 +148,45 @@ def test_company_business_endpoint_returns_404(monkeypatch) -> None:
 
 
 def test_industry_endpoint_returns_success_envelope(monkeypatch) -> None:
-    def fake_list_companies(*args, **kwargs):
-        return [make_company()], 1
+    industry = SimpleNamespace(
+        id=1,
+        sector_id=10,
+        name="Beverages",
+        slug="beverages",
+        description="Beverage production and distribution.",
+        overview="Consumer beverage industry.",
+        source_name="Development Fixture",
+        source_type="development_fixture",
+        source_url=None,
+        imported_at=datetime.now(UTC),
+        verified_at=None,
+        verification_status="development_preview",
+        dataset_version="dev-1",
+        external_key="industry:beverages",
+        is_development_data=True,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+        sector=SimpleNamespace(id=10, name="Consumer Staples", slug="consumer-staples", description="Essential consumer goods.", country="Zimbabwe", is_development_data=True),
+    )
 
-    monkeypatch.setattr(industries_module.company_service, "list_companies", fake_list_companies)
+    def fake_get_industry_by_slug(*args, **kwargs):
+        return industry
+
+    def fake_companies_for_industry(*args, **kwargs):
+        return [make_company()]
+
+    monkeypatch.setattr(industries_module.sector_service, "get_industry_by_slug", fake_get_industry_by_slug)
+    monkeypatch.setattr(industries_module.sector_service, "companies_for_industry", fake_companies_for_industry)
 
     response = client.get("/api/v1/industries/Beverages")
     body = response.json()
 
     assert response.status_code == 200
     assert body["success"] is True
-    assert body["message"] == "Industry intelligence retrieved successfully"
+    assert body["message"] == "Industry retrieved successfully"
     assert body["data"]["companies"][0]["ticker"] == "DLTA"
+
+
+
+
+

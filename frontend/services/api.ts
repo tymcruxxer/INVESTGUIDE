@@ -6,6 +6,14 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import {
   ApiError,
+  AdminMe,
+  AdminNavigationPayload,
+  AdminPermissionsPayload,
+  AdminRole,
+  AdminRoleMutationPayload,
+  AdminUserDetail,
+  AdminUserListPayload,
+  AdminUserStatusPayload,
   ApiResponse,
   Asset,
   AssetAssessment,
@@ -17,13 +25,18 @@ import {
   CompanyDividendIntelligencePayload,
   CompanyDividendsPayload,
   CompanyFinancialHealthPayload,
+  CompanyFinancialStatementIntelligencePayload,
+  CompanyFinancialStatementsPayload,
   CompanyFinancialsPayload,
   CompanyProfileDetail,
   CompanyRelatedResearch,
   ComparePayload,
   DataQualitySummaryPayload,
   EntityQualityPayload,
-  IndustryIntelligence,
+  CompanyMacroImpactPayload,
+  MacroIndicatorPayload,
+  MacroOverviewPayload,
+  MacroResearchPayload,
   IngestionRecordIssue,
   IngestionRunDetailPayload,
   IngestionRunSummary,
@@ -34,6 +47,11 @@ import {
   ResearchAssessment,
   SignupResponse,
   SourceHealthPayload,
+  SectorDetailPayload,
+  SectorRecord,
+  SectorResearchPayload,
+  IndustryRecord,
+  IndustryResearchPayload,
   User,
 } from "@/types";
 
@@ -174,6 +192,23 @@ export const authService = {
 };
 
 // ============================================================================
+// Admin Services
+// ============================================================================
+
+export const adminService = {
+  me: () => get<AdminMe>("/admin/me"),
+  navigation: () => get<AdminNavigationPayload>("/admin/navigation"),
+  permissions: () => get<AdminPermissionsPayload>("/admin/permissions"),
+  users: (params: Record<string, unknown> = {}) => get<AdminUserListPayload>("/admin/users", params),
+  user: (id: number) => get<AdminUserDetail>(`/admin/users/${id}`),
+  updateUserRoles: (id: number, payload: AdminRoleMutationPayload) =>
+    patch<AdminUserDetail>(`/admin/users/${id}/roles`, payload as unknown as Record<string, unknown>),
+  updateUserStatus: (id: number, payload: AdminUserStatusPayload) =>
+    patch<AdminUserDetail>(`/admin/users/${id}/status`, payload as unknown as Record<string, unknown>),
+  roles: () => get<AdminRole[]>("/admin/roles"),
+  role: (id: number) => get<AdminRole>(`/admin/roles/${id}`),
+};
+// ============================================================================
 // Investor Profile Services
 // ============================================================================
 
@@ -260,6 +295,9 @@ export const companyService = {
 
   getCompanyFinancials: (ticker: string) => get<CompanyFinancialsPayload>(`/companies/${ticker}/financials`),
 
+  getCompanyFinancialStatements: (ticker: string) => get<CompanyFinancialStatementsPayload>(`/companies/${ticker}/financial-statements`),
+
+  getCompanyFinancialStatementIntelligence: (ticker: string) => get<CompanyFinancialStatementIntelligencePayload>(`/companies/${ticker}/financial-intelligence`),
   getCompanyDividends: (ticker: string) => get<CompanyDividendsPayload>(`/companies/${ticker}/dividends`),
 
   getCompanyDividendIntelligence: (ticker: string) => get<CompanyDividendIntelligencePayload>(`/companies/${ticker}/dividend-intelligence`),
@@ -281,21 +319,35 @@ export const comparisonService = {
     get<ComparePayload>("/compare", { company_a: companyA, company_b: companyB }),
 };
 
-export const industryService = {
-  getIndustry: (industry: string) =>
-    get<IndustryIntelligence>(`/industries/${encodeURIComponent(industry)}`),
+export const sectorService = {
+  getSectors: () => get<SectorRecord[]>("/sectors"),
+
+  getSector: (slug: string) => get<SectorDetailPayload>(`/sectors/${encodeURIComponent(slug)}`),
+
+  getSectorResearch: (slug: string) => get<SectorResearchPayload>(`/sectors/${encodeURIComponent(slug)}/research`),
 };
 
+export const industryService = {
+  getIndustries: () => get<IndustryRecord[]>("/industries"),
+
+  getIndustry: (industry: string) =>
+    get<IndustryRecord>(`/industries/${encodeURIComponent(industry)}`),
+
+  getIndustryResearch: (industry: string) =>
+    get<IndustryResearchPayload>(`/industries/${encodeURIComponent(industry)}/research`),
+};
 // ============================================================================
 // Macro Services
 // ============================================================================
 
 export const macroService = {
-  getOverview: () => get("/macro/overview"),
+  getOverview: () => get<MacroOverviewPayload>("/macro"),
 
-  getInflation: () => get("/macro/inflation"),
+  getIndicator: (type: string) => get<MacroIndicatorPayload>(`/macro/${type}`),
 
-  getExchangeRate: () => get("/macro/exchange-rate"),
+  getResearch: (type: string) => get<MacroResearchPayload>(`/macro/${type}/research`),
+
+  getCompanyImpact: (ticker: string) => get<CompanyMacroImpactPayload>(`/macro/company/${ticker}`),
 };
 
 // ============================================================================
@@ -365,4 +417,13 @@ export const internalOperationsService = {
   getCompanyQuality: (ticker: string) =>
     get<CompanyDataQualityPayload>(`/internal/data-quality/companies/${ticker}`),
 };
+
+
+
+
+
+
+
+
+
 

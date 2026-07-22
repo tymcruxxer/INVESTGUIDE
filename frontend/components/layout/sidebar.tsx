@@ -1,15 +1,16 @@
-/**
+﻿/**
  * Navigation Sidebar Component
  * Left sidebar with navigation links and branding
  */
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/utils";
 import { useAuthStore, useUIStore } from "@/store";
+import { adminService } from "@/services/api";
 import {
   BarChart3,
   BookOpen,
@@ -18,6 +19,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  ShieldCheck,
   Sparkles,
   TrendingUp,
   X,
@@ -37,7 +39,28 @@ export function Sidebar() {
   const router = useRouter();
   const { sidebarOpen, toggleSidebar, setSidebarOpen } = useUIStore();
   const logout = useAuthStore((state) => state.logout);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
 
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isAuthenticated) {
+      setHasAdminAccess(false);
+      return;
+    }
+    adminService
+      .me()
+      .then(() => {
+        if (!cancelled) setHasAdminAccess(true);
+      })
+      .catch(() => {
+        if (!cancelled) setHasAdminAccess(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
   const handleLogout = () => {
     logout();
     router.replace("/auth/login");
@@ -97,6 +120,16 @@ export function Sidebar() {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 space-y-2 border-t border-white/10 p-4">
+          {hasAdminAccess ? (
+            <Link
+              href="/admin/dashboard"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary smooth-transition hover:bg-primary/20"
+            >
+              <ShieldCheck size={20} />
+              <span>Admin Dashboard</span>
+            </Link>
+          ) : null}
           <Link
             href="/settings"
             aria-current={pathname === "/settings" ? "page" : undefined}
@@ -131,4 +164,6 @@ export function Sidebar() {
     </>
   );
 }
+
+
 

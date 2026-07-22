@@ -18,7 +18,9 @@ from app.models.dividend import Dividend
 from app.models.financial_statement import BalanceSheet, CashFlowStatement, IncomeStatement
 from app.models.ingestion import IngestionRun
 from app.models.market_snapshot import MarketSnapshot
+from app.models.macro import MacroIndicator
 from app.models.news import News
+from app.models.sector import Industry, Sector
 from app.services.market_snapshot_service import get_latest_company_reference_snapshot
 from app.services.ingestion import EntityType, IngestionMode, SourceType
 from app.services.ingestion.pipeline import IngestionPipeline
@@ -96,6 +98,9 @@ def test_registry_supports_core_runtime_entities() -> None:
     assert EntityType.INCOME_STATEMENTS in supported
     assert EntityType.DIVIDENDS in supported
     assert EntityType.NEWS in supported
+    assert EntityType.MACRO_INDICATORS in supported
+    assert EntityType.SECTORS in supported
+    assert EntityType.INDUSTRIES in supported
 
 
 def test_dry_run_does_not_insert_entities_but_records_audit(db_session: Session) -> None:
@@ -185,6 +190,9 @@ def test_registry_includes_all_supported_entities() -> None:
         "dividends",
         "income_statements",
         "market_snapshots",
+        "macro_indicators",
+        "sectors",
+        "industries",
         "news",
     }
 
@@ -259,4 +267,30 @@ def test_market_snapshot_feeds_dividend_reference_price(db_session: Session) -> 
     assert financial["transparency"]["evidence_used"]
     assert dividend["dividend_yield"]["status"] == "Available"
     assert dividend["dividend_yield"]["price_date"] == snapshot.snapshot_date.isoformat()
+
+
+
+def test_macro_indicator_import_is_idempotent_and_persisted(db_session: Session) -> None:
+    """Macro indicators import through the verified ingestion framework."""
+    first = _pipeline(EntityType.MACRO_INDICATORS, "macro_indicators.json").run(db_session, IngestionMode.LENIENT)
+    second = _pipeline(EntityType.MACRO_INDICATORS, "macro_indicators.json").run(db_session, IngestionMode.LENIENT)
+
+    assert first.import_result.inserted == 5
+    assert second.import_result.inserted == 0
+    assert db_session.scalar(select(MacroIndicator)) is not None
+
+
+def test_sector_and_industry_imports_are_idempotent(db_session: Session) -> None:
+    """Sector and industry reference data import through the verified pipeline."""
+    sector_first = _pipeline(EntityType.SECTORS, "sectors.json").run(db_session, IngestionMode.LENIENT)
+    industry_first = _pipeline(EntityType.INDUSTRIES, "industries.json").run(db_session, IngestionMode.LENIENT)
+    sector_second = _pipeline(EntityType.SECTORS, "sectors.json").run(db_session, IngestionMode.LENIENT)
+    industry_second = _pipeline(EntityType.INDUSTRIES, "industries.json").run(db_session, IngestionMode.LENIENT)
+
+    assert sector_first.import_result.inserted == 2
+    assert industry_first.import_result.inserted == 2
+    assert sector_second.import_result.inserted == 0
+    assert industry_second.import_result.inserted == 0
+    assert db_session.scalar(select(Sector).where(Sector.slug == "consumer-staples")) is not None
+    assert db_session.scalar(select(Industry).where(Industry.slug == "beverages")) is not None
 

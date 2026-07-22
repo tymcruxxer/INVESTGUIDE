@@ -1,11 +1,12 @@
-"""Financial statement SQLAlchemy models."""
+﻿"""Financial statement SQLAlchemy models."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -52,7 +53,13 @@ class FinancialStatementMixin(TimestampMixin):
     )
     currency: Mapped[str | None] = mapped_column(String(10), nullable=True)
     source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    imported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verification_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    dataset_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    external_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
     is_development_data: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
 
 
@@ -117,3 +124,5 @@ class CashFlowStatement(FinancialStatementMixin, Base):
     free_cash_flow: Mapped[float | None] = mapped_column(Numeric(18, 2), nullable=True)
 
     company: Mapped[Company] = relationship("Company", back_populates="cash_flow_statements")
+
+

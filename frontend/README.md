@@ -928,3 +928,108 @@ Validation:
 * `npm.cmd run lint`: passed.
 * `npm.cmd run type-check`: passed.
 * `npm.cmd run build`: passed, 15 routes generated.
+
+## Sprint 050 Macro Intelligence UI
+
+Sprint 050 adds frontend Macro Intelligence surfaces powered by backend APIs, not hardcoded macro values.
+
+Frontend additions:
+
+* Dynamic macro pages at `/macro/[type]` for inflation, interest rates, exchange rates, GDP, and commodity prices.
+* Company page Macro Factors panel on `/company/[ticker]` using `GET /api/v1/macro/company/{ticker}`.
+* Frontend API client methods in `macroService` for overview, indicator, research, and company impact endpoints.
+* TypeScript contracts for macro records, evidence, research payloads, related companies, and company macro impact.
+
+The UI displays current value, provenance, Development Preview labels, evidence, affected sectors, affected companies, knowledge graph relationships, Learn Next topics, and the educational/not-advice boundary.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 15 routes generated including `/macro/[type]`.
+* Route smoke on port `3022`: `/macro/inflation`, `/macro/gdp`, and `/company/delta` returned HTTP 200.
+
+## Sprint 051 Sector and Industry Research UI
+
+Sprint 051 adds frontend surfaces for deterministic Sector and Industry Intelligence while preserving existing business logic and backend contracts.
+
+Frontend additions:
+
+* Dynamic sector research pages at `/sector/[slug]`.
+* Dynamic industry research pages at `/industry/[slug]`.
+* Company page Sector Intelligence panel powered by `GET /api/v1/sectors/{slug}/research`.
+* Macro pages now link affected sectors to their sector research pages.
+* Frontend API client methods in `sectorService` and `industryService` for list, detail, and research endpoints.
+* TypeScript contracts for sectors, industries, research payloads, related companies, knowledge graph nodes, Learn Next topics, and provenance metadata.
+
+UI behavior:
+
+* Sector and industry pages show overview, companies, macro relationships, risks, opportunities, knowledge graph relationships, Learn Next topics, and transparency notes.
+* Development Preview data remains clearly labelled through backend provenance fields.
+* The frontend remains source-agnostic and consumes backend APIs rather than hardcoded sector or industry facts.
+
+Route smoke validation:
+
+* `/company/delta`: HTTP 200 on Next.js dev server port `3023`.
+* `/sector/consumer-staples`: HTTP 200 on Next.js dev server port `3023`.
+* `/industry/beverages`: HTTP 200 on Next.js dev server port `3023`.
+* `/macro/inflation`: HTTP 200 on Next.js dev server port `3023`.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 18 routes generated including `/sector/[slug]` and `/industry/[slug]`.
+
+## Sprint 052 Financial Statement Intelligence UI
+
+Sprint 052 adds a backend-connected Financial Statement Intelligence panel to the company page.
+
+Frontend additions:
+
+* `FinancialStatementIntelligencePanel` for `/company/[ticker]`.
+* Frontend API client methods for:
+  * `GET /companies/{ticker}/financial-statements`
+  * `GET /companies/{ticker}/financial-intelligence`
+* TypeScript contracts for statement intelligence sections, provenance, confidence, coverage, missing fields, and transparency.
+
+UI behavior:
+
+* Company pages now show revenue, profitability, liquidity, leverage, cash flow, and earnings quality sections when backend data is available.
+* Each section displays explanation, evidence strength, source/provenance, ELI18 copy, and Learn Next topics.
+* Missing or development data is presented transparently without fake scores or predictions.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 19 routes generated including `/company/[ticker]`.
+
+## Sprint 052 Administration Shell
+
+Sprint 052 adds a dedicated frontend administration shell without changing the investor experience.
+
+Frontend additions:
+
+* `/admin` redirects to `/admin/dashboard`.
+* `/admin/dashboard` shows the administration operating-system foundation, permission snapshot, and future module placeholders.
+* `/admin/settings` shows Owner protections, sensitive-action readiness, and the permission catalog.
+* `AdminShell` provides separate navigation, loading state, unauthorized state, Admin Mode indicator, environment badge, current user/role display, and switch back to User View.
+* The normal user sidebar shows `Admin Dashboard` only after the backend confirms the user has admin access.
+
+Validation:
+
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 22 routes generated including `/admin`, `/admin/dashboard`, and `/admin/settings`.
+
+## Sprint 053: Admin User Management UI
+
+The frontend administration shell now includes user and role management surfaces:
+
+* `/admin/users` - searchable, filterable user directory.
+* `/admin/users/[id]` - safe user detail, effective permissions, audit summary, role assignment/removal, and account suspend/restore actions.
+* `/admin/roles` - read-only role catalog.
+* `/admin/roles/[id]` - inherited permission inspection for one role.
+
+The UI consumes backend admin APIs and does not expose password hashes, editable permissions, Owner transfer, MFA, billing, feature flags, or data-source controls. Permission editing remains intentionally deferred.

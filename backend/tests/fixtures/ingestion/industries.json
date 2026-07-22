@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Beverages",
+    "slug": "beverages",
+    "sector_slug": "consumer-staples",
+    "description": "Companies that produce, distribute, or sell drinks through retail and hospitality channels.",
+    "overview": "Beverage businesses are studied through demand resilience, pricing power, brands, distribution, and input-cost exposure."
+  },
+  {
+    "name": "Banking",
+    "slug": "banking",
+    "sector_slug": "financial-services",
+    "description": "Banks earn from lending, transaction services, deposits, and financial products.",
+    "overview": "Banking is studied through interest-rate exposure, credit quality, regulation, deposits, and liquidity."
+  }
+]

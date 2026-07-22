@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Consumer Staples",
+    "slug": "consumer-staples",
+    "description": "Companies that provide everyday goods such as food, beverages, agriculture inputs, and household essentials.",
+    "exchange_coverage": "ZSE, VFEX",
+    "country": "Zimbabwe",
+    "overview": "Consumer Staples sectors are studied because demand can be more resilient than discretionary categories, while margins still depend on inflation, input costs, and purchasing power."
+  },
+  {
+    "name": "Financial Services",
+    "slug": "financial-services",
+    "description": "Banks and finance businesses that handle deposits, lending, transactions, insurance, or capital-market services.",
+    "exchange_coverage": "ZSE",
+    "country": "Zimbabwe",
+    "overview": "Financial Services are studied because interest rates, credit quality, regulation, and economic activity can strongly affect earnings and risk."
+  }
+]

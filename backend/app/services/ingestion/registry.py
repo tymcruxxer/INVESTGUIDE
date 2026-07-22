@@ -14,6 +14,9 @@ from app.services.ingestion.importers.records import (
     DividendImporter,
     IncomeStatementImporter,
     MarketSnapshotImporter,
+    MacroIndicatorImporter,
+    SectorImporter,
+    IndustryImporter,
     NewsImporter,
 )
 from app.services.ingestion.normalizers.records import (
@@ -26,6 +29,9 @@ from app.services.ingestion.normalizers.records import (
     DividendNormalizer,
     IncomeStatementNormalizer,
     MarketSnapshotNormalizer,
+    MacroIndicatorNormalizer,
+    SectorNormalizer,
+    IndustryNormalizer,
     NewsNormalizer,
 )
 from app.services.ingestion.pipeline import Importer, Normalizer, Validator
@@ -40,6 +46,9 @@ from app.services.ingestion.validators.records import (
     DividendValidator,
     IncomeStatementValidator,
     MarketSnapshotValidator,
+    MacroIndicatorValidator,
+    SectorValidator,
+    IndustryValidator,
     NewsValidator,
 )
 
@@ -93,4 +102,9 @@ def build_default_registry() -> IngestionRegistry:
     registry.register(EntityType.CORPORATE_ACTIONS, EntityRegistration(CorporateActionNormalizer(), CorporateActionValidator(), CorporateActionImporter()))
     registry.register(EntityType.NEWS, EntityRegistration(NewsNormalizer(), NewsValidator(), NewsImporter()))
     registry.register(EntityType.MARKET_SNAPSHOTS, EntityRegistration(MarketSnapshotNormalizer(), MarketSnapshotValidator(), MarketSnapshotImporter()))
+    registry.register(EntityType.MACRO_INDICATORS, EntityRegistration(MacroIndicatorNormalizer(), MacroIndicatorValidator(), MacroIndicatorImporter()))
+    registry.register(EntityType.SECTORS, EntityRegistration(SectorNormalizer(), SectorValidator(), SectorImporter()))
+    registry.register(EntityType.INDUSTRIES, EntityRegistration(IndustryNormalizer(), IndustryValidator(), IndustryImporter()))
     return registry
+
+

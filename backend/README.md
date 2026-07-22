@@ -1369,3 +1369,178 @@ Validation:
 Documentation:
 
 * See `docs/operations/data-quality-and-ingestion-operations.md`.
+
+## Sprint 050 Macro Intelligence Engine
+
+Sprint 050 adds deterministic Macro Intelligence without live APIs, scraping, schedulers, forecasting, LLMs, recommendations, or personalized advice.
+
+Backend additions:
+
+* `macro_indicators` persisted model with source, verification, ingestion, development-data, and timestamp metadata.
+* Alembic migration `20260715_0004_create_macro_indicators.py`.
+* Manual development seed support through `seed_macro_indicators()` and `python -m app.database.seed`.
+* Verified-over-development retrieval in `app.services.macro_service`.
+* Deterministic `app.services.intelligence.macro_engine` for macro explanations, company impact, sector sensitivities, related companies, knowledge graph paths, and Learn Next.
+* Verified data pipeline support for `macro_indicators` via normalizer, validator, importer, registry, and local JSON fixture.
+
+Read-only APIs:
+
+* `GET /api/v1/macro`
+* `GET /api/v1/macro/inflation`
+* `GET /api/v1/macro/interest-rates`
+* `GET /api/v1/macro/exchange-rates`
+* `GET /api/v1/macro/gdp`
+* `GET /api/v1/macro/commodities`
+* `GET /api/v1/macro/{type}/research`
+* `GET /api/v1/macro/company/{ticker}`
+
+Runtime validation:
+
+* `docker compose up -d`: PostgreSQL running.
+* `python -m alembic upgrade head`: migrated to `20260715_0004`.
+* `python -m app.database.seed`: passed after macro fixture loader was made UTF-8 BOM tolerant.
+* `python scripts/check_database.py`: connected, migrations current, seed data present, asset count 9.
+* Macro API smoke passed on backend port `8015` for `/macro`, `/macro/inflation`, `/macro/inflation/research`, `/macro/gdp`, `/macro/exchange-rates`, `/macro/commodities`, and `/macro/company/DLTA`.
+
+Known limitations:
+
+* Macro values are development preview fixtures until verified RBZ/ZIMSTAT/ZSE/VFEX imports exist.
+* Sector pages are not implemented yet; sector impact logic is reusable for future pages.
+* No forecasting, predictions, live connectors, or financial advice were added.
+
+## Sprint 051 Sector Intelligence Engine
+
+Sprint 051 adds deterministic Sector and Industry Intelligence without LLMs, predictions, recommendations, personalized advice, portfolio features, live scraping, or live APIs.
+
+Backend additions:
+
+* Persisted `sectors` and `industries` tables with provenance, verification, ingestion, development-data, and timestamp metadata.
+* Alembic migration `20260715_0005_create_sectors_and_industries.py`.
+* Manual development seed support through `seed_sectors()` and `python -m app.database.seed`.
+* Verified-data pipeline support for `sectors` and `industries` through normalizers, validators, importers, registry entries, and local JSON fixtures.
+* `app.services.sector_service` with verified-over-development precedence and serialization helpers.
+* Deterministic `app.services.intelligence.sector_engine` for sector research, industry research, macro relationships, related companies, knowledge graph paths, Learn Next topics, and transparent educational notes.
+
+Read-only APIs:
+
+* `GET /api/v1/sectors`
+* `GET /api/v1/sectors/{slug}`
+* `GET /api/v1/sectors/{slug}/research`
+* `GET /api/v1/industries`
+* `GET /api/v1/industries/{slug}`
+* `GET /api/v1/industries/{slug}/research`
+
+Data precedence:
+
+1. Verified imported data.
+2. Validated manual data.
+3. Development Preview data when development fixture policy allows it.
+4. Unavailable when no acceptable record exists.
+
+Runtime validation:
+
+* `docker compose up -d`: PostgreSQL running.
+* `python -m alembic upgrade head`: migrated to `20260715_0005`.
+* `python -m app.database.seed`: completed successfully.
+* `python scripts/check_database.py`: connected, migrations current, seed data present, asset count 9.
+* Backend smoke passed on port `8016`: `/health`, `/sectors`, `/sectors/consumer-staples`, `/sectors/consumer-staples/research`, `/industries`, `/industries/beverages`, `/industries/beverages/research`, `/companies/DLTA`, and `/macro/inflation`.
+
+Validation:
+
+* `python -m pytest -q`: passed, 265 tests, 1 non-blocking pytest cache permission warning.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 18 routes generated.
+
+Documentation:
+
+* See `docs/architecture/sector-intelligence.md`.
+
+## Sprint 052 Financial Statement Intelligence Engine
+
+Sprint 052 adds deterministic Financial Statement Intelligence on top of the existing persisted financial statement foundation.
+
+Backend additions:
+
+* Financial statement provenance fields for income statements, balance sheets, and cash flow statements: source type, imported timestamp, verified timestamp, verification status, dataset version, and external key.
+* Alembic migration `20260721_0006_add_financial_statement_provenance.py`.
+* Retrieval helpers for latest statements, available periods, statement trends, missing fields, and serialized statement payloads.
+* Deterministic `financial_statement_engine` with revenue, profitability, liquidity, leverage, cash flow, and earnings quality sections.
+* Read-only APIs:
+  * `GET /api/v1/companies/{ticker}/financial-statements`
+  * `GET /api/v1/companies/{ticker}/financial-intelligence`
+
+Architecture notes:
+
+* The backend owns statement intelligence and exposes structured evidence, confidence, provenance, educational explanations, ELI18 text, and Learn Next topics.
+* The engine does not call AI services, forecast prices, provide buy/sell recommendations, or personalize financial advice.
+* Development fixture data remains explicitly labelled; production-facing confidence should depend on verified imported or validated manual records.
+
+Validation:
+
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 269 tests.
+* `python -m alembic history -r-5:current`: timed out in this local environment while loading Alembic/database configuration; migration file is present but live DB migration validation remains pending.
+
+## Sprint 052 Owner and Administration Foundation
+
+Sprint 052 adds the secure administration foundation without implementing user management, role editing, ingestion dashboards, analytics dashboards, feature flags, or AI provider configuration.
+
+Backend additions:
+
+* RBAC models: `Role`, `Permission`, `RolePermission`, and `UserRole`.
+* Audit model: `AuditLog` for privileged action records.
+* Sensitive-action model: `SensitiveActionRequest` for future re-authentication, MFA-compatible, and confirmation workflows.
+* Alembic migration `20260721_0007_create_rbac_and_audit_foundation.py`.
+* RBAC bootstrap through `python -m app.database.seed` using development-only `ADMIN_OWNER_EMAIL` and `ADMIN_OWNER_PASSWORD` settings.
+* Reusable `require_permission()` dependency for server-side authorization.
+* Owner protection helper that blocks normal delete, suspend, and demotion workflows.
+* Admin APIs:
+  * `GET /api/v1/admin/me`
+  * `GET /api/v1/admin/navigation`
+  * `GET /api/v1/admin/permissions`
+
+Security notes:
+
+* Owner bypasses normal permission checks while still being auditable.
+* Exactly one active Owner assignment is expected after bootstrap.
+* Production Owner creation must be performed securely and must not use committed development credentials.
+* Frontend checks are convenience only; admin APIs enforce permissions server-side.
+
+Validation:
+
+* `python -m pytest tests/test_admin_rbac.py -q --tb=short -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 14 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 283 tests.
+
+## Sprint 053: User, Role & Permission Management
+
+The administration foundation now includes controlled user, role, and permission inspection workflows.
+
+Backend APIs:
+
+* `GET /api/v1/admin/users` - user directory with search, pagination, sorting, and filters.
+* `GET /api/v1/admin/users/{id}` - safe user detail with roles, effective permissions, activity summary, and audit summary.
+* `PATCH /api/v1/admin/users/{id}/roles` - assign or remove non-Owner roles with confirmation, reason, audit history, and duplicate prevention.
+* `PATCH /api/v1/admin/users/{id}/status` - suspend or restore users with confirmation, reason, audit history, and Owner/self/last-admin protections.
+* `GET /api/v1/admin/roles` - read-only role catalog with inherited permission metadata.
+* `GET /api/v1/admin/roles/{id}` - read-only role detail.
+* `GET /api/v1/admin/permissions` - permission catalog and current admin permission context.
+
+Development seed workflow:
+
+```bash
+cd backend
+python -m app.database.seed
+```
+
+The manual seed now creates RBAC roles/permissions, the development Owner, and sample admin users for local testing. It is duplicate-aware and does not run automatically on application startup.
+
+Security notes:
+
+* Password hashes and secrets are never exposed in admin user responses.
+* Owner role assignment/removal is blocked in normal workflows.
+* Owner suspension is blocked.
+* Self-suspension and self role changes are blocked.
+* Suspending the last active administrator is blocked.
+* Role/status changes require a reason and are recorded in audit/history tables.
+
+See `docs/architecture/user-role-management.md` for the detailed architecture.

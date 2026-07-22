@@ -16,6 +16,9 @@ from app.services.ingestion.types import (
     NormalizedDividend,
     NormalizedIncomeStatement,
     NormalizedMarketSnapshot,
+    NormalizedMacroIndicator,
+    NormalizedSector,
+    NormalizedIndustry,
     NormalizedNews,
     RejectedRecord,
     ValidationIssue,
@@ -286,4 +289,68 @@ class MarketSnapshotValidator(BaseValidator):
                 value = getattr(snapshot, field)
                 if value is not None and not (snapshot.low_price <= value <= snapshot.high_price):
                     issues.append(ValidationIssue(index, field, "Price is outside the high/low range.", "warning"))
+        return issues
+
+
+SUPPORTED_MACRO_TYPES = {"inflation", "interest_rate", "exchange_rate", "gdp", "commodity_price"}
+
+
+class MacroIndicatorValidator(BaseValidator):
+    """Validate macroeconomic indicator records."""
+
+    def validate_record(self, record: BaseNormalizedRecord, index: int) -> list[ValidationIssue]:
+        macro = record
+        assert isinstance(macro, NormalizedMacroIndicator)
+        issues: list[ValidationIssue] = []
+        if macro.indicator_type not in SUPPORTED_MACRO_TYPES:
+            issues.append(ValidationIssue(index, "indicator_type", "Unsupported macro indicator type."))
+        if not macro.name:
+            issues.append(ValidationIssue(index, "name", "Indicator name is required."))
+        if macro.value is None:
+            issues.append(ValidationIssue(index, "value", "Indicator value is required."))
+        if not macro.unit:
+            issues.append(ValidationIssue(index, "unit", "Indicator unit is required."))
+        if macro.currency not in SUPPORTED_CURRENCIES:
+            issues.append(ValidationIssue(index, "currency", "Currency must be ZWG or USD when supplied."))
+        if macro.indicator_type == "exchange_rate" and not macro.currency:
+            issues.append(ValidationIssue(index, "currency", "Exchange-rate records should identify the quoted currency.", "warning"))
+        if macro.indicator_type == "commodity_price" and not macro.commodity:
+            issues.append(ValidationIssue(index, "commodity", "Commodity price records should identify the commodity.", "warning"))
+        return issues
+
+
+
+class SectorValidator(BaseValidator):
+    """Validate sector reference records."""
+
+    def validate_record(self, record: BaseNormalizedRecord, index: int) -> list[ValidationIssue]:
+        sector = record
+        assert isinstance(sector, NormalizedSector)
+        issues: list[ValidationIssue] = []
+        if not sector.name:
+            issues.append(ValidationIssue(index, "name", "Sector name is required."))
+        if not sector.slug:
+            issues.append(ValidationIssue(index, "slug", "Sector slug is required."))
+        if not sector.country:
+            issues.append(ValidationIssue(index, "country", "Country is required."))
+        if not sector.description:
+            issues.append(ValidationIssue(index, "description", "Sector description is recommended.", "warning"))
+        return issues
+
+
+class IndustryValidator(BaseValidator):
+    """Validate industry reference records."""
+
+    def validate_record(self, record: BaseNormalizedRecord, index: int) -> list[ValidationIssue]:
+        industry = record
+        assert isinstance(industry, NormalizedIndustry)
+        issues: list[ValidationIssue] = []
+        if not industry.name:
+            issues.append(ValidationIssue(index, "name", "Industry name is required."))
+        if not industry.slug:
+            issues.append(ValidationIssue(index, "slug", "Industry slug is required."))
+        if not industry.sector_slug:
+            issues.append(ValidationIssue(index, "sector_slug", "Parent sector slug is required."))
+        if not industry.description:
+            issues.append(ValidationIssue(index, "description", "Industry description is recommended.", "warning"))
         return issues

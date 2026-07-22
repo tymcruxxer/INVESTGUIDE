@@ -230,3 +230,24 @@ Validation recorded:
 * Frontend type-check: passed.
 * Frontend build: passed, 15 routes.
 * Runtime smoke: internal APIs and internal pages passed.
+
+## Sprint 050 Macro Ingestion Addendum
+
+Sprint 050 adds `macro_indicators` to the verified data pipeline. Macro data now follows the same Source Adapter -> Normalizer -> Validator -> Importer -> Database -> Intelligence -> Frontend flow as companies, assets, financial statements, dividends, corporate actions, news, and market snapshots.
+
+Macro development fixtures are local JSON only. They are marked as Development Preview, are guarded by the development-data policy, and never override verified/non-development rows.
+
+## Sprint 051 Sector and Industry Entity Support
+
+Sprint 051 extends the verified data ingestion framework with reference-data support for `sectors` and `industries`.
+
+Pipeline coverage:
+
+* `NormalizedSector` and `NormalizedIndustry` contracts.
+* Sector and industry normalizers for source rows.
+* Validators for required names, slugs, parent-sector linkage, source metadata, and development-data flags.
+* Importers that upsert by slug/source semantics and preserve verified data precedence.
+* Registry entries for `EntityType.SECTORS` and `EntityType.INDUSTRIES`.
+* Fixture coverage in `backend/tests/fixtures/ingestion/sectors.json` and `backend/tests/fixtures/ingestion/industries.json`.
+
+The frontend and research engines continue to read from backend APIs only; they do not know whether sector data came from JSON fixtures, future verified imports, manual curation, or future admin workflows.

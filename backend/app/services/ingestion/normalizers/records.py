@@ -33,6 +33,9 @@ from app.services.ingestion.types import (
     NormalizedDividend,
     NormalizedIncomeStatement,
     NormalizedMarketSnapshot,
+    NormalizedMacroIndicator,
+    NormalizedSector,
+    NormalizedIndustry,
     NormalizedNews,
     SourceMetadata,
     build_external_key,
@@ -341,3 +344,112 @@ class MarketSnapshotNormalizer:
             )
         return normalized
 
+
+
+def normalize_macro_indicator_type(value: Any) -> str:
+    """Normalize macro indicator aliases to persisted values."""
+    cleaned = (clean_string(value) or "").lower().replace(" ", "_").replace("-", "_")
+    aliases = {
+        "inflation_rate": "inflation",
+        "interest_rates": "interest_rate",
+        "interest": "interest_rate",
+        "exchange_rates": "exchange_rate",
+        "exchange": "exchange_rate",
+        "gdp_growth": "gdp",
+        "commodity": "commodity_price",
+        "commodities": "commodity_price",
+        "commodity_prices": "commodity_price",
+    }
+    allowed = {"inflation", "interest_rate", "exchange_rate", "gdp", "commodity_price"}
+    resolved = aliases.get(cleaned, cleaned)
+    return resolved if resolved in allowed else ""
+
+
+class MacroIndicatorNormalizer:
+    """Normalize macroeconomic indicator records."""
+
+    def normalize(self, records: list[dict[str, Any]], source: SourceMetadata) -> list[NormalizedMacroIndicator]:
+        normalized: list[NormalizedMacroIndicator] = []
+        for record in records:
+            indicator_type = normalize_macro_indicator_type(record.get("indicator_type") or record.get("type"))
+            name = clean_string(record.get("name") or record.get("indicator_name") or indicator_type.replace("_", " ").title()) or ""
+            reporting_period = parse_date(record.get("reporting_period") or record.get("period") or record.get("date"))
+            normalized.append(
+                NormalizedMacroIndicator(
+                    external_key=build_external_key(source.source_type.value, indicator_type, name, reporting_period, record.get("country"), record.get("currency"), record.get("commodity")),
+                    source=source,
+                    indicator_type=indicator_type,
+                    name=name,
+                    value=parse_decimal(record.get("value") or record.get("indicator_value")),
+                    unit=clean_string(record.get("unit") or record.get("indicator_unit")) or "value",
+                    reporting_period=reporting_period or source.imported_at.date(),
+                    country=clean_string(record.get("country")) or "Zimbabwe",
+                    currency=normalize_currency(record.get("currency")),
+                    commodity=clean_string(record.get("commodity")),
+                    notes=clean_string(record.get("notes")),
+                )
+            )
+        return normalized
+
+
+
+def normalize_reference_slug(value: Any) -> str:
+    """Normalize sector and industry slugs."""
+    cleaned = (clean_string(value) or "").lower().replace("&", "and")
+    parts = []
+    current = []
+    for char in cleaned:
+        if char.isalnum():
+            current.append(char)
+        elif current:
+            parts.append("".join(current))
+            current = []
+    if current:
+        parts.append("".join(current))
+    return "-".join(parts)
+
+
+class SectorNormalizer:
+    """Normalize sector reference records."""
+
+    def normalize(self, records: list[dict[str, Any]], source: SourceMetadata) -> list[NormalizedSector]:
+        normalized: list[NormalizedSector] = []
+        for record in records:
+            name = clean_string(record.get("name") or record.get("sector")) or ""
+            slug = normalize_reference_slug(record.get("slug") or name)
+            normalized.append(
+                NormalizedSector(
+                    external_key=build_external_key(source.source_type.value, "sector", slug),
+                    source=source,
+                    name=name,
+                    slug=slug,
+                    description=clean_string(record.get("description")),
+                    exchange_coverage=clean_string(record.get("exchange_coverage")),
+                    country=clean_string(record.get("country")) or "Zimbabwe",
+                    overview=clean_string(record.get("overview")),
+                )
+            )
+        return normalized
+
+
+class IndustryNormalizer:
+    """Normalize industry reference records."""
+
+    def normalize(self, records: list[dict[str, Any]], source: SourceMetadata) -> list[NormalizedIndustry]:
+        normalized: list[NormalizedIndustry] = []
+        for record in records:
+            name = clean_string(record.get("name") or record.get("industry")) or ""
+            slug = normalize_reference_slug(record.get("slug") or name)
+            sector_slug = normalize_reference_slug(record.get("sector_slug") or record.get("sector"))
+            normalized.append(
+                NormalizedIndustry(
+                    external_key=build_external_key(source.source_type.value, "industry", sector_slug, slug),
+                    source=source,
+                    name=name,
+                    slug=slug,
+                    sector_slug=sector_slug,
+                    description=clean_string(record.get("description")),
+                    overview=clean_string(record.get("overview")),
+                )
+            )
+        return normalized
