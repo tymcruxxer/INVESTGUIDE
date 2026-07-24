@@ -4830,3 +4830,303 @@ Next Recommended Task:
 
 * Sprint 054: implement an audit log viewer/export workflow or production Owner provisioning and transfer workflow before adding broader admin operations.
 
+
+---
+
+## Session 063
+
+Date: 2026-07-22
+
+Objective: Complete Sprint 054 Data Source Registry & Source Management Platform by adding configurable source governance for future ingestion without executing live data collection.
+
+Completed:
+
+* Added source registry models for sources, configuration, masked credentials, and version history.
+* Added source trust/category/connector/authentication/status/refresh-policy enums.
+* Added migration `20260722_0009_create_source_registry.py`.
+* Added source registry service with create, list, detail, update, status change, soft delete, audit recording, credential masking, and version snapshots.
+* Added admin APIs under `/api/v1/admin/sources`.
+* Added duplicate-aware development source catalogue seeding to the manual seed workflow.
+* Added frontend admin source list and detail pages.
+* Added architecture documentation at `docs/architecture/data-source-registry.md`.
+* Updated backend and frontend README notes.
+
+Files Created:
+
+* `backend/app/models/source_registry.py`
+* `backend/app/schemas/source_registry.py`
+* `backend/app/services/source_registry_service.py`
+* `backend/app/database/seed_sources.py`
+* `backend/alembic/versions/20260722_0009_create_source_registry.py`
+* `backend/tests/test_source_registry.py`
+* `docs/architecture/data-source-registry.md`
+* `frontend/app/admin/sources/page.tsx`
+* `frontend/app/admin/sources/[id]/page.tsx`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/app/api/v1/admin.py`
+* `backend/app/database/seed.py`
+* `backend/README.md`
+* `frontend/components/layout/admin-shell.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Source management is configuration-first and separate from ingestion execution.
+* Source credentials are write-only and exposed only as masked metadata.
+* Registry changes are versioned and audited using existing admin infrastructure.
+* Source deletion is soft-delete to preserve provenance and future ingestion history.
+* Development source seeds are duplicate-aware and do not include real credentials or trigger live connectors.
+
+Validation Results:
+
+* `python -m pytest tests/test_source_registry.py -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 8 tests.
+* `python -m pytest tests/test_admin_rbac.py tests/test_admin_user_management.py tests/test_source_registry.py -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 29 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 298 tests.
+* `python -m compileall backend/app/models/source_registry.py backend/app/schemas/source_registry.py backend/app/services/source_registry_service.py backend/app/database/seed_sources.py backend/app/api/v1/admin.py backend/app/database/seed.py`: passed.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 21 static pages generated plus dynamic admin/source routes.
+
+Known Issues:
+
+* Source registry does not execute ingestion, scraping, scheduling, workers, analytics, or AI connectors.
+* Production credential storage should move to a dedicated secret manager before live source integration.
+* Source health checks, connector validation, and an audit/source-change viewer are future admin modules.
+
+Session Summary:
+
+* Sprint 054 establishes InvestGuide's source-management control plane: trusted source catalogue, source configuration, masked credentials, audited lifecycle management, seeded development catalogue, admin UI, and passing validation without adding live ingestion.
+
+Next Recommended Task:
+
+* Sprint 055: add safe source health/configuration validation or an operator-facing source-change audit viewer before any live connector execution.
+
+---
+
+## Session 064
+
+Date: 2026-07-22
+
+Objective: Add a pre-Sprint 055 Data Source Registry enhancement for operational capability metadata and record the future Connector Registry pattern.
+
+Completed:
+
+* Added `SourceCapability` enum values for market prices, corporate actions, dividends, annual reports, interim reports, trading updates, news, economic indicators, exchange rates, commodity prices, weather, and research reports.
+* Added `supported_capabilities` to the Source model, migration, schemas, service serialization, version snapshots, seed catalogue, tests, and frontend types.
+* Updated admin source list/detail pages to display declared capabilities.
+* Documented the future Connector Registry pattern so multiple sources can reuse shared connector implementations.
+
+Files Modified:
+
+* `backend/app/models/source_registry.py`
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/source_registry.py`
+* `backend/app/services/source_registry_service.py`
+* `backend/app/database/seed_sources.py`
+* `backend/alembic/versions/20260722_0009_create_source_registry.py`
+* `backend/tests/test_source_registry.py`
+* `frontend/types/index.ts`
+* `frontend/app/admin/sources/page.tsx`
+* `frontend/app/admin/sources/[id]/page.tsx`
+* `docs/architecture/data-source-registry.md`
+* `backend/README.md`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Source capabilities are first-class metadata used for future ingestion discovery.
+* Connector implementation reuse is planned through a future Connector Registry rather than one-off connectors per source.
+* The enhancement remains declarative and does not add live ingestion, scraping, workers, schedulers, or external calls.
+
+Validation Results:
+
+* `python -m compileall backend/app/models/source_registry.py backend/app/models/__init__.py backend/app/schemas/source_registry.py backend/app/services/source_registry_service.py backend/app/database/seed_sources.py backend/tests/test_source_registry.py`: passed.
+* `python -m pytest backend/tests/test_source_registry.py -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 8 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 349 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 21 static pages generated plus dynamic admin/source routes.
+
+Known Issues:
+
+* Capabilities are not yet used by ingestion jobs.
+* Connector Registry, Parser Registry, and source health checks remain future work.
+
+Session Summary:
+
+* InvestGuide's source registry can now declare what a source supports, allowing future ingestion jobs to discover candidate sources by capability rather than hard-coded logic.
+
+Next Recommended Task:
+
+* Sprint 055: add safe source health/configuration validation or define the Connector Registry contract before live ingestion execution.
+
+---
+
+## Session 065
+
+Date: 2026-07-22
+
+Objective: Complete Sprint 055 Ingestion Operations Centre by adding an operator-facing job registry, execution history, metrics, failures, freshness tracking, manual request recording, admin APIs, admin UI, seeds, tests, and documentation without live ingestion execution.
+
+Completed:
+
+* Added normalized `IngestionJob`, `IngestionExecution`, `ExecutionMetric`, and `ExecutionFailure` models.
+* Added job, execution, trigger, priority, failure, and freshness enums.
+* Added migration `20260722_0010_create_ingestion_operations_centre.py`.
+* Added `ingestion_operations_service` for CRUD, filtering, pagination, summary widgets, serialization, manual operation requests, and audit writes.
+* Added secure admin ingestion APIs under `/api/v1/admin/ingestion`.
+* Added development seed data for jobs, execution history, operational metrics, failures, stale jobs, and paused jobs.
+* Integrated ingestion operations seeding into the manual `python -m app.database.seed` workflow.
+* Added frontend admin navigation and pages for jobs, job detail, and execution history.
+* Added architecture documentation at `docs/architecture/ingestion-operations-centre.md`.
+* Updated backend and frontend README notes.
+
+Files Created:
+
+* `backend/app/models/ingestion_operations.py`
+* `backend/app/schemas/ingestion_operations.py`
+* `backend/app/services/ingestion_operations_service.py`
+* `backend/app/database/seed_ingestion_operations.py`
+* `backend/app/api/v1/admin_ingestion.py`
+* `backend/alembic/versions/20260722_0010_create_ingestion_operations_centre.py`
+* `backend/tests/test_ingestion_operations.py`
+* `docs/architecture/ingestion-operations-centre.md`
+* `frontend/app/admin/ingestion/jobs/page.tsx`
+* `frontend/app/admin/ingestion/jobs/[id]/page.tsx`
+* `frontend/app/admin/ingestion/executions/page.tsx`
+
+Files Modified:
+
+* `backend/app/models/__init__.py`
+* `backend/app/api/v1/router.py`
+* `backend/app/database/seed.py`
+* `backend/app/services/rbac_service.py`
+* `backend/README.md`
+* `frontend/components/layout/admin-shell.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Ingestion job definitions are separated from pipeline execution audit rows for clearer operations governance.
+* Manual run/retry/pause/resume/cancel actions record requests and audit trails only; they do not invoke connectors or workers.
+* Metrics and failures are normalized under executions.
+* Freshness is represented as explicit job state for future worker updates.
+* RBAC permissions `ingestion.read` and `ingestion.manage` protect all operations-centre APIs.
+
+Validation Results:
+
+* `python -m compileall backend/app/models/ingestion_operations.py backend/app/schemas/ingestion_operations.py backend/app/services/ingestion_operations_service.py backend/app/database/seed_ingestion_operations.py backend/app/api/v1/admin_ingestion.py backend/tests/test_ingestion_operations.py`: passed.
+* `python -m pytest backend/tests/test_ingestion_operations.py -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 7 tests.
+* `python -m pytest -q -o cache_dir=C:/tmp/investguide-pytest-cache`: passed, 356 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 23 routes generated including `/admin/ingestion/jobs`, `/admin/ingestion/jobs/[id]`, and `/admin/ingestion/executions`.
+
+Known Issues:
+
+* The Operations Centre does not execute jobs yet.
+* No scheduler, queue, worker, live connector, parser, scraper, live API, or AI process was added.
+* Development execution metrics and failures are simulated.
+
+Session Summary:
+
+* Sprint 055 establishes InvestGuide's ingestion operations control plane: observable job definitions, immutable execution history, normalized metrics/failures, freshness state, audited manual operation requests, admin APIs, admin UI, seed data, and passing validation.
+
+Next Recommended Task:
+
+* Sprint 056: add safe source/job health validation and Connector Registry contracts before introducing any live ingestion workers.
+
+---
+
+## Session 066
+
+Date: 2026-07-22
+
+Objective: Complete Sprint 056 Connector Registry & Connector Framework by adding reusable connector contracts, source bindings, admin APIs, admin UI, seed data, tests, and documentation without live execution.
+
+Completed:
+
+* Added normalized connector registry models for `Connector`, `ConnectorCapability`, `ConnectorConfigurationSchema`, `ConnectorVersion`, and `ConnectorValidation`.
+* Added connector enums for type, lifecycle, authentication strategy, capability, and validation status.
+* Added nullable source-to-connector binding through `sources.connector_id`.
+* Added migration `20260722_0011_create_connector_registry.py`.
+* Added `connector_registry_service` for CRUD, filtering, pagination, capability assignment, lifecycle changes, metadata-only validation, audit events, version snapshots, source binding serialization, and soft archive.
+* Added secure admin connector APIs under `/api/v1/admin/connectors`.
+* Added RBAC permissions `connectors.read` and `connectors.update` and admin navigation support.
+* Added duplicate-aware development connector seed data and source binding through the manual seed workflow.
+* Added admin frontend pages for connector list and detail views.
+* Added frontend connector types and API client methods.
+* Added connector architecture documentation.
+
+Files Created:
+
+* `backend/app/models/connector_registry.py`
+* `backend/app/schemas/connector_registry.py`
+* `backend/app/services/connector_registry_service.py`
+* `backend/app/database/seed_connectors.py`
+* `backend/app/api/v1/admin_connectors.py`
+* `backend/alembic/versions/20260722_0011_create_connector_registry.py`
+* `backend/tests/test_connector_registry.py`
+* `docs/architecture/connector-registry.md`
+* `frontend/app/admin/connectors/page.tsx`
+* `frontend/app/admin/connectors/[id]/page.tsx`
+
+Files Modified:
+
+* `backend/app/models/source_registry.py`
+* `backend/app/models/__init__.py`
+* `backend/app/schemas/source_registry.py`
+* `backend/app/services/source_registry_service.py`
+* `backend/app/api/v1/router.py`
+* `backend/app/database/seed.py`
+* `backend/app/services/rbac_service.py`
+* `backend/tests/test_admin_rbac.py`
+* `backend/README.md`
+* `frontend/components/layout/admin-shell.tsx`
+* `frontend/services/api.ts`
+* `frontend/types/index.ts`
+* `frontend/README.md`
+* `PROJECT_STATE.md`
+* `context.md`
+
+Architecture Decisions:
+
+* Connector definitions are metadata and validation contracts, not executable integrations.
+* Data sources can bind to reusable connectors so one connector implementation can support multiple sources in future sprints.
+* Configuration contracts forbid secret-bearing schema fields and use future secret references instead of storing raw credentials.
+* Validation checks lifecycle, required fields, auth compatibility, source category compatibility, and schema integrity without network I/O.
+* Connector modifications and validation requests are audited and versioned.
+
+Validation Results:
+
+* `python -m pytest -q`: passed, 314 tests.
+* `npm.cmd run lint`: passed.
+* `npm.cmd run type-check`: passed.
+* `npm.cmd run build`: passed, 24 routes generated including connector admin routes.
+
+Known Issues:
+
+* Connector registry does not execute live ingestion.
+* Parser registry, connector implementation registry, secure secret manager integration, live connectivity tests, worker execution, schedulers, queues, and runtime health checks remain future work.
+* A non-blocking Pydantic warning remains for the connector configuration field named `schema`.
+
+Session Summary:
+
+* Sprint 056 established InvestGuide's reusable connector framework: normalized connector contracts, capabilities, configuration schemas, metadata validation, source bindings, lifecycle controls, audit/version history, seed data, admin APIs, admin UI, and passing validation.
+
+Next Recommended Task:
+
+* Sprint 057: define a connector implementation/parser registry or safe connector health-check framework before enabling live source execution.

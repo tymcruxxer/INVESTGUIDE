@@ -229,6 +229,9 @@ def main() -> None:
         from app.database.seed_macro_indicators import seed_macro_indicators
         from app.database.seed_sectors import seed_sectors
         from app.database.seed_admin_users import seed_admin_users
+        from app.database.seed_sources import seed_sources
+        from app.database.seed_ingestion_operations import seed_ingestion_operations
+        from app.database.seed_connectors import seed_connectors`r`n        from app.database.seed_runtime import seed_runtimes
         from app.services.rbac_service import bootstrap_rbac
 
         company_profile_result = seed_company_profiles(db)
@@ -240,6 +243,8 @@ def main() -> None:
         settings = get_settings()
         rbac_result = bootstrap_rbac(db, owner_email=settings.admin_owner_email, owner_password=settings.admin_owner_password)
         admin_user_result = seed_admin_users(db)
+        source_result = seed_sources(db)
+        connector_result = seed_connectors(db)`r`n        runtime_result = seed_runtimes(db)`r`n        ingestion_operations_result = seed_ingestion_operations(db)
     logger.info(
         "Manual development seed finished: %s assets inserted, %s assets skipped, "
         "%s companies inserted, %s companies updated, %s companies skipped, "
@@ -249,7 +254,9 @@ def main() -> None:
         "%s macro indicators inserted, %s macro indicators updated, %s macro indicators skipped, "
         "%s sectors inserted, %s sectors updated, %s sectors skipped, %s industries inserted, %s industries updated, %s industries skipped, "
         "%s investor profiles inserted, %s investor profiles skipped, "
-        "%s roles inserted, %s permissions inserted, %s role-permissions inserted, owner created=%s, owner assigned=%s",
+        "%s roles inserted, %s permissions inserted, %s role-permissions inserted, owner created=%s, owner assigned=%s, "
+        "%s source registry rows inserted, %s source registry rows skipped, "
+        "%s connector rows inserted, %s connector rows skipped, %s source bindings updated, "`r`n        "%s runtime rows inserted, %s runtime rows skipped, %s connector compatibilities, "`r`n        "%s ingestion jobs inserted, %s ingestion jobs skipped, %s ingestion executions inserted, %s ingestion failures inserted",
         asset_result.inserted,
         asset_result.skipped,
         company_result.inserted,
@@ -280,11 +287,28 @@ def main() -> None:
         rbac_result.role_permissions_inserted,
         rbac_result.owner_created,
         rbac_result.owner_assigned,
+        source_result.inserted,
+        source_result.skipped,
+        connector_result.inserted,
+        connector_result.skipped,
+        connector_result.bound_sources,`r`n        runtime_result.inserted,`r`n        runtime_result.skipped,`r`n        runtime_result.compatible_connectors,`r`n        ingestion_operations_result.jobs_inserted,
+        ingestion_operations_result.jobs_skipped,
+        ingestion_operations_result.executions_inserted,
+        ingestion_operations_result.failures_inserted,
     )
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
 
 
 

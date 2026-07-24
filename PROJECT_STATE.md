@@ -1101,3 +1101,169 @@ Recommended Sprint 054:
 
 * Add a dedicated audit log viewer/export workflow or production Owner provisioning and transfer workflow before expanding administrative operations.
 
+
+---
+
+## Sprint 054 Data Source Registry & Source Management Platform
+
+Status: Complete.
+
+Completed:
+
+* Added a normalized Data Source Registry backend domain with sources, source configurations, masked credentials, and source version history.
+* Added Alembic migration `20260722_0009_create_source_registry.py`.
+* Added source registry service logic for create, read, update, status changes, soft delete, audit recording, duplicate prevention, credential masking, and version snapshots.
+* Added admin APIs under `/api/v1/admin/sources` for source management.
+* Added duplicate-aware development source catalogue seeding through `python -m app.database.seed`.
+* Added frontend admin pages for `/admin/sources` and `/admin/sources/[id]`.
+* Added architecture documentation at `docs/architecture/data-source-registry.md`.
+
+Architecture decisions:
+
+* Source configuration is data-driven so future ingestion sources can be configured without code changes.
+* Sources are categorized by trust tier, category, connector type, authentication type, status, and operational refresh policy.
+* Credential values are write-only; API responses expose only masked credential metadata and never raw secrets.
+* Source changes are auditable and versioned through source version records plus the existing admin audit service.
+* Source deletion is soft-delete only so provenance and historical ingestion records can remain traceable.
+* No live ingestion, scraping, scheduler, worker, analytics execution, feature flags, or AI provider management was added.
+
+Validation results:
+
+* Backend source registry tests: passed, `8 passed in 8.36s`.
+* Backend admin/source focused tests: passed, `29 passed in 22.81s`.
+* Backend full test suite: passed, `298 passed in 45.19s`.
+* Backend compile check for Sprint 054 files: passed.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 21 static pages generated plus dynamic admin/source routes.
+
+Known limitations:
+
+* Source credentials use development-safe stored hashes/references and still need production secret-manager integration.
+* Registry entries do not execute ingestion and do not call external systems.
+* Source health checks, connector validation, audit-log viewer/export, and ingestion operations dashboards remain future work.
+
+Recommended Sprint 055:
+
+* Build a source health and validation workflow that can test registry configuration safely without executing live ingestion, or add an audit/source-change viewer for operators.
+
+---
+
+## Pre-Sprint 055 Source Registry Capability Enhancement
+
+Status: Complete.
+
+Completed:
+
+* Added operational capability metadata to Data Source Registry sources through `supported_capabilities`.
+* Added supported capability enum values for market prices, corporate actions, dividends, annual reports, interim reports, trading updates, news, economic indicators, exchange rates, commodity prices, weather, and research reports.
+* Updated source creation, update, serialization, version snapshots, seed catalogue entries, tests, and admin UI displays.
+* Documented the future Connector Registry pattern: Source -> Connector -> Parser -> Ingestion Job.
+
+Architecture decisions:
+
+* Capabilities describe what a source can provide; connector configuration describes how the source is accessed.
+* Future ingestion jobs should discover candidate sources by capability rather than hard-coded source names.
+* Connector Registry remains deferred so this enhancement does not introduce live connectors or ingestion execution.
+
+Validation results:
+
+* Backend focused source registry tests: passed, `8 passed in 14.27s`.
+* Backend full test suite: passed, `349 passed in 79.17s`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 21 static pages generated plus dynamic admin/source routes.
+
+Known limitations:
+
+* Capability metadata is declarative only and does not execute ingestion.
+* Connector Registry, parser registry, source health checks, and live connector validation remain future work.
+
+Recommended Sprint 055:
+
+* Build safe source health/configuration validation or introduce the Connector Registry contract before any live source execution.
+
+---
+
+## Sprint 055 Ingestion Operations Centre
+
+Status: Complete.
+
+Completed:
+
+* Added normalized Ingestion Operations Centre models for jobs, executions, metrics, and failures.
+* Added Alembic migration `20260722_0010_create_ingestion_operations_centre.py`.
+* Added backend service logic for job CRUD, filters, pagination, summary widgets, execution serialization, freshness state, and manual operation request recording.
+* Added secure admin APIs under `/api/v1/admin/ingestion` using `ingestion.read` and `ingestion.manage` permissions.
+* Added duplicate-aware development seed data for example jobs, execution history, metrics, failures, stale jobs, and paused jobs.
+* Added admin frontend pages for `/admin/ingestion/jobs`, `/admin/ingestion/jobs/[id]`, and `/admin/ingestion/executions`.
+* Added architecture documentation at `docs/architecture/ingestion-operations-centre.md`.
+
+Architecture decisions:
+
+* Operations Centre job definitions are separate from existing `ingestion_runs` pipeline audit rows.
+* Execution history is append-only operational history; manual actions record requests but do not execute workers.
+* Job freshness is stored on the job so future workers can update source/job health without changing UI contracts.
+* Every operator action records audit metadata with previous and new job state.
+* The system remains execution-engine agnostic; Celery, Redis, cron, schedulers, connectors, and workers are deferred.
+
+Validation results:
+
+* Backend focused operations tests: passed, `7 passed in 59.56s`.
+* Backend full test suite: passed, `356 passed in 120.14s`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 23 routes generated including admin ingestion pages.
+
+Known limitations:
+
+* Manual operation buttons record requests only and do not execute ingestion.
+* No live scraping, live APIs, queue workers, schedulers, connector execution, data parsing, or AI processing was added.
+* Execution metrics and failures in development seeds are simulated for operator UI validation.
+
+Recommended Sprint 056:
+
+* Add a Connector Registry contract and safe source/job health checks, or build a read-only audit log viewer for ingestion operations before introducing live execution workers.
+
+---
+
+## Sprint 056 Connector Registry & Connector Framework
+
+Status: Complete.
+
+Completed:
+
+* Added a normalized Connector Registry backend domain with connectors, capabilities, configuration schemas, version history, and validation history.
+* Added Alembic migration `20260722_0011_create_connector_registry.py`.
+* Added nullable `sources.connector_id` so Data Source Registry records can bind to reusable connector definitions.
+* Added connector service logic for CRUD, search, filters, pagination, capability assignment, lifecycle updates, soft archive, source compatibility checks, validation, audit recording, and immutable version snapshots.
+* Added secure admin APIs under `/api/v1/admin/connectors`.
+* Added duplicate-aware development connector seeding and source binding through `python -m app.database.seed`.
+* Added frontend admin pages for `/admin/connectors` and `/admin/connectors/[id]`.
+* Added architecture documentation at `docs/architecture/connector-registry.md`.
+
+Architecture decisions:
+
+* Sources describe where data comes from; jobs describe when work happens; connectors describe how future work is performed.
+* Connectors are reusable and can be shared by many sources.
+* Connector configuration schemas store metadata only and reject secret-bearing fields.
+* Connector validation is metadata-only and never performs live connectivity tests or outbound network requests.
+* Connector lifecycle changes are audited and versioned; archived connectors are soft-deleted from active registry lists.
+* No live HTTP requests, scraping, RSS fetching, API integrations, background workers, schedulers, queue execution, parsing engines, browser automation, or AI processing was added.
+
+Validation results:
+
+* Backend full test suite: passed, `314 passed`.
+* Frontend lint: passed.
+* Frontend type-check: passed.
+* Frontend build: passed, 24 static/dynamic routes generated including `/admin/connectors` and `/admin/connectors/[id]`.
+
+Known limitations:
+
+* Connector definitions do not execute ingestion yet.
+* Secure secret-manager integration, parser registry, connector implementation registry, live connectivity tests, workers, schedulers, and runtime connector health checks remain future work.
+* Pydantic emits a non-blocking warning for connector configuration schema field naming.
+
+Recommended Sprint 057:
+
+* Build a Connector Implementation Registry or Parser Registry that maps connector definitions to future executable implementations without enabling live data ingestion yet.

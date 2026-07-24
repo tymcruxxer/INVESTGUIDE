@@ -40,6 +40,8 @@ DEFAULT_PERMISSIONS: tuple[dict[str, str], ...] = (
     {"code": "roles.update", "name": "Update roles", "category": "roles", "description": "Update non-owner roles."},
     {"code": "sources.read", "name": "Read sources", "category": "sources", "description": "View data source configuration."},
     {"code": "sources.update", "name": "Update sources", "category": "sources", "description": "Update data source configuration."},
+    {"code": "connectors.read", "name": "Read connectors", "category": "connectors", "description": "View reusable connector definitions."},
+    {"code": "connectors.update", "name": "Update connectors", "category": "connectors", "description": "Create, update, validate, and archive connector definitions."},`r`n    {"code": "runtime.read", "name": "Read runtime", "category": "runtime", "description": "View execution runtime definitions."},`r`n    {"code": "runtime.update", "name": "Update runtime", "category": "runtime", "description": "Create, update, validate, and archive runtime definitions."},
     {"code": "ingestion.read", "name": "Read ingestion", "category": "ingestion", "description": "View ingestion operations."},
     {"code": "ingestion.manage", "name": "Manage ingestion", "category": "ingestion", "description": "Operate ingestion workflows."},
     {"code": "analytics.read", "name": "Read analytics", "category": "analytics", "description": "View analytics outputs and diagnostics."},
@@ -53,7 +55,8 @@ ROLE_PERMISSION_MAP: dict[str, tuple[str, ...] | str] = {
     OPERATIONS_ADMIN_ROLE: (
         "sources.read",
         "sources.update",
-        "ingestion.read",
+        "connectors.read",
+        "connectors.update",`r`n        "runtime.read",`r`n        "runtime.update",`r`n        "ingestion.read",
         "ingestion.manage",
         "system.read",
         "audit.read",
@@ -83,6 +86,7 @@ ADMIN_NAVIGATION: tuple[dict[str, str], ...] = (
     {"label": "Dashboard", "href": "/admin/dashboard", "permission": "system.read"},
     {"label": "Users", "href": "/admin/users", "permission": "users.read"},
     {"label": "Roles", "href": "/admin/roles", "permission": "roles.read"},
+    {"label": "Connectors", "href": "/admin/connectors", "permission": "connectors.read"},`r`n    {"label": "Runtime", "href": "/admin/runtime", "permission": "runtime.read"},
     {"label": "Settings", "href": "/admin/settings", "permission": "system.configure"},
 )
 
@@ -294,6 +298,9 @@ def filter_navigation_for_user(db: Session, user: User, items: Iterable[dict[str
     """Return admin navigation entries visible to the user."""
     permission_codes = get_user_permission_codes(db, user)
     return [dict(item) for item in items if item["permission"] in permission_codes]
+
+
+
 
 
 

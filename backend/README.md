@@ -1544,3 +1544,108 @@ Security notes:
 * Role/status changes require a reason and are recorded in audit/history tables.
 
 See `docs/architecture/user-role-management.md` for the detailed architecture.
+
+## Sprint 054: Data Source Registry
+
+The backend now includes a normalized Data Source Registry for configuring future ingestion sources without code changes.
+
+Admin APIs:
+
+* `GET /api/v1/admin/sources` - source list with search, pagination, and filters.
+* `GET /api/v1/admin/sources/{id}` - source detail with configuration, masked credentials, provenance, version history, and recent activity.
+* `POST /api/v1/admin/sources` - create a source registry entry.
+* `PATCH /api/v1/admin/sources/{id}` - update source identity, connector configuration, or credential metadata.
+* `PATCH /api/v1/admin/sources/{id}/status` - set enabled, disabled, or maintenance mode.
+* `DELETE /api/v1/admin/sources/{id}` - soft delete a source with reason and audit trail.
+
+Manual development seed:
+
+```bash
+cd backend
+python -m app.database.seed
+```
+
+The seed registers development catalogue entries for market, government, regulator, research, news, international, commodity, weather, and alternative-intelligence sources. It does not enable live ingestion and does not seed production credentials.
+
+Security:
+
+* Raw credential values are write-only.
+* API responses expose only masked credential metadata.
+* Every create/update/status/delete action records source version history and audit metadata.
+
+See `docs/architecture/data-source-registry.md`.
+
+## Pre-Sprint 055: Source Capabilities
+
+The Data Source Registry now includes `supported_capabilities` on each source. This lets future ingestion jobs discover whether a source can provide market prices, corporate actions, dividends, reports, news, macroeconomic indicators, exchange rates, commodities, weather, or research reports without hard-coded source assumptions.
+
+Connector Registry is intentionally deferred. Future work should allow many sources to reuse one connector implementation.
+
+## Sprint 055: Ingestion Operations Centre
+
+The backend now includes an Ingestion Operations Centre for defining and observing future ingestion jobs without executing live ingestion.
+
+Backend additions:
+
+* Normalized models for `IngestionJob`, `IngestionExecution`, `ExecutionMetric`, and `ExecutionFailure`.
+* Alembic migration `20260722_0010_create_ingestion_operations_centre.py`.
+* Manual development seed support through `seed_ingestion_operations()` and `python -m app.database.seed`.
+* Secure admin APIs under `/api/v1/admin/ingestion`.
+* RBAC enforcement using `ingestion.read` and `ingestion.manage`.
+* Audit records for job create, update, run, retry, pause, resume, and cancel requests.
+
+Admin APIs:
+
+* `GET /api/v1/admin/ingestion/jobs`
+* `GET /api/v1/admin/ingestion/jobs/{id}`
+* `POST /api/v1/admin/ingestion/jobs`
+* `PATCH /api/v1/admin/ingestion/jobs/{id}`
+* `POST /api/v1/admin/ingestion/jobs/{id}/run`
+* `POST /api/v1/admin/ingestion/jobs/{id}/retry`
+* `POST /api/v1/admin/ingestion/jobs/{id}/pause`
+* `POST /api/v1/admin/ingestion/jobs/{id}/resume`
+* `POST /api/v1/admin/ingestion/jobs/{id}/cancel`
+* `GET /api/v1/admin/ingestion/executions`
+* `GET /api/v1/admin/ingestion/executions/{id}`
+
+Manual operation requests are recorded only. No worker, scheduler, queue, parser, connector, scraper, or live API execution runs in this sprint.
+
+See `docs/architecture/ingestion-operations-centre.md`.
+
+## Sprint 056: Connector Registry
+
+The backend now includes a reusable Connector Registry for future ingestion execution contracts.
+
+Backend additions:
+
+* Normalized models for `Connector`, `ConnectorCapability`, `ConnectorConfigurationSchema`, `ConnectorVersion`, and `ConnectorValidation`.
+* Alembic migration `20260722_0011_create_connector_registry.py`.
+* Nullable `sources.connector_id` binding so multiple sources can reuse one connector.
+* Manual development seed support through `seed_connectors()` and `python -m app.database.seed`.
+* Secure admin APIs under `/api/v1/admin/connectors`.
+* RBAC enforcement using `connectors.read` and `connectors.update`.
+* Audit records for connector create, update, validate, and lifecycle changes.
+
+Admin APIs:
+
+* `GET /api/v1/admin/connectors`
+* `GET /api/v1/admin/connectors/capabilities`
+* `GET /api/v1/admin/connectors/{id}`
+* `POST /api/v1/admin/connectors`
+* `PATCH /api/v1/admin/connectors/{id}`
+* `POST /api/v1/admin/connectors/{id}/validate`
+* `PATCH /api/v1/admin/connectors/{id}/status`
+
+Connector validation is metadata-only. It checks required fields, lifecycle, auth compatibility, source-category compatibility, and unsafe secret-bearing schema fields. It never performs external network requests.
+
+Seeded development connectors:
+
+* Generic REST API Connector
+* Generic RSS Feed Connector
+* Generic HTML Scraper Connector
+* Generic PDF Extractor Connector
+* Generic CSV Importer Connector
+
+No live HTTP calls, scraping, RSS fetching, parsing engines, workers, queues, schedulers, browser automation, or AI processing were added.
+
+See `docs/architecture/connector-registry.md`.

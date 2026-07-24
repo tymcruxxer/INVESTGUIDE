@@ -1033,3 +1033,35 @@ The frontend administration shell now includes user and role management surfaces
 * `/admin/roles/[id]` - inherited permission inspection for one role.
 
 The UI consumes backend admin APIs and does not expose password hashes, editable permissions, Owner transfer, MFA, billing, feature flags, or data-source controls. Permission editing remains intentionally deferred.
+
+## Sprint 054: Data Source Registry Admin UI
+
+The admin frontend now includes source-management pages:
+
+* `/admin/sources` - searchable/filterable source registry, pagination, and source creation form.
+* `/admin/sources/[id]` - source overview, connector configuration, masked credentials, provenance, operational settings, version history, and audited status/soft-delete controls.
+
+The UI does not run ingestion, live scraping, scheduled jobs, feature flags, or AI provider management. Credential values are never displayed after creation.
+
+## Pre-Sprint 055: Source Capabilities UI
+
+The admin source registry now displays declared source capabilities on `/admin/sources` and `/admin/sources/[id]`. These labels are informational only; they do not trigger ingestion, scraping, scheduling, or live connector execution.
+
+## Sprint 055: Ingestion Operations Centre UI
+
+The admin frontend now includes ingestion operations pages:
+
+* `/admin/ingestion/jobs` - job registry, summary widgets, filters, pagination, and job creation.
+* `/admin/ingestion/jobs/[id]` - job overview, configuration, freshness, metrics, failures, execution history, and manual request buttons.
+* `/admin/ingestion/executions` - immutable execution history with status, trigger, operator, metrics, and failures.
+
+The UI is operator-facing only. Buttons record requests through backend APIs and do not start live ingestion, workers, queues, scrapers, or schedulers.
+
+## Sprint 056: Connector Registry Admin UI
+
+The admin frontend now includes connector-management pages:
+
+* `/admin/connectors` - searchable/filterable connector registry, pagination, and connector creation form.
+* `/admin/connectors/[id]` - connector overview, capabilities, configuration schema, authentication contract, validation history, compatible sources, version history, recent activity, and lifecycle controls.
+
+The UI is operator-facing only. It defines future connector contracts and can request metadata validation, but it does not execute live API calls, scraping, RSS fetching, parsing, workers, queues, schedulers, or AI processing.

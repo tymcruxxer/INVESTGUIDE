@@ -1082,6 +1082,257 @@ export interface AdminUserStatusPayload {
   reason: string;
   confirmation: boolean;
 }
+
+export interface SourceConfiguration {
+  id: number;
+  base_url?: string | null;
+  headers: Record<string, unknown>;
+  parser: Record<string, unknown>;
+  connector_config: Record<string, unknown>;
+  refresh_policy: string;
+  custom_cron?: string | null;
+  timeout_seconds: number;
+  retry_count: number;
+  rate_limit_per_minute?: number | null;
+  backoff_policy?: string | null;
+  freshness_window_minutes?: number | null;
+  confidence_weight: number;
+  trust_level: string;
+  verification_required: boolean;
+  parser_version: string;
+  connector_version: string;
+  last_verified_at?: string | null;
+  notes?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SourceCredential {
+  id: number;
+  key: string;
+  label: string;
+  secret_type: string;
+  secret_reference?: string | null;
+  is_configured: boolean;
+  masked_value: string;
+  last_rotated_at?: string | null;
+}
+
+export interface SourceVersion {
+  id: number;
+  version: number;
+  change_type: string;
+  reason?: string | null;
+  previous_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  request_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface SourceSummary {
+  id: number;
+  name: string;
+  display_name: string;
+  category: string;
+  tier: string;
+  status: string;
+  connector_type: string;
+  authentication_type: string;
+  supported_capabilities: string[];
+  refresh_policy: string;
+  confidence_weight: number;
+  last_updated_at?: string | null;
+}
+
+export interface SourceDetail extends SourceSummary {
+  description?: string | null;
+  organization?: string | null;
+  classification?: string | null;
+  is_active: boolean;
+  configuration?: SourceConfiguration | null;
+  credentials: SourceCredential[];
+  version_history: SourceVersion[];
+  recent_activity: Array<Record<string, unknown>>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SourceListPayload {
+  sources: SourceSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface SourceCredentialPayload {
+  key: string;
+  label: string;
+  secret_type: string;
+  secret_value?: string | null;
+  secret_reference?: string | null;
+}
+
+export interface SourceConfigurationPayload {
+  base_url?: string | null;
+  headers?: Record<string, unknown>;
+  parser?: Record<string, unknown>;
+  connector_config?: Record<string, unknown>;
+  refresh_policy?: string;
+  timeout_seconds?: number;
+  retry_count?: number;
+  rate_limit_per_minute?: number | null;
+  backoff_policy?: string | null;
+  freshness_window_minutes?: number | null;
+  confidence_weight?: number | null;
+  trust_level?: string;
+  verification_required?: boolean;
+  parser_version?: string;
+  connector_version?: string;
+  notes?: string | null;
+}
+
+export interface SourceCreatePayload {
+  name: string;
+  display_name: string;
+  description?: string | null;
+  category: string;
+  tier: string;
+  organization?: string | null;
+  classification?: string | null;
+  connector_type: string;
+  authentication_type: string;
+  status: string;
+  supported_capabilities?: string[];
+  configuration: SourceConfigurationPayload;
+  credentials?: SourceCredentialPayload[];
+  reason: string;
+}
+
+export interface SourceUpdatePayload extends Partial<Omit<SourceCreatePayload, "name" | "status">> {
+  reason: string;
+}
+
+export interface SourceStatusPayload {
+  status: "enabled" | "disabled" | "maintenance";
+  reason: string;
+}
+
+export interface IngestionOperationMetric {
+  id: number;
+  rows_processed: number;
+  records_inserted: number;
+  records_updated: number;
+  duplicates_detected: number;
+  records_rejected: number;
+  warning_count: number;
+  error_count: number;
+  duration_ms?: number | null;
+  throughput_per_second?: number | null;
+}
+
+export interface IngestionOperationFailure {
+  id: number;
+  failure_category: string;
+  error_message: string;
+  stack_trace_placeholder?: string | null;
+  retry_eligible: boolean;
+  failed_at: string;
+}
+
+export interface IngestionOperationExecution {
+  id: number;
+  job_id: number;
+  job_name?: string | null;
+  source_name?: string | null;
+  status: string;
+  trigger_type: string;
+  operator_user_id?: number | null;
+  operator_email?: string | null;
+  retry_count: number;
+  result_summary?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  duration_ms?: number | null;
+  request_id?: string | null;
+  metric?: IngestionOperationMetric | null;
+  failures: IngestionOperationFailure[];
+  created_at?: string | null;
+}
+
+export interface IngestionOperationJobSummary {
+  id: number;
+  source_id: number;
+  source_name: string;
+  name: string;
+  job_type: string;
+  status: string;
+  priority: string;
+  is_enabled: boolean;
+  execution_mode: string;
+  manual_only: boolean;
+  last_run_at?: string | null;
+  last_successful_run_at?: string | null;
+  next_scheduled_run_at?: string | null;
+  freshness_status: string;
+  latest_execution_status?: string | null;
+  updated_at?: string | null;
+}
+
+export interface IngestionOperationJobDetail extends IngestionOperationJobSummary {
+  description?: string | null;
+  configuration: Record<string, unknown>;
+  max_retries: number;
+  timeout_seconds: number;
+  concurrency_limit: number;
+  queue_name?: string | null;
+  recent_executions: IngestionOperationExecution[];
+  recent_failures: IngestionOperationFailure[];
+  audit: Array<Record<string, unknown>>;
+  created_at?: string | null;
+}
+
+export interface IngestionOperationJobListPayload {
+  jobs: IngestionOperationJobSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+  summary: Record<string, number | string>;
+}
+
+export interface IngestionOperationExecutionListPayload {
+  executions: IngestionOperationExecution[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface IngestionOperationJobPayload {
+  source_id: number;
+  name: string;
+  job_type: string;
+  description?: string | null;
+  configuration?: Record<string, unknown>;
+  execution_mode?: string;
+  priority?: string;
+  max_retries?: number;
+  timeout_seconds?: number;
+  concurrency_limit?: number;
+  queue_name?: string | null;
+  status?: string;
+  is_enabled?: boolean;
+  manual_only?: boolean;
+  freshness_status?: string;
+  reason: string;
+}
+
+export interface IngestionOperationRequestPayload {
+  reason: string;
+}
 export interface AuthTokens {
   access_token: string;
   token_type: "bearer";
@@ -1587,3 +1838,308 @@ export interface SectorDetailPayload {
 
 
 
+
+
+
+
+
+
+// ============================================================================
+// Connector Registry Types
+// ============================================================================
+
+export interface ConnectorCapability {
+  id: number;
+  capability: string;
+  description?: string | null;
+}
+
+export interface ConnectorConfigurationContract {
+  id: number;
+  schema: Record<string, unknown>;
+  required_fields: string[];
+  endpoint_templates: Record<string, unknown>;
+  headers_schema: Record<string, unknown>;
+  pagination_strategy?: string | null;
+  parser_identifier?: string | null;
+  rate_limit_policy: Record<string, unknown>;
+  default_timeout_seconds: number;
+  default_retry_count: number;
+  request_method: string;
+  compression?: string | null;
+  user_agent?: string | null;
+  updated_at?: string | null;
+}
+
+export interface ConnectorVersion {
+  id: number;
+  version: string;
+  change_type: string;
+  change_summary?: string | null;
+  compatibility_notes?: string | null;
+  previous_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  request_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface ConnectorValidation {
+  id: number;
+  status: "passed" | "warning" | "failed";
+  summary: string;
+  errors: string[];
+  warnings: string[];
+  checked_fields: string[];
+  requested_config: Record<string, unknown>;
+  request_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface ConnectorSourceBinding {
+  id: number;
+  name: string;
+  display_name: string;
+  category: string;
+  status: string;
+  connector_type: string;
+}
+
+export interface ConnectorSummary {
+  id: number;
+  name: string;
+  display_name: string;
+  version: string;
+  connector_type: string;
+  lifecycle: string;
+  authentication_strategy: string;
+  classification?: string | null;
+  capabilities: string[];
+  compatible_source_count: number;
+  last_updated_at?: string | null;
+}
+
+export interface ConnectorDetail extends ConnectorSummary {
+  description?: string | null;
+  vendor?: string | null;
+  author?: string | null;
+  configuration_schema: Record<string, unknown>;
+  required_fields: string[];
+  supported_source_categories: string[];
+  compatibility_notes?: string | null;
+  deprecation_status: boolean;
+  change_summary?: string | null;
+  is_active: boolean;
+  configuration_contract?: ConnectorConfigurationContract | null;
+  capability_details: ConnectorCapability[];
+  version_history: ConnectorVersion[];
+  validation_history: ConnectorValidation[];
+  compatible_sources: ConnectorSourceBinding[];
+  recent_activity: Array<Record<string, unknown>>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface ConnectorListPayload {
+  connectors: ConnectorSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface ConnectorCapabilitiesPayload {
+  connector_types: string[];
+  lifecycle_states: string[];
+  authentication_strategies: string[];
+  capabilities: string[];
+  validation_statuses: string[];
+}
+
+export interface ConnectorConfigurationPayload {
+  schema?: Record<string, unknown>;
+  required_fields?: string[];
+  endpoint_templates?: Record<string, unknown>;
+  headers_schema?: Record<string, unknown>;
+  pagination_strategy?: string | null;
+  parser_identifier?: string | null;
+  rate_limit_policy?: Record<string, unknown>;
+  default_timeout_seconds?: number;
+  default_retry_count?: number;
+  request_method?: string;
+  compression?: string | null;
+  user_agent?: string | null;
+}
+
+export interface ConnectorCapabilityPayload {
+  capability: string;
+  description?: string | null;
+}
+
+export interface ConnectorCreatePayload {
+  name: string;
+  display_name: string;
+  description?: string | null;
+  version?: string;
+  vendor?: string | null;
+  author?: string | null;
+  classification?: string | null;
+  connector_type: string;
+  lifecycle: string;
+  authentication_strategy: string;
+  configuration_schema?: Record<string, unknown>;
+  required_fields?: string[];
+  supported_source_categories?: string[];
+  compatibility_notes?: string | null;
+  deprecation_status?: boolean;
+  change_summary?: string | null;
+  capabilities?: ConnectorCapabilityPayload[];
+  configuration_contract?: ConnectorConfigurationPayload;
+  reason: string;
+}
+
+export interface ConnectorUpdatePayload extends Partial<Omit<ConnectorCreatePayload, "name">> {
+  reason: string;
+}
+
+export interface ConnectorStatusPayload {
+  lifecycle: "draft" | "active" | "deprecated" | "disabled" | "archived";
+  reason: string;
+}
+
+export interface ConnectorValidationPayload {
+  configuration?: Record<string, unknown>;
+  source_id?: number | null;
+  reason?: string;
+}
+
+// ============================================================================
+// Execution Runtime Registry Types
+// ============================================================================
+
+export interface RuntimeCapability {
+  id: number;
+  capability: string;
+  description?: string | null;
+}
+
+export interface RuntimeCompatibility {
+  id: number;
+  connector_id: number;
+  connector_type: string;
+  compatibility_status: string;
+  notes?: string | null;
+}
+
+export interface RuntimeVersion {
+  id: number;
+  version: string;
+  change_type: string;
+  change_summary?: string | null;
+  previous_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  request_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface RuntimeValidation {
+  id: number;
+  runtime_id?: number | null;
+  source_id?: number | null;
+  connector_id?: number | null;
+  status: "passed" | "warning" | "failed";
+  summary: string;
+  errors: string[];
+  warnings: string[];
+  checked_fields: string[];
+  execution_context: Record<string, unknown>;
+  result_contract: Record<string, unknown>;
+  request_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface RuntimeSummary {
+  id: number;
+  name: string;
+  display_name: string;
+  version: string;
+  runtime_class: string;
+  status: string;
+  supported_connector_types: string[];
+  capabilities: string[];
+  compatible_connector_count: number;
+  last_updated_at?: string | null;
+}
+
+export interface RuntimeDetail extends RuntimeSummary {
+  description?: string | null;
+  runtime_metadata: Record<string, unknown>;
+  vendor?: string | null;
+  author?: string | null;
+  classification?: string | null;
+  lifecycle_states: string[];
+  result_statuses: string[];
+  change_summary?: string | null;
+  is_active: boolean;
+  capability_details: RuntimeCapability[];
+  compatibility_details: RuntimeCompatibility[];
+  version_history: RuntimeVersion[];
+  validation_history: RuntimeValidation[];
+  recent_activity: Array<Record<string, unknown>>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface RuntimeListPayload {
+  runtimes: RuntimeSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface RuntimeCapabilitiesPayload {
+  runtime_statuses: string[];
+  lifecycle_states: string[];
+  result_statuses: string[];
+  validation_statuses: string[];
+  capabilities: string[];
+  supported_connector_types: string[];
+}
+
+export interface RuntimeCapabilityPayload {
+  capability: string;
+  description?: string | null;
+}
+
+export interface RuntimeCreatePayload {
+  name: string;
+  display_name: string;
+  description?: string | null;
+  version?: string;
+  runtime_class: string;
+  status: string;
+  supported_connector_types?: string[];
+  runtime_metadata?: Record<string, unknown>;
+  vendor?: string | null;
+  author?: string | null;
+  classification?: string | null;
+  change_summary?: string | null;
+  capabilities?: RuntimeCapabilityPayload[];
+  reason: string;
+}
+
+export interface RuntimeUpdatePayload extends Partial<Omit<RuntimeCreatePayload, "name">> {
+  reason: string;
+}
+
+export interface RuntimeValidationPayload {
+  runtime_id?: number | null;
+  source_id?: number | null;
+  connector_id?: number | null;
+  job_id?: number | null;
+  execution_id?: number | null;
+  context?: Record<string, unknown>;
+  reason?: string;
+}

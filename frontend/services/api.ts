@@ -29,6 +29,14 @@ import {
   CompanyFinancialStatementsPayload,
   CompanyFinancialsPayload,
   CompanyProfileDetail,
+  ConnectorCapabilitiesPayload,
+  ConnectorCreatePayload,
+  ConnectorDetail,
+  ConnectorListPayload,
+  ConnectorStatusPayload,
+  ConnectorUpdatePayload,
+  ConnectorValidation,
+  ConnectorValidationPayload,
   CompanyRelatedResearch,
   ComparePayload,
   DataQualitySummaryPayload,
@@ -37,6 +45,12 @@ import {
   MacroIndicatorPayload,
   MacroOverviewPayload,
   MacroResearchPayload,
+  IngestionOperationExecution,
+  IngestionOperationExecutionListPayload,
+  IngestionOperationJobDetail,
+  IngestionOperationJobListPayload,
+  IngestionOperationJobPayload,
+  IngestionOperationRequestPayload,
   IngestionRecordIssue,
   IngestionRunDetailPayload,
   IngestionRunSummary,
@@ -46,7 +60,12 @@ import {
   NewsResearch,
   ResearchAssessment,
   SignupResponse,
+  SourceCreatePayload,
+  SourceDetail,
   SourceHealthPayload,
+  SourceListPayload,
+  SourceStatusPayload,
+  SourceUpdatePayload,
   SectorDetailPayload,
   SectorRecord,
   SectorResearchPayload,
@@ -207,6 +226,37 @@ export const adminService = {
     patch<AdminUserDetail>(`/admin/users/${id}/status`, payload as unknown as Record<string, unknown>),
   roles: () => get<AdminRole[]>("/admin/roles"),
   role: (id: number) => get<AdminRole>(`/admin/roles/${id}`),
+  sources: (params: Record<string, unknown> = {}) => get<SourceListPayload>("/admin/sources", params),
+  source: (id: number) => get<SourceDetail>(`/admin/sources/${id}`),
+  createSource: (payload: SourceCreatePayload) =>
+    post<SourceDetail>("/admin/sources", payload as unknown as Record<string, unknown>),
+  updateSource: (id: number, payload: SourceUpdatePayload) =>
+    patch<SourceDetail>(`/admin/sources/${id}`, payload as unknown as Record<string, unknown>),
+  updateSourceStatus: (id: number, payload: SourceStatusPayload) =>
+    patch<SourceDetail>(`/admin/sources/${id}/status`, payload as unknown as Record<string, unknown>),
+  deleteSource: (id: number, reason: string) =>
+    delete_<SourceDetail>(`/admin/sources/${id}?reason=${encodeURIComponent(reason)}`),
+  ingestionJobs: (params: Record<string, unknown> = {}) => get<IngestionOperationJobListPayload>("/admin/ingestion/jobs", params),
+  connectors: (params: Record<string, unknown> = {}) => get<ConnectorListPayload>("/admin/connectors", params),
+  connector: (id: number) => get<ConnectorDetail>(`/admin/connectors/${id}`),
+  connectorCapabilities: () => get<ConnectorCapabilitiesPayload>("/admin/connectors/capabilities"),
+  createConnector: (payload: ConnectorCreatePayload) =>
+    post<ConnectorDetail>("/admin/connectors", payload as unknown as Record<string, unknown>),
+  updateConnector: (id: number, payload: ConnectorUpdatePayload) =>
+    patch<ConnectorDetail>(`/admin/connectors/${id}`, payload as unknown as Record<string, unknown>),
+  updateConnectorStatus: (id: number, payload: ConnectorStatusPayload) =>
+    patch<ConnectorDetail>(`/admin/connectors/${id}/status`, payload as unknown as Record<string, unknown>),
+  validateConnector: (id: number, payload: ConnectorValidationPayload) =>
+    post<ConnectorValidation>(`/admin/connectors/${id}/validate`, payload as unknown as Record<string, unknown>),
+  ingestionJob: (id: number) => get<IngestionOperationJobDetail>(`/admin/ingestion/jobs/${id}`),
+  createIngestionJob: (payload: IngestionOperationJobPayload) =>
+    post<IngestionOperationJobDetail>("/admin/ingestion/jobs", payload as unknown as Record<string, unknown>),
+  updateIngestionJob: (id: number, payload: Partial<IngestionOperationJobPayload> & { reason: string }) =>
+    patch<IngestionOperationJobDetail>(`/admin/ingestion/jobs/${id}`, payload as unknown as Record<string, unknown>),
+  ingestionJobOperation: (id: number, operation: "run" | "retry" | "pause" | "resume" | "cancel", payload: IngestionOperationRequestPayload) =>
+    post<IngestionOperationJobDetail>(`/admin/ingestion/jobs/${id}/${operation}`, payload as unknown as Record<string, unknown>),
+  ingestionExecutions: (params: Record<string, unknown> = {}) => get<IngestionOperationExecutionListPayload>("/admin/ingestion/executions", params),
+  ingestionExecution: (id: number) => get<IngestionOperationExecution>(`/admin/ingestion/executions/${id}`),
 };
 // ============================================================================
 // Investor Profile Services
@@ -417,6 +467,12 @@ export const internalOperationsService = {
   getCompanyQuality: (ticker: string) =>
     get<CompanyDataQualityPayload>(`/internal/data-quality/companies/${ticker}`),
 };
+
+
+
+
+
+
 
 
 

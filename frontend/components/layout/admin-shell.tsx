@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, KeyRound, LayoutDashboard, Settings, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, Cable, DatabaseZap, GitBranch, KeyRound, LayoutDashboard, Settings, ShieldCheck, Users } from "lucide-react";
 import { adminService } from "@/services/api";
 import { useAuthStore } from "@/store";
 import { cn } from "@/utils";
@@ -12,6 +12,9 @@ const ADMIN_NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/roles", label: "Roles", icon: KeyRound },
+  { href: "/admin/sources", label: "Sources", icon: DatabaseZap },
+  { href: "/admin/connectors", label: "Connectors", icon: Cable },
+  { href: "/admin/ingestion/jobs", label: "Ingestion", icon: GitBranch },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -114,5 +117,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+
+
+
 
 

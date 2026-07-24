@@ -220,7 +220,7 @@ def test_admin_navigation_filters_by_permissions(client: TestClient, db_session:
     body = response.json()
 
     assert response.status_code == 200
-    assert [item["href"] for item in body["data"]["items"]] == ["/admin/dashboard", "/admin/users", "/admin/roles", "/admin/settings"]
+    assert [item["href"] for item in body["data"]["items"]] == ["/admin/dashboard", "/admin/users", "/admin/roles", "/admin/connectors", "/admin/settings"]
 
 
 def test_admin_permissions_returns_grouped_permission_model(client: TestClient, db_session: Session) -> None:
@@ -251,4 +251,5 @@ def test_owner_protection_blocks_normal_destructive_actions(db_session: Session)
 
     with pytest.raises(OwnerProtectionError):
         ensure_user_is_not_protected_owner(db_session, owner, "demote")
+
 

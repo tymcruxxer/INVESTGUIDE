@@ -29,9 +29,11 @@ from app.schemas.admin import (
     UserStatusRequest,
 )
 from app.schemas.auth import UserRead
-from app.services import admin_user_service
+from app.schemas.source_registry import SourceCreate, SourceStatusUpdate, SourceUpdate
+from app.services import admin_user_service, source_registry_service
 from app.services.admin_user_service import AdminUserManagementError
 from app.services.audit_service import record_audit_event
+from app.services.source_registry_service import SourceRegistryError
 from app.services.rbac_service import filter_navigation_for_user, get_admin_context, get_user_permission_codes, get_user_roles, require_permission
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -206,6 +208,81 @@ async def admin_user_status(user_id: int, payload: UserStatusRequest, request: R
     return success_response(message="User status updated successfully", data=_safe_user_detail(db, user).model_dump(mode="json"))
 
 
+
+@router.get("/sources", response_model=None)
+async def admin_sources(
+    request: Request,
+    search: str | None = None,
+    category: str | None = None,
+    tier: str | None = None,
+    status: str | None = None,
+    connector_type: str | None = None,
+    page: int = 1,
+    limit: int = 20,
+    sort_by: str = "updated_at",
+    sort_order: str = "desc",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("sources.read")),
+) -> dict[str, Any]:
+    """Return the source registry list."""
+    result = source_registry_service.list_sources(db, search=search, category=category, tier=tier, status=status, connector_type=connector_type, page=page, limit=limit, sort_by=sort_by, sort_order=sort_order)
+    record_audit_event(db, actor=current_user, action="admin.sources.read", target_type="source", target_id="registry", ip_address=_request_ip(request), request_id=_request_id(request), commit=True)
+    return success_response(message="Source registry retrieved successfully", data=source_registry_service.source_list_payload(result).model_dump(mode="json"))
+
+
+@router.post("/sources", response_model=None)
+async def admin_source_create(payload: SourceCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_permission("sources.update"))) -> dict[str, Any] | JSONResponse:
+    """Create a data source registry entry."""
+    try:
+        source = source_registry_service.create_source(db, actor=current_user, payload=payload, request_id=_request_id(request), ip_address=_request_ip(request))
+    except SourceRegistryError as exc:
+        return _source_error(exc)
+    return success_response(message="Source created successfully", data=source_registry_service.source_to_read(db, source).model_dump(mode="json"))
+
+
+@router.get("/sources/{source_id}", response_model=None)
+async def admin_source_detail(source_id: int, request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_permission("sources.read"))) -> dict[str, Any] | JSONResponse:
+    """Return one source registry entry."""
+    try:
+        source = source_registry_service.get_source_or_raise(db, source_id)
+    except SourceRegistryError as exc:
+        return _source_error(exc)
+    record_audit_event(db, actor=current_user, action="admin.source.read", target_type="source", target_id=str(source.id), ip_address=_request_ip(request), request_id=_request_id(request), commit=True)
+    return success_response(message="Source retrieved successfully", data=source_registry_service.source_to_read(db, source).model_dump(mode="json"))
+
+
+@router.patch("/sources/{source_id}", response_model=None)
+async def admin_source_update(source_id: int, payload: SourceUpdate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_permission("sources.update"))) -> dict[str, Any] | JSONResponse:
+    """Update source identity, connector configuration, or credentials."""
+    try:
+        source = source_registry_service.get_source_or_raise(db, source_id)
+        updated = source_registry_service.update_source(db, actor=current_user, source=source, payload=payload, request_id=_request_id(request), ip_address=_request_ip(request))
+    except SourceRegistryError as exc:
+        return _source_error(exc)
+    return success_response(message="Source updated successfully", data=source_registry_service.source_to_read(db, updated).model_dump(mode="json"))
+
+
+@router.patch("/sources/{source_id}/status", response_model=None)
+async def admin_source_status(source_id: int, payload: SourceStatusUpdate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_permission("sources.update"))) -> dict[str, Any] | JSONResponse:
+    """Update source operational status."""
+    try:
+        source = source_registry_service.get_source_or_raise(db, source_id)
+        updated = source_registry_service.update_source_status(db, actor=current_user, source=source, payload=payload, request_id=_request_id(request), ip_address=_request_ip(request))
+    except SourceRegistryError as exc:
+        return _source_error(exc)
+    return success_response(message="Source status updated successfully", data=source_registry_service.source_to_read(db, updated).model_dump(mode="json"))
+
+
+@router.delete("/sources/{source_id}", response_model=None)
+async def admin_source_delete(source_id: int, request: Request, reason: str = Query(min_length=3, max_length=1000), db: Session = Depends(get_db), current_user: User = Depends(require_permission("sources.update"))) -> dict[str, Any] | JSONResponse:
+    """Soft-delete a source registry entry."""
+    try:
+        source = source_registry_service.get_source_or_raise(db, source_id)
+        deleted = source_registry_service.soft_delete_source(db, actor=current_user, source=source, reason=reason, request_id=_request_id(request), ip_address=_request_ip(request))
+    except SourceRegistryError as exc:
+        return _source_error(exc)
+    return success_response(message="Source soft-deleted successfully", data=source_registry_service.source_to_read(db, deleted).model_dump(mode="json"))
+
 @router.get("/roles", response_model=None)
 async def admin_roles(request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_permission("roles.read"))) -> dict[str, Any]:
     """Return the role catalog with inherited permissions."""
@@ -245,6 +322,8 @@ async def admin_permissions(request: Request, db: Session = Depends(get_db), cur
         metadata={"environment": get_settings().environment, "permission_model": "rbac", "owner_transfer_workflow": "not_implemented"},
     ).model_dump(mode="json")
     return success_response(message="Admin permissions retrieved successfully", data=payload)
+
+
 
 
 
